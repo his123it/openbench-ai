@@ -49,6 +49,38 @@
     {
       "id": "reasoning_012",
       "response": "1/2"
+    },
+    {
+      "id": "reasoning_013",
+      "response": "No"
+    },
+    {
+      "id": "reasoning_014",
+      "response": "T3"
+    },
+    {
+      "id": "reasoning_015",
+      "response": "215"
+    },
+    {
+      "id": "reasoning_016",
+      "response": "28"
+    },
+    {
+      "id": "reasoning_017",
+      "response": "No"
+    },
+    {
+      "id": "reasoning_018",
+      "response": "10"
+    },
+    {
+      "id": "reasoning_019",
+      "response": "1"
+    },
+    {
+      "id": "reasoning_020",
+      "response": "2"
     }
   ]
 }
