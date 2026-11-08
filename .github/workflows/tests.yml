@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   test:
-    name: Pytest (Python ${{ matrix.python-version }})
+    name: Pytest & CLI Smoke (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -28,13 +28,24 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
 
-      - name: Install package and dev dependencies
+      - name: Install core + dev + config + metrics dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
+          python -m pip install -e ".[dev,config,metrics]"
 
-      - name: Validate built-in datasets
+      - name: Validate all 10 built-in datasets
         run: python scripts/validate_datasets.py
 
       - name: Run pytest suite
         run: pytest -v
+
+      - name: Run CLI smoke tests (v0.1.0 & v0.2.0 commands)
+        run: |
+          openbench --version
+          openbench list-datasets
+          openbench inspect-dataset datasets/mathematics/sample.jsonl --samples 1
+          openbench dataset-stats datasets/
+          openbench validate-dataset datasets/
+          openbench evaluate --config configs/reasoning.yaml --responses examples/sample_responses.json --output results/
+          openbench history list --store results/history.jsonl
+          openbench export --input results/alphabaseline-7b.json --format csv --output results/exported.csv

@@ -1,0 +1,31 @@
+name: reasoning-profile
+description: Comprehensive evaluation profile for mathematical and logical reasoning datasets.
+
+dataset:
+  path: datasets/reasoning/sample.jsonl
+  category: reasoning
+
+metrics:
+  - exact_match
+  - accuracy
+  - keyword_coverage
+  - semantic_similarity
+
+normalization:
+  strip_whitespace: true
+  case_sensitive: false
+  collapse_whitespace: true
+  strip_punctuation: false
+
+options:
+  difficulty:
+    - easy
+    - medium
+    - hard
+  strict_unknown_ids: false
+  record_history: true
+
+output_format:
+  - json
+  - markdown
+  - csv

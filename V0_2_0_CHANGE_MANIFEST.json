@@ -1,0 +1,835 @@
+{
+  "project": "OpenBench AI",
+  "from_version": "0.1.0",
+  "to_version": "0.2.0",
+  "summary": {
+    "total_files_in_v0_2_0": 92,
+    "added_files_count": 42,
+    "modified_files_count": 20,
+    "unchanged_files_count": 30,
+    "removed_files_count": 0
+  },
+  "added_files": [
+    {
+      "path": "BACKWARD_COMPATIBILITY_REPORT.md",
+      "purpose": "Detailed report verifying all v0.1.0 behaviors and contracts in v0.2.0.",
+      "type": "documentation_markdown",
+      "feature_area": "release_management",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_backward_compatibility.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "V0_2_0_BUILD_INSTRUCTIONS.md",
+      "purpose": "Build, installation, test, lint, and CLI verification guide for v0.2.0.",
+      "type": "documentation_markdown",
+      "feature_area": "release_management",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [],
+      "required": true
+    },
+    {
+      "path": "V0_2_0_CHANGE_MANIFEST.json",
+      "purpose": "Machine-readable change manifest detailing added, modified, and removed files in v0.2.0.",
+      "type": "json_manifest",
+      "feature_area": "release_management",
+      "dependencies": [],
+      "compatibility_impact": "new_manifest",
+      "associated_tests": [],
+      "required": true
+    },
+    {
+      "path": "V0_2_0_MIGRATION_GUIDE.md",
+      "purpose": "Step-by-step migration guide from v0.1.0 to v0.2.0.",
+      "type": "documentation_markdown",
+      "feature_area": "release_management",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_backward_compatibility.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "V0_2_0_VALIDATION_CHECKLIST.md",
+      "purpose": "Comprehensive validation checklist for v0.2.0.",
+      "type": "documentation_markdown",
+      "feature_area": "release_management",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [],
+      "required": true
+    },
+    {
+      "path": "configs/coding.yaml",
+      "purpose": "YAML evaluation profile for coding datasets.",
+      "type": "configuration_yaml",
+      "feature_area": "configuration_profiles",
+      "dependencies": [
+        "PyYAML (optional)"
+      ],
+      "compatibility_impact": "new_file",
+      "associated_tests": [
+        "tests/test_configuration.py"
+      ],
+      "required": false
+    },
+    {
+      "path": "configs/instruction_following.yaml",
+      "purpose": "YAML evaluation profile for instruction-following datasets with case sensitivity.",
+      "type": "configuration_yaml",
+      "feature_area": "configuration_profiles",
+      "dependencies": [
+        "PyYAML (optional)"
+      ],
+      "compatibility_impact": "new_file",
+      "associated_tests": [
+        "tests/test_configuration.py"
+      ],
+      "required": false
+    },
+    {
+      "path": "configs/reasoning.yaml",
+      "purpose": "YAML evaluation profile for reasoning datasets.",
+      "type": "configuration_yaml",
+      "feature_area": "configuration_profiles",
+      "dependencies": [
+        "PyYAML (optional)"
+      ],
+      "compatibility_impact": "new_file",
+      "associated_tests": [
+        "tests/test_configuration.py"
+      ],
+      "required": false
+    },
+    {
+      "path": "datasets/debugging/sample.jsonl",
+      "purpose": "20 original software debugging evaluation items.",
+      "type": "dataset_jsonl",
+      "feature_area": "datasets",
+      "dependencies": [],
+      "compatibility_impact": "new_dataset",
+      "associated_tests": [
+        "tests/test_catalog.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "datasets/factual_knowledge/sample.jsonl",
+      "purpose": "20 original factual knowledge evaluation items with source provenance.",
+      "type": "dataset_jsonl",
+      "feature_area": "datasets",
+      "dependencies": [],
+      "compatibility_impact": "new_dataset",
+      "associated_tests": [
+        "tests/test_catalog.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "datasets/mathematics/sample.jsonl",
+      "purpose": "20 original mathematics evaluation items.",
+      "type": "dataset_jsonl",
+      "feature_area": "datasets",
+      "dependencies": [],
+      "compatibility_impact": "new_dataset",
+      "associated_tests": [
+        "tests/test_catalog.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "datasets/multilingual/sample.jsonl",
+      "purpose": "20 original multilingual evaluation items across 11 languages.",
+      "type": "dataset_jsonl",
+      "feature_area": "datasets",
+      "dependencies": [],
+      "compatibility_impact": "new_dataset",
+      "associated_tests": [
+        "tests/test_catalog.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "datasets/structured_output/sample.jsonl",
+      "purpose": "20 original structured JSON generation evaluation items with schema metadata.",
+      "type": "dataset_jsonl",
+      "feature_area": "datasets",
+      "dependencies": [],
+      "compatibility_impact": "new_dataset",
+      "associated_tests": [
+        "tests/test_catalog.py",
+        "tests/test_structured_output.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "datasets/summarization/sample.jsonl",
+      "purpose": "20 original single-sentence summarization evaluation items.",
+      "type": "dataset_jsonl",
+      "feature_area": "datasets",
+      "dependencies": [],
+      "compatibility_impact": "new_dataset",
+      "associated_tests": [
+        "tests/test_catalog.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "docs/advanced_metrics.md",
+      "purpose": "Documentation for Precision, Recall, F1, ROUGE, BLEU, Semantic Similarity, and Structured Output metrics.",
+      "type": "documentation_markdown",
+      "feature_area": "documentation",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_advanced_metrics.py",
+        "tests/test_structured_output.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "docs/backward_compatibility.md",
+      "purpose": "Comprehensive documentation of v0.1.0 backward compatibility guarantees in v0.2.0.",
+      "type": "documentation_markdown",
+      "feature_area": "documentation",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_backward_compatibility.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "docs/configuration.md",
+      "purpose": "Documentation for YAML evaluation configuration profiles.",
+      "type": "documentation_markdown",
+      "feature_area": "documentation",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_configuration.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "docs/dashboard_architecture.md",
+      "purpose": "Data contract specification and architectural blueprint for future dashboard consumption.",
+      "type": "documentation_markdown",
+      "feature_area": "documentation",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_reporting.py"
+      ],
+      "required": false
+    },
+    {
+      "path": "docs/dataset_catalog.md",
+      "purpose": "Documentation for the 10-category dataset catalog, additive schema, and CLI inspection commands.",
+      "type": "documentation_markdown",
+      "feature_area": "documentation",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_catalog.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "docs/historical_tracking.md",
+      "purpose": "Documentation for local JSONL result history tracking and longitudinal comparisons.",
+      "type": "documentation_markdown",
+      "feature_area": "documentation",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_history.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "docs/integrations.md",
+      "purpose": "Documentation for local and Hugging Face model adapters.",
+      "type": "documentation_markdown",
+      "feature_area": "documentation",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_integrations.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "src/openbench/adapters/__init__.py",
+      "purpose": "Model inference adapters package exports.",
+      "type": "python_source",
+      "feature_area": "model_integrations",
+      "dependencies": [],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_integrations.py"
+      ],
+      "required": false
+    },
+    {
+      "path": "src/openbench/adapters/base.py",
+      "purpose": "Abstract BaseModelAdapter interface and reproducibility metadata contract.",
+      "type": "python_source",
+      "feature_area": "model_integrations",
+      "dependencies": [],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_integrations.py"
+      ],
+      "required": false
+    },
+    {
+      "path": "src/openbench/adapters/huggingface.py",
+      "purpose": "Experimental HuggingFaceAdapter for local transformers pipelines (offline-first by default).",
+      "type": "python_source",
+      "feature_area": "model_integrations",
+      "dependencies": [
+        "transformers (optional)",
+        "torch (optional)"
+      ],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_integrations.py"
+      ],
+      "required": false
+    },
+    {
+      "path": "src/openbench/adapters/local.py",
+      "purpose": "LocalCallableAdapter and DeterministicLookupAdapter for local Python model functions.",
+      "type": "python_source",
+      "feature_area": "model_integrations",
+      "dependencies": [],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_integrations.py"
+      ],
+      "required": false
+    },
+    {
+      "path": "src/openbench/catalog.py",
+      "purpose": "Dataset catalog discovery, metadata inspection, filtering, and statistical analysis.",
+      "type": "python_source",
+      "feature_area": "dataset_management",
+      "dependencies": [],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_catalog.py",
+        "tests/test_backward_compatibility.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "src/openbench/configuration.py",
+      "purpose": "YAML evaluation configuration profile loader and validator with CLI override support.",
+      "type": "python_source",
+      "feature_area": "configuration_profiles",
+      "dependencies": [
+        "PyYAML (optional)"
+      ],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_configuration.py",
+        "tests/test_backward_compatibility.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "src/openbench/history.py",
+      "purpose": "Zero-server local JSONL result history store for longitudinal benchmark tracking.",
+      "type": "python_source",
+      "feature_area": "historical_tracking",
+      "dependencies": [],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_history.py",
+        "tests/test_backward_compatibility.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "src/openbench/metrics/bleu.py",
+      "purpose": "BleuMetric computing smoothed clipped n-gram precision with brevity penalty.",
+      "type": "python_source",
+      "feature_area": "advanced_metrics",
+      "dependencies": [],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_advanced_metrics.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "src/openbench/metrics/f1.py",
+      "purpose": "F1Metric computing harmonic mean of precision and recall.",
+      "type": "python_source",
+      "feature_area": "advanced_metrics",
+      "dependencies": [],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_advanced_metrics.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "src/openbench/metrics/precision.py",
+      "purpose": "PrecisionMetric for binary classification decisions and discrete element-set predictions.",
+      "type": "python_source",
+      "feature_area": "advanced_metrics",
+      "dependencies": [],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_advanced_metrics.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "src/openbench/metrics/recall.py",
+      "purpose": "RecallMetric for binary classification decisions and discrete element-set predictions.",
+      "type": "python_source",
+      "feature_area": "advanced_metrics",
+      "dependencies": [],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_advanced_metrics.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "src/openbench/metrics/rouge.py",
+      "purpose": "RougeMetric, Rouge1Metric, and RougeLMetric for unigram and LCS overlap.",
+      "type": "python_source",
+      "feature_area": "advanced_metrics",
+      "dependencies": [],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_advanced_metrics.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "src/openbench/metrics/semantic_similarity.py",
+      "purpose": "SemanticSimilarityMetric with pluggable EmbeddingProvider adapters.",
+      "type": "python_source",
+      "feature_area": "advanced_metrics",
+      "dependencies": [
+        "sentence-transformers (optional)"
+      ],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_advanced_metrics.py"
+      ],
+      "required": false
+    },
+    {
+      "path": "src/openbench/metrics/structured_output.py",
+      "purpose": "StructuredOutputMetric validating JSON parsing, required keys, field types, and JSON Schema.",
+      "type": "python_source",
+      "feature_area": "advanced_metrics",
+      "dependencies": [
+        "jsonschema (optional)"
+      ],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_structured_output.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "tests/test_advanced_metrics.py",
+      "purpose": "Unit tests for precision, recall, F1, ROUGE, BLEU, and semantic similarity.",
+      "type": "python_test",
+      "feature_area": "testing",
+      "dependencies": [
+        "pytest"
+      ],
+      "compatibility_impact": "new_test_suite",
+      "associated_tests": [
+        "tests/test_advanced_metrics.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "tests/test_backward_compatibility.py",
+      "purpose": "Dedicated backward compatibility test suite verifying v0.1.0 contracts.",
+      "type": "python_test",
+      "feature_area": "testing",
+      "dependencies": [
+        "pytest"
+      ],
+      "compatibility_impact": "new_test_suite",
+      "associated_tests": [
+        "tests/test_backward_compatibility.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "tests/test_catalog.py",
+      "purpose": "Unit tests for DatasetCatalog, filtering, inspection, and stats.",
+      "type": "python_test",
+      "feature_area": "testing",
+      "dependencies": [
+        "pytest"
+      ],
+      "compatibility_impact": "new_test_suite",
+      "associated_tests": [
+        "tests/test_catalog.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "tests/test_configuration.py",
+      "purpose": "Unit tests for YAML configuration profiles and strict validation.",
+      "type": "python_test",
+      "feature_area": "testing",
+      "dependencies": [
+        "pytest",
+        "PyYAML"
+      ],
+      "compatibility_impact": "new_test_suite",
+      "associated_tests": [
+        "tests/test_configuration.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "tests/test_history.py",
+      "purpose": "Unit tests for ResultHistoryStore and historical run comparisons.",
+      "type": "python_test",
+      "feature_area": "testing",
+      "dependencies": [
+        "pytest"
+      ],
+      "compatibility_impact": "new_test_suite",
+      "associated_tests": [
+        "tests/test_history.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "tests/test_integrations.py",
+      "purpose": "Unit tests for LocalCallableAdapter, DeterministicLookupAdapter, HuggingFaceAdapter, and telemetry.",
+      "type": "python_test",
+      "feature_area": "testing",
+      "dependencies": [
+        "pytest"
+      ],
+      "compatibility_impact": "new_test_suite",
+      "associated_tests": [
+        "tests/test_integrations.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "tests/test_structured_output.py",
+      "purpose": "Unit tests for StructuredOutputMetric.",
+      "type": "python_test",
+      "feature_area": "testing",
+      "dependencies": [
+        "pytest"
+      ],
+      "compatibility_impact": "new_test_suite",
+      "associated_tests": [
+        "tests/test_structured_output.py"
+      ],
+      "required": true
+    }
+  ],
+  "modified_files": [
+    {
+      "path": ".github/workflows/tests.yml",
+      "purpose": "GitHub Actions test & CLI smoke workflow across Python 3.10, 3.11, and 3.12.",
+      "type": "ci_workflow_yaml",
+      "feature_area": "ci_cd",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_cli.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "CHANGELOG.md",
+      "purpose": "Release changelog containing both v0.2.0 and v0.1.0 histories.",
+      "type": "documentation_markdown",
+      "feature_area": "release_management",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [],
+      "required": true
+    },
+    {
+      "path": "FILE_MANIFEST.json",
+      "purpose": "Complete machine-readable manifest of all files in OpenBench AI v0.2.0.",
+      "type": "json_manifest",
+      "feature_area": "release_management",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [],
+      "required": true
+    },
+    {
+      "path": "README.md",
+      "purpose": "Updated v0.2.0 primary documentation, dataset catalog, metrics reference, and CLI guide.",
+      "type": "documentation_markdown",
+      "feature_area": "documentation",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [],
+      "required": true
+    },
+    {
+      "path": "datasets/coding/sample.jsonl",
+      "purpose": "20 original coding evaluation items (12 original v0.1.0 + 8 new v0.2.0).",
+      "type": "dataset_jsonl",
+      "feature_area": "datasets",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_catalog.py",
+        "tests/test_backward_compatibility.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "datasets/instruction_following/sample.jsonl",
+      "purpose": "20 original instruction-following evaluation items (12 original v0.1.0 + 8 new v0.2.0).",
+      "type": "dataset_jsonl",
+      "feature_area": "datasets",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_catalog.py",
+        "tests/test_backward_compatibility.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "datasets/reasoning/sample.jsonl",
+      "purpose": "20 original reasoning evaluation items (12 original v0.1.0 + 8 new v0.2.0).",
+      "type": "dataset_jsonl",
+      "feature_area": "datasets",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_catalog.py",
+        "tests/test_backward_compatibility.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "datasets/safety/sample.jsonl",
+      "purpose": "20 original safety evaluation items with rationale metadata (12 original v0.1.0 + 8 new v0.2.0).",
+      "type": "dataset_jsonl",
+      "feature_area": "datasets",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_catalog.py",
+        "tests/test_backward_compatibility.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "examples/sample_responses.json",
+      "purpose": "Sample model response set (AlphaBaseline-7B) covering all 20 reasoning items.",
+      "type": "json_data",
+      "feature_area": "examples",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_cli.py",
+        "tests/test_backward_compatibility.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "pyproject.toml",
+      "purpose": "PEP 621 package configuration (v0.2.0) with optional dependency groups.",
+      "type": "configuration_toml",
+      "feature_area": "packaging",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_backward_compatibility.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "src/openbench/__init__.py",
+      "purpose": "Package initialization, version 0.2.0, and exports of v0.1.0 + v0.2.0 public symbols.",
+      "type": "python_source",
+      "feature_area": "core_api",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_backward_compatibility.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "src/openbench/cli.py",
+      "purpose": "Command-line interface supporting all v0.1.0 commands plus list-datasets, inspect-dataset, dataset-stats, history, export, and --config.",
+      "type": "python_source",
+      "feature_area": "cli",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_cli.py",
+        "tests/test_backward_compatibility.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "src/openbench/comparison.py",
+      "purpose": "Multi-model comparator with category/difficulty breakdowns, score margins, historical comparison, and optional explicit weighted scoring.",
+      "type": "python_source",
+      "feature_area": "model_comparison",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_comparison.py",
+        "tests/test_history.py",
+        "tests/test_backward_compatibility.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "src/openbench/dataset.py",
+      "purpose": "JSONL dataset loader, directory loader, metadata filter, SHA-256 checksum, and schema validator.",
+      "type": "python_source",
+      "feature_area": "dataset_system",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_dataset.py",
+        "tests/test_catalog.py",
+        "tests/test_backward_compatibility.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "src/openbench/evaluator.py",
+      "purpose": "Response loader (with optional latency/token telemetry) and central evaluation engine with category/difficulty/missing/invalid breakdowns.",
+      "type": "python_source",
+      "feature_area": "evaluation_engine",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_evaluator.py",
+        "tests/test_integrations.py",
+        "tests/test_backward_compatibility.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "src/openbench/metrics/__init__.py",
+      "purpose": "Metric registry, factory function, metadata listing, and custom metric registration.",
+      "type": "python_source",
+      "feature_area": "metrics",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_metrics.py",
+        "tests/test_advanced_metrics.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "src/openbench/metrics/base.py",
+      "purpose": "BaseMetric abstract interface, MetricMetadata, MetricResult, and AggregateMetricResult.",
+      "type": "python_source",
+      "feature_area": "metrics",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_metrics.py",
+        "tests/test_advanced_metrics.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "src/openbench/reporting.py",
+      "purpose": "JSON, Markdown, and CSV report generator with enhanced Benchmark Reproducibility Card and secret redaction.",
+      "type": "python_source",
+      "feature_area": "reporting",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_reporting.py",
+        "tests/test_backward_compatibility.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "tests/test_cli.py",
+      "purpose": "End-to-end CLI tests for v0.1.0 commands.",
+      "type": "python_test",
+      "feature_area": "testing",
+      "dependencies": [
+        "pytest"
+      ],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_cli.py"
+      ],
+      "required": true
+    },
+    {
+      "path": "tests/test_reporting.py",
+      "purpose": "Unit tests for JSON/Markdown reporting and Reproducibility Cards.",
+      "type": "python_test",
+      "feature_area": "testing",
+      "dependencies": [
+        "pytest"
+      ],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_reporting.py"
+      ],
+      "required": true
+    }
+  ],
+  "removed_files": [],
+  "unchanged_files": [
+    ".github/ISSUE_TEMPLATE/bug_report.md",
+    ".github/ISSUE_TEMPLATE/feature_request.md",
+    ".github/pull_request_template.md",
+    ".github/workflows/lint.yml",
+    ".gitignore",
+    "BUILD_INSTRUCTIONS.md",
+    "CODE_OF_CONDUCT.md",
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "SECURITY.md",
+    "VALIDATION_CHECKLIST.md",
+    "docs/architecture.md",
+    "docs/contributing.md",
+    "docs/evaluation_methodology.md",
+    "docs/installation.md",
+    "docs/metrics.md",
+    "docs/usage.md",
+    "examples/basic_evaluation.py",
+    "examples/compare_models.py",
+    "scripts/run_example.py",
+    "scripts/validate_datasets.py",
+    "src/openbench/exceptions.py",
+    "src/openbench/metrics/accuracy.py",
+    "src/openbench/metrics/exact_match.py",
+    "src/openbench/metrics/keyword_match.py",
+    "src/openbench/metrics/normalization.py",
+    "tests/test_comparison.py",
+    "tests/test_dataset.py",
+    "tests/test_evaluator.py",
+    "tests/test_metrics.py"
+  ]
+}
