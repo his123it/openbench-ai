@@ -1,0 +1,38 @@
+name: repeated-mock-benchmark
+description: Multi-run experiment profile (repeat_count=3) for variance and consistency analysis.
+
+dataset:
+  path: datasets/reasoning/sample.jsonl
+  category: reasoning
+
+provider:
+  name: mock
+  model: mock-repeated-v1
+  model_version: 0.3.0
+  use_expected_answer: true
+  simulated_latency_ms: 1.0
+
+generation:
+  temperature: 0.0
+  max_tokens: 64
+
+execution:
+  timeout_seconds: 10.0
+  concurrency: 2
+  use_cache: false
+  max_attempts: 2
+
+metrics:
+  - exact_match
+  - accuracy
+  - f1
+
+options:
+  difficulty:
+    - easy
+  repeat_count: 3
+  record_history: true
+
+output_format:
+  - json
+  - markdown

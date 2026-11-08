@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Callable
 from typing import Any
 
@@ -25,9 +26,36 @@ _TYPE_CHECKERS: dict[str, Callable[[Any], bool]] = {
     "object": lambda v: isinstance(v, dict),
 }
 
+# Matches a single surrounding Markdown code fence (optional `json` or `JSON` language tag)
+# Anchored to the entire trimmed string so arbitrary surrounding prose is never stripped.
+_SINGLE_FENCE_RE = re.compile(
+    r"^```(?:json|JSON)?[ \t]*\r?\n([\s\S]*?)\r?\n```$"
+)
+
+
+def extract_fenced_json(text: str) -> tuple[str, bool]:
+    """Remove at most one valid surrounding Markdown code fence from `text`.
+
+    Rules:
+    - The entire trimmed text must begin with ```` ``` ```` (or ```` ```json ````) on the
+      first line and end with ```` ``` ```` on the final line.
+    - Any surrounding conversational prose before the opening fence or after the closing
+      fence causes this function to return `(text, False)` without stripping.
+    - If the inner body itself contains another ```` ``` ```` fence marker (multiple fences),
+      returns `(text, False)` so multiple code blocks are never silently concatenated or repaired.
+    """
+    trimmed = text.strip()
+    match = _SINGLE_FENCE_RE.match(trimmed)
+    if not match:
+        return trimmed, False
+    inner = match.group(1)
+    if "```" in inner:
+        return trimmed, False
+    return inner.strip(), True
+
 
 class StructuredOutputMetric(BaseMetric):
-    """Validates JSON syntax, required keys, field types, and optional JSON Schema compliance.
+    r"""Validates JSON syntax, required keys, field types, and optional JSON Schema compliance.
 
     Crucial Separation of Concerns:
     `StructuredOutputMetric` reports **structural validity** (`valid_structure`, `structure_score`)
@@ -35,10 +63,16 @@ class StructuredOutputMetric(BaseMetric):
     valid JSON structure and all required keys/types but different values will have
     `valid_structure=True` (`structure_score=1.0`) and `value_match=False`, clearly distinguishing
     schema compliance from factual accuracy.
+
+    Optional Fenced JSON Support (`strip_markdown_fence`):
+    - Defaults to `False` (preserving strict v0.2.0 behavior).
+    - When `strip_markdown_fence=True`, removes at most one valid surrounding Markdown
+      code fence (e.g., ```` ```json ... ``` ````) before parsing JSON, without stripping
+      arbitrary surrounding prose or repairing malformed JSON.
     """
 
     name = "structured_output"
-    version = "0.2.0"
+    version = "0.3.1"
     description = (
         "Validates JSON parsing, expected/required keys, field types, and optional "
         "JSON Schema compliance while reporting structural validity separately from value correctness."
@@ -55,15 +89,21 @@ class StructuredOutputMetric(BaseMetric):
         normalization: NormalizationConfig | None = None,
         require_value_match: bool = False,
         use_jsonschema: bool = True,
+        strip_markdown_fence: bool = False,
     ) -> None:
         self.normalization = normalization or NormalizationConfig()
         self.require_value_match = require_value_match
         self.use_jsonschema = use_jsonschema
+        self.strip_markdown_fence = strip_markdown_fence
 
     def compute_item(self, record: DatasetRecord, response_text: str) -> MetricResult:
-        stripped = response_text.strip()
+        candidate_text = response_text.strip()
+        fence_stripped = False
+        if self.strip_markdown_fence:
+            candidate_text, fence_stripped = extract_fenced_json(response_text)
+
         try:
-            parsed_resp = json.loads(stripped)
+            parsed_resp = json.loads(candidate_text)
         except json.JSONDecodeError as exc:
             return MetricResult(
                 metric_name=self.name,
@@ -74,6 +114,7 @@ class StructuredOutputMetric(BaseMetric):
                     "valid_structure": False,
                     "value_match": False,
                     "structure_score": 0.0,
+                    "fence_stripped": fence_stripped,
                     "parse_error": f"{exc.msg} (line {exc.lineno}, column {exc.colno})",
                     "missing_keys": [],
                     "type_errors": [],
@@ -81,7 +122,6 @@ class StructuredOutputMetric(BaseMetric):
                 },
             )
 
-        # Parse expected_answer if it is valid JSON to infer expected keys/values when metadata omits them
         expected_json: Any = None
         try:
             expected_json = json.loads(record.expected_answer.strip())
@@ -143,7 +183,7 @@ class StructuredOutputMetric(BaseMetric):
         if expected_json is not None:
             value_match = parsed_resp == expected_json
         else:
-            value_match = normalize_text(response_text, self.normalization) == normalize_text(
+            value_match = normalize_text(candidate_text, self.normalization) == normalize_text(
                 record.expected_answer, self.normalization
             )
 
@@ -163,6 +203,7 @@ class StructuredOutputMetric(BaseMetric):
                 "valid_structure": valid_structure,
                 "value_match": value_match,
                 "structure_score": round(structure_score, 6),
+                "fence_stripped": fence_stripped,
                 "missing_keys": missing_keys,
                 "type_errors": type_errors,
                 "schema_validated": schema_validated,
@@ -179,6 +220,7 @@ class StructuredOutputMetric(BaseMetric):
         valid_json_count = sum(1 for r in item_results if r.details.get("valid_json"))
         valid_struct_count = sum(1 for r in item_results if r.details.get("valid_structure"))
         value_match_count = sum(1 for r in item_results if r.details.get("value_match"))
+        fence_stripped_count = sum(1 for r in item_results if r.details.get("fence_stripped"))
         denom = max(total_dataset_items, 1)
 
         details = dict(base_agg.details)
@@ -188,8 +230,10 @@ class StructuredOutputMetric(BaseMetric):
                 "valid_structure_count": valid_struct_count,
                 "invalid_structure_count": len(item_results) - valid_struct_count,
                 "value_match_count": value_match_count,
+                "fence_stripped_count": fence_stripped_count,
                 "structural_validity_rate": round(valid_struct_count / denom, 6),
                 "value_match_rate": round(value_match_count / denom, 6),
+                "strip_markdown_fence": self.strip_markdown_fence,
             }
         )
         return AggregateMetricResult(
@@ -209,5 +253,6 @@ class StructuredOutputMetric(BaseMetric):
             "description": self.description,
             "require_value_match": self.require_value_match,
             "use_jsonschema": self.use_jsonschema,
+            "strip_markdown_fence": self.strip_markdown_fence,
             "normalization": self.normalization.to_dict(),
         }

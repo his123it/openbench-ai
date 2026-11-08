@@ -1,4 +1,4 @@
-"""YAML evaluation configuration profile loader and validator for OpenBench AI."""
+"""YAML evaluation and model execution configuration profile loader and validator (v0.3.0)."""
 
 from __future__ import annotations
 
@@ -6,11 +6,15 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from openbench.adapters.base import PROVIDER_REGISTRY, GenerationConfig
 from openbench.dataset import ALLOWED_DIFFICULTIES
 from openbench.evaluator import DEFAULT_METRIC_NAMES, EvaluationConfig
 from openbench.exceptions import ConfigurationError
+from openbench.execution import ExecutionConfig, RetryPolicy
 from openbench.metrics import METRIC_REGISTRY
 from openbench.metrics.normalization import NormalizationConfig
+from openbench.performance import PricingConfig
+from openbench.security import redact_sensitive_data
 
 ALLOWED_TOP_LEVEL_KEYS = {
     "name",
@@ -21,21 +25,81 @@ ALLOWED_TOP_LEVEL_KEYS = {
     "normalization",
     "options",
     "output_format",
+    # Additive v0.3.0 sections
+    "provider",
+    "generation",
+    "execution",
+    "performance",
+    "privacy",
 }
-ALLOWED_DATASET_KEYS = {"path", "category", "categories", "language", "languages", "tags"}
-ALLOWED_OPTION_KEYS = {"difficulty", "difficulties", "strict_unknown_ids", "record_history"}
+ALLOWED_DATASET_KEYS = {"path", "category", "categories", "language", "languages", "tags", "ids_file", "selected_ids"}
+ALLOWED_OPTION_KEYS = {
+    "difficulty",
+    "difficulties",
+    "strict_unknown_ids",
+    "record_history",
+    "repeat_count",
+    "experiments_dir",
+    "ids_file",
+    "selected_ids",
+}
 ALLOWED_NORMALIZATION_KEYS = {
     "strip_whitespace",
     "case_sensitive",
     "collapse_whitespace",
     "strip_punctuation",
 }
+ALLOWED_PROVIDER_KEYS = {
+    "name",
+    "model",
+    "model_version",
+    "revision",
+    "endpoint",
+    "device",
+    "allow_download",
+    "allow_remote_http",
+    "use_expected_answer",
+    "simulated_latency_ms",
+    "api_key_env",
+}
+ALLOWED_GENERATION_KEYS = {
+    "temperature",
+    "max_tokens",
+    "top_p",
+    "seed",
+    "stop_sequences",
+    "stream",
+    "extra_options",
+}
+ALLOWED_EXECUTION_KEYS = {
+    "timeout_seconds",
+    "concurrency",
+    "use_cache",
+    "cache_dir",
+    "max_attempts",
+    "initial_backoff_seconds",
+    "backoff_multiplier",
+    "max_backoff_seconds",
+    "retry_on_timeouts",
+}
+ALLOWED_PERFORMANCE_KEYS = {
+    "estimate_missing_tokens",
+    "pricing",
+}
+ALLOWED_PRICING_KEYS = {
+    "prompt_cost_per_1k_tokens",
+    "completion_cost_per_1k_tokens",
+    "currency",
+}
+ALLOWED_PRIVACY_KEYS = {
+    "privacy_mode",
+}
 ALLOWED_OUTPUT_FORMATS = {"json", "markdown", "md", "csv"}
 
 
 @dataclass
 class EvaluationProfile:
-    """Represents a validated YAML evaluation configuration profile."""
+    """Represents a validated YAML evaluation and/or model execution configuration profile."""
 
     name: str
     dataset_path: str | None = None
@@ -43,6 +107,8 @@ class EvaluationProfile:
     difficulties: list[str] | None = None
     languages: list[str] | None = None
     tags: list[str] | None = None
+    selected_ids: list[str] | None = None
+    ids_file: str | None = None
     metrics: list[str] = field(default_factory=lambda: list(DEFAULT_METRIC_NAMES))
     metric_options: dict[str, dict[str, Any]] = field(default_factory=dict)
     normalization: NormalizationConfig = field(default_factory=NormalizationConfig)
@@ -50,6 +116,13 @@ class EvaluationProfile:
     record_history: bool = True
     output_formats: list[str] = field(default_factory=lambda: ["json", "markdown"])
     description: str = ""
+    # v0.3.0 execution & provider fields
+    provider_config: dict[str, Any] = field(default_factory=dict)
+    generation_config: GenerationConfig = field(default_factory=GenerationConfig)
+    execution_config: ExecutionConfig = field(default_factory=ExecutionConfig)
+    cache_dir: str | None = None
+    experiments_dir: str | None = None
+    repeat_count: int = 1
 
     def to_evaluation_config(
         self,
@@ -66,6 +139,8 @@ class EvaluationProfile:
             difficulties=list(self.difficulties) if self.difficulties else None,
             tags=list(self.tags) if self.tags else None,
             languages=list(self.languages) if self.languages else None,
+            selected_ids=list(self.selected_ids) if self.selected_ids else None,
+            ids_file=self.ids_file,
             profile_name=self.name,
         )
 
@@ -78,12 +153,18 @@ class EvaluationProfile:
             "difficulties": self.difficulties,
             "languages": self.languages,
             "tags": self.tags,
+            "selected_ids": self.selected_ids,
+            "ids_file": self.ids_file,
             "metrics": list(self.metrics),
             "metric_options": dict(self.metric_options),
             "normalization": self.normalization.to_dict(),
             "strict_unknown_ids": self.strict_unknown_ids,
             "record_history": self.record_history,
             "output_formats": list(self.output_formats),
+            "provider_config": redact_sensitive_data(dict(self.provider_config)),
+            "generation_config": self.generation_config.to_dict(),
+            "execution_config": self.execution_config.to_dict(),
+            "repeat_count": self.repeat_count,
         }
 
 
@@ -141,7 +222,7 @@ class ProfileLoader:
 
         description = str(payload.get("description", "")).strip()
 
-        # Dataset section
+        # 1. Dataset section
         ds_section = payload.get("dataset", {})
         if not isinstance(ds_section, dict):
             raise ConfigurationError(f"Field 'dataset'{loc} must be a mapping")
@@ -181,7 +262,14 @@ class ProfileLoader:
                 raise ConfigurationError(f"Field 'dataset.tags'{loc} must be a list of strings")
             tags = [str(t) for t in ds_section["tags"]]
 
-        # Metrics section
+        ids_file: str | None = ds_section.get("ids_file")
+        selected_ids: list[str] | None = None
+        if "selected_ids" in ds_section and ds_section["selected_ids"] is not None:
+            if not isinstance(ds_section["selected_ids"], list):
+                raise ConfigurationError(f"Field 'dataset.selected_ids'{loc} must be a list of strings")
+            selected_ids = [str(i) for i in ds_section["selected_ids"]]
+
+        # 2. Metrics section
         metrics_raw = payload.get("metrics", list(DEFAULT_METRIC_NAMES))
         if not isinstance(metrics_raw, list) or not metrics_raw:
             raise ConfigurationError(f"Field 'metrics'{loc} must be a non-empty list of metric names")
@@ -201,7 +289,7 @@ class ProfileLoader:
         if not isinstance(metric_options, dict):
             raise ConfigurationError(f"Field 'metric_options'{loc} must be a mapping")
 
-        # Normalization section
+        # 3. Normalization section
         norm_raw = payload.get("normalization", {})
         if not isinstance(norm_raw, dict):
             raise ConfigurationError(f"Field 'normalization'{loc} must be a mapping")
@@ -217,7 +305,7 @@ class ProfileLoader:
             strip_punctuation=bool(norm_raw.get("strip_punctuation", False)),
         )
 
-        # Options section
+        # 4. Options section
         opts_raw = payload.get("options", {})
         if not isinstance(opts_raw, dict):
             raise ConfigurationError(f"Field 'options'{loc} must be a mapping")
@@ -240,8 +328,18 @@ class ProfileLoader:
 
         strict_unknown_ids = bool(opts_raw.get("strict_unknown_ids", False))
         record_history = bool(opts_raw.get("record_history", True))
+        repeat_count = int(opts_raw.get("repeat_count", 1))
+        if repeat_count < 1:
+            raise ConfigurationError(f"Field 'options.repeat_count'{loc} must be >= 1")
+        experiments_dir = opts_raw.get("experiments_dir")
+        if "ids_file" in opts_raw and opts_raw["ids_file"] is not None:
+            ids_file = str(opts_raw["ids_file"])
+        if "selected_ids" in opts_raw and opts_raw["selected_ids"] is not None:
+            if not isinstance(opts_raw["selected_ids"], list):
+                raise ConfigurationError(f"Field 'options.selected_ids'{loc} must be a list of strings")
+            selected_ids = [str(i) for i in opts_raw["selected_ids"]]
 
-        # Output formats
+        # 5. Output formats
         out_raw = payload.get("output_format", ["json", "markdown"])
         if isinstance(out_raw, str):
             out_list = [out_raw]
@@ -262,6 +360,111 @@ class ProfileLoader:
             if canonical_fmt not in normalized_formats:
                 normalized_formats.append(canonical_fmt)
 
+        # 6. Provider section (v0.3.0)
+        provider_raw = payload.get("provider", {})
+        if not isinstance(provider_raw, dict):
+            raise ConfigurationError(f"Field 'provider'{loc} must be a mapping")
+        unknown_prov = set(provider_raw.keys()) - ALLOWED_PROVIDER_KEYS
+        if unknown_prov:
+            raise ConfigurationError(
+                f"Unknown field(s) in 'provider'{loc}: {sorted(unknown_prov)}"
+            )
+        if "name" in provider_raw and provider_raw["name"] is not None:
+            p_name = str(provider_raw["name"]).strip().lower()
+            if p_name not in PROVIDER_REGISTRY:
+                raise ConfigurationError(
+                    f"Unknown model provider '{p_name}' in profile{loc}. "
+                    f"Registered providers: {sorted(PROVIDER_REGISTRY.keys())}"
+                )
+
+        # 7. Generation section (v0.3.0)
+        gen_raw = payload.get("generation", {})
+        if not isinstance(gen_raw, dict):
+            raise ConfigurationError(f"Field 'generation'{loc} must be a mapping")
+        unknown_gen = set(gen_raw.keys()) - ALLOWED_GENERATION_KEYS
+        if unknown_gen:
+            raise ConfigurationError(
+                f"Unknown field(s) in 'generation'{loc}: {sorted(unknown_gen)}"
+            )
+        gen_cfg = GenerationConfig(
+            temperature=float(gen_raw.get("temperature", 0.0)),
+            max_tokens=int(gen_raw.get("max_tokens", 256)),
+            top_p=float(gen_raw.get("top_p", 1.0)),
+            seed=int(gen_raw["seed"]) if gen_raw.get("seed") is not None else None,
+            stop_sequences=list(gen_raw.get("stop_sequences", [])),
+            stream=bool(gen_raw.get("stream", False)),
+            extra_options=dict(gen_raw.get("extra_options", {})),
+        )
+
+        # 8. Performance & Pricing section (v0.3.0)
+        perf_raw = payload.get("performance", {})
+        if not isinstance(perf_raw, dict):
+            raise ConfigurationError(f"Field 'performance'{loc} must be a mapping")
+        unknown_perf = set(perf_raw.keys()) - ALLOWED_PERFORMANCE_KEYS
+        if unknown_perf:
+            raise ConfigurationError(
+                f"Unknown field(s) in 'performance'{loc}: {sorted(unknown_perf)}"
+            )
+        estimate_tokens = bool(perf_raw.get("estimate_missing_tokens", False))
+        pricing_cfg: PricingConfig | None = None
+        if "pricing" in perf_raw and perf_raw["pricing"] is not None:
+            pr_raw = perf_raw["pricing"]
+            if not isinstance(pr_raw, dict):
+                raise ConfigurationError(f"Field 'performance.pricing'{loc} must be a mapping")
+            unknown_pr = set(pr_raw.keys()) - ALLOWED_PRICING_KEYS
+            if unknown_pr:
+                raise ConfigurationError(
+                    f"Unknown field(s) in 'performance.pricing'{loc}: {sorted(unknown_pr)}"
+                )
+            if "prompt_cost_per_1k_tokens" not in pr_raw or "completion_cost_per_1k_tokens" not in pr_raw:
+                raise ConfigurationError(
+                    f"Field 'performance.pricing'{loc} requires both 'prompt_cost_per_1k_tokens' "
+                    "and 'completion_cost_per_1k_tokens'"
+                )
+            pricing_cfg = PricingConfig(
+                prompt_cost_per_1k_tokens=float(pr_raw["prompt_cost_per_1k_tokens"]),
+                completion_cost_per_1k_tokens=float(pr_raw["completion_cost_per_1k_tokens"]),
+                currency=str(pr_raw.get("currency", "USD")),
+            )
+
+        # 9. Privacy section (v0.3.0)
+        priv_raw = payload.get("privacy", {})
+        if not isinstance(priv_raw, dict):
+            raise ConfigurationError(f"Field 'privacy'{loc} must be a mapping")
+        unknown_priv = set(priv_raw.keys()) - ALLOWED_PRIVACY_KEYS
+        if unknown_priv:
+            raise ConfigurationError(
+                f"Unknown field(s) in 'privacy'{loc}: {sorted(unknown_priv)}"
+            )
+        privacy_mode = bool(priv_raw.get("privacy_mode", False))
+
+        # 10. Execution section (v0.3.0)
+        exec_raw = payload.get("execution", {})
+        if not isinstance(exec_raw, dict):
+            raise ConfigurationError(f"Field 'execution'{loc} must be a mapping")
+        unknown_exec = set(exec_raw.keys()) - ALLOWED_EXECUTION_KEYS
+        if unknown_exec:
+            raise ConfigurationError(
+                f"Unknown field(s) in 'execution'{loc}: {sorted(unknown_exec)}"
+            )
+        retry_policy = RetryPolicy(
+            max_attempts=int(exec_raw.get("max_attempts", 3)),
+            initial_backoff_seconds=float(exec_raw.get("initial_backoff_seconds", 0.05)),
+            backoff_multiplier=float(exec_raw.get("backoff_multiplier", 2.0)),
+            max_backoff_seconds=float(exec_raw.get("max_backoff_seconds", 2.0)),
+            retry_on_timeouts=bool(exec_raw.get("retry_on_timeouts", True)),
+        )
+        exec_cfg = ExecutionConfig(
+            timeout_seconds=float(exec_raw.get("timeout_seconds", 30.0)),
+            concurrency=int(exec_raw.get("concurrency", 1)),
+            retry_policy=retry_policy,
+            use_cache=bool(exec_raw.get("use_cache", True)),
+            estimate_missing_tokens=estimate_tokens,
+            privacy_mode=privacy_mode,
+            pricing=pricing_cfg,
+        )
+        cache_dir = exec_raw.get("cache_dir")
+
         return EvaluationProfile(
             name=name.strip(),
             dataset_path=dataset_path.strip() if dataset_path else None,
@@ -269,6 +472,8 @@ class ProfileLoader:
             difficulties=difficulties,
             languages=languages,
             tags=tags,
+            selected_ids=selected_ids,
+            ids_file=ids_file,
             metrics=metrics,
             metric_options=dict(metric_options),
             normalization=norm_cfg,
@@ -276,4 +481,10 @@ class ProfileLoader:
             record_history=record_history,
             output_formats=normalized_formats,
             description=description,
+            provider_config=dict(provider_raw),
+            generation_config=gen_cfg,
+            execution_config=exec_cfg,
+            cache_dir=str(cache_dir) if cache_dir else None,
+            experiments_dir=str(experiments_dir) if experiments_dir else None,
+            repeat_count=repeat_count,
         )

@@ -21,8 +21,10 @@ env/
 .coverage
 htmlcov/
 
-# Generated evaluation reports (keep examples, ignore ad-hoc runs)
+# Local runtime artifacts (keep examples, ignore ad-hoc runs & caches)
 results/
+experiments/
+.openbench_cache/
 
 # OS / Editor files
 .DS_Store

@@ -1,9 +1,10 @@
-"""Dataset loading, validation, filtering, and checksum calculation for OpenBench AI."""
+"""Dataset loading, validation, ID filtering, and checksum calculation for OpenBench AI."""
 
 from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -12,7 +13,142 @@ from openbench.exceptions import DatasetValidationError, EmptyDatasetError
 
 REQUIRED_RECORD_FIELDS = ("id", "category", "prompt", "expected_answer")
 ALLOWED_DIFFICULTIES = {"easy", "medium", "hard"}
-ALLOWED_FIELD_TYPES = {"str", "int", "float", "bool", "list", "dict", "number", "string", "integer", "boolean", "array", "object"}
+ALLOWED_FIELD_TYPES = {
+    "str",
+    "int",
+    "float",
+    "bool",
+    "list",
+    "dict",
+    "number",
+    "string",
+    "integer",
+    "boolean",
+    "array",
+    "object",
+}
+_VALID_ID_TOKEN_RE = re.compile(r"^[A-Za-z0-9_.\-:]+$")
+
+
+@dataclass(frozen=True)
+class IdFilterSpec:
+    """Validated specification of an ID filter loaded from an `--ids-file` or ID list."""
+
+    selected_ids: list[str]
+    duplicate_ids_removed: list[str]
+    source_path: str | None = None
+
+    @property
+    def checksum(self) -> str:
+        """Compute deterministic SHA-256 checksum over the ordered unique selected IDs."""
+        canonical = json.dumps(self.selected_ids, ensure_ascii=False)
+        return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "source_path": self.source_path,
+            "selected_ids_count": len(self.selected_ids),
+            "selected_ids": list(self.selected_ids),
+            "duplicate_ids_removed": list(self.duplicate_ids_removed),
+            "selected_ids_checksum": self.checksum,
+        }
+
+
+def load_ids_file(file_path: str | Path) -> IdFilterSpec:
+    """Load and validate an ID filter file (plain text with one ID per line, or a JSON array of IDs).
+
+    Validation Rules:
+    - Raises `FileNotFoundError` if `file_path` does not exist.
+    - Raises `DatasetValidationError` if `file_path` is a directory, contains invalid characters,
+      or contains zero valid IDs.
+    - Supports plain text (ignoring blank lines and `#` comment lines) or a JSON array of strings.
+    - Deduplicates repeated IDs while preserving first-seen deterministic ordering and recording
+      duplicates in `duplicate_ids_removed`.
+    """
+    target = Path(file_path)
+    if not target.exists():
+        raise FileNotFoundError(f"ID filter file does not exist: {target}")
+    if target.is_dir():
+        raise DatasetValidationError(
+            "Expected an ID filter file path, but received a directory",
+            file_path=target,
+        )
+
+    try:
+        raw_text = target.read_text(encoding="utf-8")
+    except UnicodeDecodeError as exc:
+        raise DatasetValidationError(
+            f"ID filter file is not valid UTF-8 text: {exc}",
+            file_path=target,
+        ) from exc
+
+    if not raw_text.strip():
+        raise EmptyDatasetError(
+            "ID filter file is empty or contains only whitespace",
+            file_path=target,
+        )
+
+    stripped_all = raw_text.strip()
+    raw_entries: list[tuple[int, str]] = []
+
+    if stripped_all.startswith("["):
+        try:
+            parsed = json.loads(stripped_all)
+        except json.JSONDecodeError as exc:
+            raise DatasetValidationError(
+                f"Malformed JSON array in ID filter file: {exc.msg}",
+                file_path=target,
+                line_number=exc.lineno,
+            ) from exc
+        if not isinstance(parsed, list):
+            raise DatasetValidationError(
+                "JSON ID filter file must contain a top-level array of string IDs",
+                file_path=target,
+            )
+        for idx, item in enumerate(parsed, start=1):
+            if not isinstance(item, str) or not item.strip():
+                raise DatasetValidationError(
+                    f"Invalid ID entry at index {idx} in JSON ID filter file; expected non-empty string",
+                    file_path=target,
+                )
+            raw_entries.append((idx, item.strip()))
+    else:
+        for lineno, line in enumerate(raw_text.splitlines(), start=1):
+            clean = line.strip()
+            if not clean or clean.startswith("#"):
+                continue
+            if not _VALID_ID_TOKEN_RE.match(clean):
+                raise DatasetValidationError(
+                    f"Invalid dataset ID '{clean}' on line {lineno} of ID filter file "
+                    "(IDs must contain only alphanumeric characters, underscores, hyphens, dots, or colons)",
+                    file_path=target,
+                    line_number=lineno,
+                )
+            raw_entries.append((lineno, clean))
+
+    if not raw_entries:
+        raise EmptyDatasetError(
+            "ID filter file contains no valid dataset IDs after ignoring comments and blank lines",
+            file_path=target,
+        )
+
+    unique_ids: list[str] = []
+    seen: set[str] = set()
+    duplicates: list[str] = []
+
+    for _, item_id in raw_entries:
+        if item_id in seen:
+            if item_id not in duplicates:
+                duplicates.append(item_id)
+        else:
+            seen.add(item_id)
+            unique_ids.append(item_id)
+
+    return IdFilterSpec(
+        selected_ids=unique_ids,
+        duplicate_ids_removed=duplicates,
+        source_path=str(target),
+    )
 
 
 @dataclass(frozen=True)
@@ -43,11 +179,7 @@ class DatasetRecord:
 
     @property
     def keywords(self) -> list[str]:
-        """Return expected keywords for keyword coverage evaluation.
-
-        If `metadata.keywords` is explicitly provided as a non-empty list, use it.
-        Otherwise, fall back to non-empty tokens extracted from `expected_answer`.
-        """
+        """Return expected keywords for keyword coverage evaluation."""
         raw_keywords = self.metadata.get("keywords")
         if isinstance(raw_keywords, list) and raw_keywords:
             return [str(k) for k in raw_keywords if str(k).strip()]
@@ -142,15 +274,22 @@ class Dataset:
         difficulties: list[str] | None = None,
         tags: list[str] | None = None,
         languages: list[str] | None = None,
+        ids: list[str] | None = None,
     ) -> Dataset:
-        """Return a new Dataset filtered by the specified metadata criteria."""
+        """Return a new Dataset filtered by the specified metadata or ID criteria.
+
+        Preserves the deterministic ordering of `self.records`.
+        """
         cat_set = {c.strip().lower() for c in categories if c.strip()} if categories else None
         diff_set = {d.strip().lower() for d in difficulties if d.strip()} if difficulties else None
         tag_set = {t.strip().lower() for t in tags if t.strip()} if tags else None
         lang_set = {lg.strip().lower() for lg in languages if lg.strip()} if languages else None
+        id_set = {i.strip() for i in ids if i.strip()} if ids is not None else None
 
         filtered: list[DatasetRecord] = []
         for rec in self.records:
+            if id_set is not None and rec.id not in id_set:
+                continue
             if cat_set is not None and rec.category.lower() not in cat_set:
                 continue
             if diff_set is not None and rec.difficulty.lower() not in diff_set:
@@ -165,7 +304,7 @@ class Dataset:
 
         if not filtered:
             raise EmptyDatasetError(
-                f"Applying metadata filters resulted in 0 matching records for dataset '{self.name}'",
+                f"Applying filters resulted in 0 matching records for dataset '{self.name}'",
                 file_path=self.source_path,
             )
 
@@ -177,7 +316,7 @@ class Dataset:
         )
 
     def summary(self) -> dict[str, Any]:
-        """Return summary statistics for the dataset (preserving v0.1.0 keys and adding v0.2.0 metadata)."""
+        """Return summary statistics for the dataset."""
         category_counts: dict[str, int] = {}
         difficulty_counts: dict[str, int] = {}
         language_counts: dict[str, int] = {}
@@ -216,6 +355,7 @@ class DatasetLoader:
         difficulties: list[str] | None = None,
         tags: list[str] | None = None,
         languages: list[str] | None = None,
+        ids: list[str] | None = None,
     ) -> Dataset:
         """Load a dataset from either a single JSONL file or a directory of JSONL files."""
         target = Path(path)
@@ -227,12 +367,13 @@ class DatasetLoader:
         else:
             ds = DatasetLoader.load_file(target, dataset_name=dataset_name)
 
-        if any(x is not None for x in (categories, difficulties, tags, languages)):
+        if any(x is not None for x in (categories, difficulties, tags, languages, ids)):
             return ds.filter(
                 categories=categories,
                 difficulties=difficulties,
                 tags=tags,
                 languages=languages,
+                ids=ids,
             )
         return ds
 
@@ -295,7 +436,6 @@ class DatasetLoader:
             raise EmptyDatasetError("Dataset contains no valid records", file_path=target)
 
         resolved_name = dataset_name or DatasetLoader._infer_dataset_name(target)
-        # Infer dataset version from records if explicitly consistent, else default to 0.1.0 for backward compatibility
         versions = {
             str(r.metadata["version"])
             for r in records
@@ -442,7 +582,6 @@ class DatasetLoader:
                     record_id=record_id,
                 )
 
-        # Additive v0.2.0 optional metadata validation
         for str_meta_field in ("language", "source", "version", "rationale"):
             if str_meta_field in metadata and metadata[str_meta_field] is not None:
                 val = metadata[str_meta_field]

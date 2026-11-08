@@ -10,13 +10,39 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  test-core-only:
+    name: Core-Only Install & Smoke (Python 3.11)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install core package only (no optional extras)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+
+      - name: Verify core CLI, dataset validation, evaluation, and JSON reporting
+        run: |
+          openbench --version
+          openbench --help
+          openbench validate-dataset datasets/reasoning/sample.jsonl
+          openbench evaluate             --dataset datasets/reasoning/sample.jsonl             --responses examples/sample_responses.json             --metrics exact_match accuracy keyword_coverage             --output results/core_only/
+          python -c "import json, pathlib; p = pathlib.Path('results/core_only/alphabaseline-7b.json'); data = json.loads(p.read_text()); assert data['project_version'] == '0.3.1'"
+
+  test-matrix:
     name: Pytest & CLI Smoke (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
 
     steps:
       - name: Checkout repository
@@ -28,24 +54,24 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
 
-      - name: Install core + dev + config + metrics dependencies
+      - name: Install package and dev/config/metrics dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev,config,metrics]"
 
-      - name: Validate all 10 built-in datasets
+      - name: Validate all 10 built-in datasets and self-consistency
         run: python scripts/validate_datasets.py
 
-      - name: Run pytest suite
-        run: pytest -v
+      - name: Run pytest suite with SyntaxWarning treated as error
+        run: pytest -W error::SyntaxWarning -v
 
-      - name: Run CLI smoke tests (v0.1.0 & v0.2.0 commands)
+      - name: Run CLI smoke tests
         run: |
           openbench --version
           openbench list-datasets
-          openbench inspect-dataset datasets/mathematics/sample.jsonl --samples 1
-          openbench dataset-stats datasets/
-          openbench validate-dataset datasets/
-          openbench evaluate --config configs/reasoning.yaml --responses examples/sample_responses.json --output results/
-          openbench history list --store results/history.jsonl
-          openbench export --input results/alphabaseline-7b.json --format csv --output results/exported.csv
+          openbench providers list
+          openbench providers check mock
+          openbench run --config configs/mock_experiment.yaml --experiments-dir results/ci_experiments --cache-dir results/ci_cache
+          openbench runs list --experiments-dir results/ci_experiments
+          openbench cache stats --cache-dir results/ci_cache
+          openbench cache clear --cache-dir results/ci_cache

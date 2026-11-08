@@ -16,7 +16,7 @@ def test_cli_version_flag(capsys: pytest.CaptureFixture[str]) -> None:
         main(["--version"])
     assert exc_info.value.code == 0
     captured = capsys.readouterr()
-    assert "openbench 0.2.0" in captured.out
+    assert "openbench 0.3.1" in captured.out
 
 
 def test_cli_no_arguments_returns_exit_code_2(capsys: pytest.CaptureFixture[str]) -> None:

@@ -10,9 +10,15 @@ from pathlib import Path
 from typing import Any
 
 from openbench.comparison import ComparisonResult
-from openbench.evaluator import EvaluationResult, redact_secrets
+from openbench.evaluator import EvaluationResult
+from openbench.security import redact_sensitive_data
 
-_redact_secrets = redact_secrets
+
+def escape_markdown_cell(value: Any) -> str:
+    """Escape pipe characters (`|`) and newlines so Markdown table cells remain valid."""
+    text = str(value) if value is not None else ""
+    text = text.replace("\r\n", " ").replace("\n", " ").replace("\r", " ")
+    return text.replace("|", r"\|")
 
 
 class ReportGenerator:
@@ -21,7 +27,7 @@ class ReportGenerator:
     @staticmethod
     def to_json(result: EvaluationResult | ComparisonResult, indent: int = 2) -> str:
         """Serialize an EvaluationResult or ComparisonResult to a formatted JSON string."""
-        payload = result.to_dict()
+        payload = redact_sensitive_data(result.to_dict())
         if isinstance(result, EvaluationResult):
             payload["reproducibility_card"] = ReportGenerator.build_reproducibility_card(result)
         return json.dumps(payload, indent=indent, sort_keys=False) + "\n"
@@ -39,14 +45,7 @@ class ReportGenerator:
         result: EvaluationResult | ComparisonResult,
         mode: str = "individual",
     ) -> str:
-        """Serialize an EvaluationResult or ComparisonResult to CSV format.
-
-        For `EvaluationResult`:
-        - `mode="individual"` (default): One row per dataset item with per-metric scores and pass flags.
-        - `mode="aggregate"`: One row per metric with aggregate score, passed items, and missing items.
-        For `ComparisonResult`:
-        - One row per compared model with all metric scores.
-        """
+        """Serialize an EvaluationResult or ComparisonResult to CSV format."""
         buf = io.StringIO()
         writer = csv.writer(buf)
 
@@ -118,7 +117,6 @@ class ReportGenerator:
                 )
             return buf.getvalue()
 
-        # Default: individual item results CSV
         metric_names = list(result.aggregate_results.keys())
         headers = [
             "id",
@@ -166,17 +164,12 @@ class ReportGenerator:
 
     @staticmethod
     def build_reproducibility_card(result: EvaluationResult) -> dict[str, Any]:
-        """Construct the structured Benchmark Reproducibility Card data dictionary.
-
-        Preserves all v0.1.0 keys while adding v0.2.0 reproducibility fields
-        (model_provider, dataset_identifier, dataset_checksum, python_version,
-        operating_system, inference_configuration, metric_configurations, warnings).
-        """
+        """Construct the structured Benchmark Reproducibility Card data dictionary."""
         ds = result.dataset_summary
-        safe_inference_cfg = _redact_secrets(result.inference_config)
-        safe_eval_cfg = _redact_secrets(result.config)
+        safe_inference_cfg = redact_sensitive_data(result.inference_config)
+        safe_eval_cfg = redact_sensitive_data(result.config)
 
-        return {
+        card: dict[str, Any] = {
             "evaluation_id": result.evaluation_id,
             "model_name": result.model_name,
             "model_version": result.model_version,
@@ -190,7 +183,7 @@ class ReportGenerator:
                 {"name": m.get("name"), "version": m.get("version", "0.1.0")}
                 for m in result.metrics_used
             ],
-            "metric_configurations": list(result.metrics_used),
+            "metric_configurations": redact_sensitive_data(list(result.metrics_used)),
             "evaluation_timestamp": result.evaluation_timestamp,
             "python_version": platform.python_version(),
             "openbench_version": result.project_version,
@@ -200,23 +193,30 @@ class ReportGenerator:
             "number_of_test_cases": result.total_dataset_items,
             "evaluated_test_cases": result.evaluated_items_count,
             "missing_responses": result.missing_responses_count,
-            "warnings": list(result.warnings),
+            "warnings": [redact_sensitive_data(w) for w in result.warnings],
             "results": {
                 m_name: round(agg.score, 6)
                 for m_name, agg in result.aggregate_results.items()
             },
             "known_limitations": list(result.limitations),
         }
+        if result.id_filter_summary is not None:
+            card["selected_ids_count"] = result.id_filter_summary.get("selected_ids_count")
+            card["excluded_ids_count"] = result.id_filter_summary.get("excluded_ids_count")
+            card["selected_ids_checksum"] = result.id_filter_summary.get("selected_ids_checksum")
+        return card
 
     @staticmethod
     def format_reproducibility_card_markdown(result: EvaluationResult) -> str:
         """Render the Benchmark Reproducibility Card as a self-contained Markdown section."""
         card = ReportGenerator.build_reproducibility_card(result)
         metrics_str = ", ".join(
-            f"`{m['name']}` (v{m['version']})" for m in card["metrics"]
+            f"`{escape_markdown_cell(m['name'])}` (v{escape_markdown_cell(m['version'])})"
+            for m in card["metrics"]
         )
         results_str = ", ".join(
-            f"**{k}**: {v:.4f} ({v * 100:.2f}%)" for k, v in card["results"].items()
+            f"**{escape_markdown_cell(k)}**: {v:.4f} ({v * 100:.2f}%)"
+            for k, v in card["results"].items()
         )
         norm_cfg = card["evaluation_configuration"].get("normalization", {})
         norm_summary = (
@@ -226,27 +226,43 @@ class ReportGenerator:
             f"strip_punctuation={norm_cfg.get('strip_punctuation', False)}"
         )
 
+        esc_model = escape_markdown_cell(card["model_name"])
+        esc_mver = escape_markdown_cell(card["model_version"])
+        esc_prov = escape_markdown_cell(card["model_provider"])
+        esc_ds = escape_markdown_cell(card["dataset_name"])
+        esc_dver = escape_markdown_cell(card["dataset_version"])
+        esc_dsrc = escape_markdown_cell(card["dataset_source"])
+
         lines = [
             "## Benchmark Reproducibility Card",
             "",
             "| Field | Value |",
             "| :--- | :--- |",
-            f"| **Evaluation ID** | `{card['evaluation_id']}` |",
-            f"| **Model Name & Version** | `{card['model_name']}` (v`{card['model_version']}`) |",
-            f"| **Model Provider** | `{card['model_provider']}` |",
-            f"| **Dataset Name & Version** | `{card['dataset_name']}` (v`{card['dataset_version']}`) |",
-            f"| **Dataset Source Path** | `{card['dataset_source']}` |",
-            f"| **Dataset SHA-256 Checksum** | `{card['dataset_checksum']}` |",
-            f"| **Metrics & Versions** | {metrics_str} |",
-            f"| **Evaluation Timestamp (UTC)** | `{card['evaluation_timestamp']}` |",
-            f"| **Python Environment** | Python `{card['python_version']}` on `{card['operating_system']}` |",
-            f"| **OpenBench AI Version** | `v{card['openbench_version']}` |",
-            f"| **Normalization Config** | `{norm_summary}` |",
-            f"| **Number of Test Cases** | {card['number_of_test_cases']} total ({card['evaluated_test_cases']} evaluated, {card['missing_responses']} missing) |",
-            f"| **Aggregate Results** | {results_str} |",
-            "",
-            "### Known Limitations",
+            f"| **Evaluation ID** | `{escape_markdown_cell(card['evaluation_id'])}` |",
+            f"| **Model Name & Version** | `{esc_model}` (v`{esc_mver}`) |",
+            f"| **Model Provider** | `{esc_prov}` |",
+            f"| **Dataset Name & Version** | `{esc_ds}` (v`{esc_dver}`) |",
+            f"| **Dataset Source Path** | `{esc_dsrc}` |",
+            f"| **Dataset SHA-256 Checksum** | `{escape_markdown_cell(card['dataset_checksum'])}` |",
         ]
+        if "selected_ids_checksum" in card:
+            lines.append(
+                f"| **ID Filter (Selected / Excluded)** | {card['selected_ids_count']} selected, "
+                f"{card['excluded_ids_count']} excluded (SHA-256: `{card['selected_ids_checksum']}`) |"
+            )
+        lines.extend(
+            [
+                f"| **Metrics & Versions** | {metrics_str} |",
+                f"| **Evaluation Timestamp (UTC)** | `{escape_markdown_cell(card['evaluation_timestamp'])}` |",
+                f"| **Python Environment** | Python `{escape_markdown_cell(card['python_version'])}` on `{escape_markdown_cell(card['operating_system'])}` |",
+                f"| **OpenBench AI Version** | `v{escape_markdown_cell(card['openbench_version'])}` |",
+                f"| **Normalization Config** | `{escape_markdown_cell(norm_summary)}` |",
+                f"| **Number of Test Cases** | {card['number_of_test_cases']} total ({card['evaluated_test_cases']} evaluated, {card['missing_responses']} missing) |",
+                f"| **Aggregate Results** | {results_str} |",
+                "",
+                "### Known Limitations",
+            ]
+        )
         for lim in card["known_limitations"]:
             lines.append(f"- {lim}")
         return "\n".join(lines)
@@ -267,34 +283,47 @@ class ReportGenerator:
             f"- **OpenBench AI Version**: `v{result.project_version}`",
             f"- **Test Cases Evaluated**: {result.evaluated_items_count} / {result.total_dataset_items} "
             f"(Missing responses: {result.missing_responses_count})",
-            "",
-            "## Dataset Details",
-            "",
-            f"- **Source Path**: `{ds.get('source_path', 'unknown')}`",
-            f"- **SHA-256 Checksum**: `{ds.get('checksum', 'unknown')}`",
-            f"- **Total Records**: {ds.get('total_records', 0)}",
-            f"- **Categories**: {', '.join(f'`{k}` ({v})' for k, v in ds.get('categories', {}).items()) or 'N/A'}",
-            f"- **Difficulty Breakdown**: {', '.join(f'`{k}` ({v})' for k, v in ds.get('difficulties', {}).items()) or 'N/A'}",
-            "",
-            "## Model Details",
-            "",
-            f"- **Model Name**: `{result.model_name}`",
-            f"- **Model Version**: `{result.model_version}`",
-            f"- **Model Provider**: `{result.model_provider}`",
-            f"- **Evaluated Items**: {result.evaluated_items_count}",
-            f"- **Missing Responses**: {result.missing_responses_count}",
-            f"- **Unknown Response IDs Ignored**: {len(result.unknown_response_ids)}",
-            "",
-            "## Metric Results",
-            "",
-            "| Metric | Version | Aggregate Score | Percentage | Passed Items | Evaluated Items | Total Items |",
-            "| :--- | :--- | ---: | ---: | ---: | ---: | ---: |",
         ]
+        if result.id_filter_summary is not None:
+            idf = result.id_filter_summary
+            lines.append(
+                f"- **ID Filter Applied**: {idf['selected_ids_count']} selected, "
+                f"{idf['excluded_ids_count']} excluded "
+                f"(Selected IDs SHA-256: `{idf['selected_ids_checksum']}`)"
+            )
+
+        lines.extend(
+            [
+                "",
+                "## Dataset Details",
+                "",
+                f"- **Source Path**: `{ds.get('source_path', 'unknown')}`",
+                f"- **SHA-256 Checksum**: `{ds.get('checksum', 'unknown')}`",
+                f"- **Total Records**: {ds.get('total_records', 0)}",
+                f"- **Categories**: {', '.join(f'`{k}` ({v})' for k, v in ds.get('categories', {}).items()) or 'N/A'}",
+                f"- **Difficulty Breakdown**: {', '.join(f'`{k}` ({v})' for k, v in ds.get('difficulties', {}).items()) or 'N/A'}",
+                "",
+                "## Model Details",
+                "",
+                f"- **Model Name**: `{result.model_name}`",
+                f"- **Model Version**: `{result.model_version}`",
+                f"- **Model Provider**: `{result.model_provider}`",
+                f"- **Evaluated Items**: {result.evaluated_items_count}",
+                f"- **Missing Responses**: {result.missing_responses_count}",
+                f"- **Unknown Response IDs Ignored**: {len(result.unknown_response_ids)}",
+                "",
+                "## Metric Results",
+                "",
+                "| Metric | Version | Aggregate Score | Percentage | Passed Items | Evaluated Items | Total Items |",
+                "| :--- | :--- | ---: | ---: | ---: | ---: | ---: |",
+            ]
+        )
 
         for m_name, agg in result.aggregate_results.items():
             pct = agg.score * 100.0
             lines.append(
-                f"| `{m_name}` | `{agg.metric_version}` | {agg.score:.4f} | {pct:.2f}% | "
+                f"| `{escape_markdown_cell(m_name)}` | `{escape_markdown_cell(agg.metric_version)}` | "
+                f"{agg.score:.4f} | {pct:.2f}% | "
                 f"{agg.passed_items} | {agg.evaluated_items} | {agg.total_items} |"
             )
 
@@ -302,7 +331,7 @@ class ReportGenerator:
         if result.category_breakdown:
             lines.extend(["", "## Category-Wise Breakdown", ""])
             header = "| Category | Evaluated / Total | Missing | " + " | ".join(
-                f"`{m}`" for m in metric_cols
+                f"`{escape_markdown_cell(m)}`" for m in metric_cols
             ) + " |"
             sep = "| :--- | ---: | ---: | " + " | ".join("---:" for _ in metric_cols) + " |"
             lines.extend([header, sep])
@@ -312,14 +341,14 @@ class ReportGenerator:
                     for m in metric_cols
                 ]
                 lines.append(
-                    f"| `{cat_name}` | {c_info['evaluated_items']} / {c_info['total_items']} | "
+                    f"| `{escape_markdown_cell(cat_name)}` | {c_info['evaluated_items']} / {c_info['total_items']} | "
                     f"{c_info['missing_items']} | " + " | ".join(m_cells) + " |"
                 )
 
         if result.difficulty_breakdown:
             lines.extend(["", "## Difficulty-Wise Breakdown", ""])
             header = "| Difficulty | Evaluated / Total | Missing | " + " | ".join(
-                f"`{m}`" for m in metric_cols
+                f"`{escape_markdown_cell(m)}`" for m in metric_cols
             ) + " |"
             sep = "| :--- | ---: | ---: | " + " | ".join("---:" for _ in metric_cols) + " |"
             lines.extend([header, sep])
@@ -329,14 +358,14 @@ class ReportGenerator:
                     for m in metric_cols
                 ]
                 lines.append(
-                    f"| `{diff_name}` | {d_info['evaluated_items']} / {d_info['total_items']} | "
+                    f"| `{escape_markdown_cell(diff_name)}` | {d_info['evaluated_items']} / {d_info['total_items']} | "
                     f"{d_info['missing_items']} | " + " | ".join(m_cells) + " |"
                 )
 
         if result.warnings:
             lines.extend(["", "## Warnings", ""])
             for warn in result.warnings:
-                lines.append(f"- **Warning**: {warn}")
+                lines.append(f"- **Warning**: {redact_sensitive_data(warn)}")
 
         lines.extend(["", "## Limitations", ""])
         for lim in result.limitations:
@@ -362,7 +391,6 @@ class ReportGenerator:
             "",
         ]
 
-        # Build dynamic columns for all compared metrics while preserving standard v0.1.0 columns
         extra_metrics = [
             m for m in comparison.metrics_compared
             if m not in {"exact_match", "accuracy", "keyword_coverage"}
@@ -375,7 +403,7 @@ class ReportGenerator:
             "Exact Match",
             "Accuracy",
             "Keyword Coverage",
-            *[f"`{m}`" for m in extra_metrics],
+            *[f"`{escape_markdown_cell(m)}`" for m in extra_metrics],
         ]
         if comparison.weights_used is not None:
             headers.append("User-Weighted Score")
@@ -404,8 +432,8 @@ class ReportGenerator:
                 else "N/A"
             )
             row_cells = [
-                f"`{entry.model_name}`",
-                f"`{entry.model_version}`",
+                f"`{escape_markdown_cell(entry.model_name)}`",
+                f"`{escape_markdown_cell(entry.model_version)}`",
                 f"{entry.evaluated_items} / {entry.total_dataset_items}",
                 str(entry.missing_responses_count),
                 em,
@@ -433,10 +461,10 @@ class ReportGenerator:
 
         for m_name, leader in comparison.highest_by_metric.items():
             pct = leader.highest_score * 100.0
-            models_str = ", ".join(f"`{m}`" for m in leader.leading_models)
+            models_str = ", ".join(f"`{escape_markdown_cell(m)}`" for m in leader.leading_models)
             margin_str = f"+{leader.score_margin:.4f}" if not (len(leader.leading_models) > 1) else "Tie (0.0000)"
             lines.append(
-                f"| `{m_name}` | {leader.highest_score:.4f} | {pct:.2f}% | {margin_str} | {models_str} |"
+                f"| `{escape_markdown_cell(m_name)}` | {leader.highest_score:.4f} | {pct:.2f}% | {margin_str} | {models_str} |"
             )
 
         if comparison.relative_performance:
@@ -447,7 +475,7 @@ class ReportGenerator:
         if comparison.warnings:
             lines.extend(["", "## Warnings", ""])
             for warn in comparison.warnings:
-                lines.append(f"- **Warning**: {warn}")
+                lines.append(f"- **Warning**: {redact_sensitive_data(warn)}")
 
         lines.extend(
             [

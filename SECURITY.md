@@ -2,26 +2,26 @@
 
 ## Supported Versions
 
-OpenBench AI is currently in its initial baseline release (`v0.1.0`). Security fixes are applied to the latest `0.1.x` release series.
+OpenBench AI is maintained by its project owner, and its initial development was AI-assisted. Security updates and maintenance fixes are applied to the latest `0.3.x` release series.
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 0.1.x   | :white_check_mark: |
+| 0.3.x   | :white_check_mark: |
+| < 0.3.0 | :x:                |
 
-## Security Model of OpenBench AI v0.1.0
+## Security Model of OpenBench AI
 
-- **Zero External Network Calls**: OpenBench AI `v0.1.0` operates entirely on local JSONL dataset files and local JSON response files. It does not transmit prompts, responses, or telemetry over the network.
-- **No Arbitrary Code Execution**: The `coding` dataset evaluates language model responses using reference-based deterministic metrics (`exact_match`, `accuracy`, `keyword_coverage`). It does **not** execute untrusted model-generated code via `eval()` or `subprocess`.
+- **Offline-First Core Evaluation**: Evaluating static JSON response files (`openbench evaluate`) operates entirely on local files and makes zero network requests.
+- **No Arbitrary Code Execution**: Model outputs and dataset prompts are treated as untrusted text or parsed with `json.loads()` / `yaml.safe_load()`. OpenBench AI never passes prompts or model responses to `eval()`, `exec()`, `pickle.loads()`, or shell execution.
+- **Centralized Credential Redaction**: `openbench.security.redact_sensitive_data()` and `sanitize_error_message()` scrub sensitive keys, URL query parameters (`?token=...`, `&api_key=...`), `Authorization: Bearer ...` headers, inline credential assignments (`password=...`, `client_secret=...`), and token prefixes from serialized reports, experiment metadata, cache keys, and error logs while preserving live runtime credentials during provider requests.
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in OpenBench AI (such as path traversal in report output handling or unsafe deserialization):
+If you discover a security vulnerability in OpenBench AI:
 
 1. **Do not open a public GitHub issue** if the vulnerability could put users at risk.
-2. **Use GitHub Private Vulnerability Reporting** (if enabled on the repository) or contact the project maintainer directly via their GitHub profile contact address with the subject line `[SECURITY] OpenBench AI Vulnerability Report`.
+2. **Use GitHub Private Vulnerability Reporting** on [https://github.com/lakshaychhaba0001-sys/openbench-ai](https://github.com/lakshaychhaba0001-sys/openbench-ai) or contact the project maintainer (**Lakshay Chhaba**) with the subject line `[SECURITY] OpenBench AI Vulnerability Report`.
 3. Include:
-   - Affected version and component (`dataset.py`, `cli.py`, etc.).
+   - Affected version and module (`security.py`, `cli.py`, etc.).
    - Minimal steps or input files required to reproduce the issue.
-   - Potential impact and suggested remediation (if available).
-
-The maintainer will acknowledge receipt within 7 days and coordinate a fix and disclosure timeline.
+   - Potential impact and suggested remediation.

@@ -1,120 +1,97 @@
-# OpenBench AI (v0.2.0)
+# OpenBench AI (v0.3.1)
 
-**A modular, open-source LLM evaluation and benchmarking toolkit for reproducible, offline-first model comparison.**
+**A modular, open-source LLM experiment execution, evaluation, and benchmarking platform.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](pyproject.toml)
-[![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-2ea44f.svg)](CHANGELOG.md)
+[![Version: 0.3.1](https://img.shields.io/badge/Version-0.3.1-2ea44f.svg)](CHANGELOG.md)
 
 ---
 
 ## Project Overview
 
-**OpenBench AI** is an open-source Python toolkit designed to help developers, students, and AI evaluation researchers evaluate and compare language model outputs against standardized JSONL datasets using transparent, reproducible evaluation methods.
+**OpenBench AI** is a modular Python toolkit and experiment platform designed to help developers and researchers run reproducible language model benchmarks, evaluate model responses against standardized JSONL datasets, monitor latency and token performance, and verify benchmark artifact integrity—without requiring paid commercial API keys.
 
 > **Note**: OpenBench AI is maintained by its project owner, and its initial development was AI-assisted. Contributions, bug reports, and new datasets are welcome!
 
 ---
 
-## What's New in v0.2.0
+## Highlights in v0.3.1 (Maintenance, Security & Reliability Release)
 
-OpenBench AI `v0.2.0` expands the `v0.1.0` baseline while keeping the `v0.1.0` Python APIs, CLI commands, and dataset/response/report schemas backward compatible. The four original datasets grew from 12 to 20 items each, so response files written for `v0.1.0` will show the new items as missing (see the [Migration Guide](V0_2_0_MIGRATION_GUIDE.md)).
-
-1. **200 Original Benchmark Examples across 10 Categories**:
-   - Expanded `reasoning`, `coding`, `instruction_following`, and `safety` to 20 items each (preserving all 48 original `v0.1.0` items verbatim).
-   - Added 6 new 20-item categories: `mathematics`, `debugging`, `factual_knowledge`, `multilingual`, `summarization`, and `structured_output`.
-2. **Dataset Catalog & Discovery (`openbench.catalog`)**:
-   - Inspect, filter, validate, and compute statistics across datasets via `list-datasets`, `inspect-dataset`, and `dataset-stats`.
-3. **12 Registered Evaluation Metrics (`openbench.metrics`)**:
-   - Preserved `exact_match`, `accuracy`, and `keyword_coverage` (`keyword_match`).
-   - Added `precision`, `recall`, `f1`, `rouge` (`rouge_1`, `rouge_l`), `bleu`, `semantic_similarity` (with pluggable embedding providers), and `structured_output` (JSON syntax, required keys, field types, and optional JSON Schema validation).
-4. **Deeper Evaluation & Comparison Analysis**:
-   - Category-wise and difficulty-wise score breakdowns, missing and invalid response breakdowns, optional latency and token usage summaries, runner-up margins, score spread analysis, and optional explicit user-weighted scoring.
-5. **CSV Export, Local Run History & Enhanced Reproducibility Cards**:
-   - Export individual item results, aggregate scores, or model comparisons to `.csv`.
-   - Track longitudinal evaluation runs in a local JSONL store (`openbench history list` / `show`).
-   - Extended **Benchmark Reproducibility Card** with SHA-256 dataset checksums, Python/OS environment details, model provider metadata, and redaction of credential-like configuration keys.
-6. **Declarative YAML Configuration Profiles & Optional Model Adapters**:
-   - Run repeatable evaluations with `openbench evaluate --config configs/reasoning.yaml ...`.
-   - Connect local Python functions (`LocalCallableAdapter`) or optional local Hugging Face pipelines (`HuggingFaceAdapter`).
+- **Like-for-Like Subset Evaluation (`--ids-file`)**: Evaluate response files against an explicit subset of dataset IDs (`openbench evaluate --ids-file legacy_ids.txt ...`) so intentionally excluded dataset records are never penalized as missing responses.
+- **Stronger Value-Level Secret Redaction**: Redacts URL query tokens (`?token=...`, `&api_key=...`), `Authorization: Bearer ...` headers, inline `password=...` / `client_secret=...` assignments, and API token prefixes embedded inside string values while preserving live runtime credentials during model execution.
+- **Optional Fenced JSON Stripping (`strip_markdown_fence`)**: `StructuredOutputMetric` can optionally strip a single valid surrounding Markdown code fence (```` ```json ... ``` ````) when `strip_markdown_fence=True` (default `False`).
+- **Accurate Lexical vs. Semantic Similarity Labeling**: Distinguishes surface n-gram feature hashing (`lexical_similarity` via `LocalNgramEmbeddingProvider`) from neural embedding similarity (`semantic_similarity` via `HuggingFaceEmbeddingProvider` or verified embedding providers).
+- **Stderr Warning Emission & Markdown Table Escaping**: `openbench evaluate` prints evaluation warnings to `stderr` while keeping `stdout` clean, and Markdown tables escape `|` characters in model, dataset, and category names.
+- **Core v0.3.0 Platform Preserved**: Full support for `ExecutionEngine`, `OllamaAdapter`, `HuggingFaceAdapter` (experimental), `MockModelProvider`, `ExperimentManager` (`experiments/run_<id>/`), `RunIntegrityVerifier`, `PerformanceMonitor`, and `BenchmarkAnalytics`.
 
 ---
 
 ## Installation
 
-### Core Installation (Zero External Runtime Dependencies)
-
 ```bash
-git clone https://github.com/<your-username>/openbench-ai.git
+git clone https://github.com/lakshaychhaba0001-sys/openbench-ai.git
 cd openbench-ai
+
+# Core installation (zero external runtime dependencies)
 python -m pip install -e .
-```
 
-### Development & Optional Feature Groups
-
-```bash
-# Recommended for development, testing, YAML configs, and JSON Schema validation
+# Development + YAML config + JSON Schema validation
 python -m pip install -e ".[dev]"
 
-# Install specific optional feature groups
-python -m pip install -e ".[config]"       # PyYAML for YAML configuration profiles
-python -m pip install -e ".[metrics]"      # jsonschema for structured_output schema validation
+# Optional integration groups
+python -m pip install -e ".[huggingface]"  # transformers + torch for local HF models
 python -m pip install -e ".[semantic]"     # sentence-transformers for neural embeddings
-python -m pip install -e ".[huggingface]"  # transformers + torch for HuggingFaceAdapter
 python -m pip install -e ".[all]"          # All optional dependencies
 ```
+
+The Ollama adapter needs no extra packages: it uses the Python standard library HTTP client.
 
 ---
 
 ## Quick Start & CLI Reference
 
-### 1. Explore & Validate the Dataset Catalog
+### 1. Evaluate Static Response Files (Full Dataset or `--ids-file` Subset)
 
 ```bash
-# List all 10 built-in datasets (200 total examples)
-openbench list-datasets
-
-# Inspect metadata, SHA-256 checksum, and sample items
-openbench inspect-dataset datasets/mathematics/sample.jsonl --samples 2
-
-# Compute dataset statistics across the entire repository
-openbench dataset-stats datasets/
-
-# Validate a single dataset or directory tree (v0.1.0 command preserved)
-openbench validate-dataset datasets/
-```
-
-### 2. Evaluate Model Responses (CLI Flags or YAML Profile)
-
-```bash
-# Standard CLI evaluation (v0.1.0 syntax preserved)
+# Full dataset evaluation
 openbench evaluate   --dataset datasets/reasoning/sample.jsonl   --responses examples/sample_responses.json   --metrics exact_match accuracy keyword_coverage   --output results/
 
-# Profile-driven evaluation (v0.2.0)
-openbench evaluate   --config configs/reasoning.yaml   --responses examples/sample_responses.json   --output results/
+# Like-for-like subset evaluation using --ids-file
+openbench evaluate   --dataset datasets/reasoning/sample.jsonl   --responses examples/sample_responses.json   --ids-file legacy_ids.txt   --output results/
 ```
 
-### 3. Compare Multiple Models & Export to CSV
+### 2. Execute a Model Experiment & Manage Runs
 
 ```bash
-python examples/compare_models.py
+openbench providers list
+openbench providers check mock
 
-openbench compare   --results results/model_a.json   --results results/model_b.json   --output results/comparison.md
+openbench run --config configs/mock_experiment.yaml
 
-# Export individual or aggregate evaluation results to CSV
-openbench export   --input results/model_a.json   --format csv   --mode individual   --output results/model_a_items.csv
+openbench runs list
+openbench runs show <RUN_ID>
+openbench runs verify <RUN_ID>
+openbench runs resume <RUN_ID>
+openbench runs compare <RUN_ID_1> <RUN_ID_2> --output results/run_comparison.md
+
+openbench cache stats
+openbench cache clear
 ```
 
-### 4. Track & Inspect Historical Evaluation Runs
+### 3. Explore & Validate the 200-Item Dataset Catalog
 
 ```bash
-openbench history list --store results/history.jsonl
-openbench history show <EVALUATION_ID> --store results/history.jsonl
+openbench list-datasets
+openbench inspect-dataset datasets/mathematics/sample.jsonl --samples 2
+openbench dataset-stats datasets/
+openbench validate-dataset datasets/
+python scripts/validate_datasets.py
 ```
 
 ---
 
-## Built-in Dataset Catalog (200 Original Examples)
+## Built-in Dataset Catalog (200 Examples)
 
 | Category | Path | Examples | Highlights |
 | :--- | :--- | ---: | :--- |
@@ -143,40 +120,23 @@ openbench history show <EVALUATION_ID> --store results/history.jsonl
 | `f1` | `0.2.0` | Harmonic mean of `precision` and `recall`. | Ignores word order outside discrete elements. |
 | `rouge` / `rouge_1` / `rouge_l` | `0.2.0` | Unigram (`rouge_1`) and LCS (`rouge_l`) overlap F1. | Cannot detect factual hallucinations or antonym flips. |
 | `bleu` | `0.2.0` | Smoothed clipped $n$-gram precision with brevity penalty. | Penalizes valid synonyms and paraphrases. |
-| `semantic_similarity` | `0.2.0` | Embedding cosine similarity via configurable `EmbeddingProvider`. | **Not factual correctness**; opposite statements can have high similarity. The default `local_ngram_hash` provider is lexical, not a neural semantic model. |
+| `semantic_similarity` | `0.2.0` | Embedding cosine similarity via configurable `EmbeddingProvider`; with the default `local_ngram_hash` provider it is a legacy alias for `lexical_similarity`. Pass `require_semantic_provider=True` to require a neural embedding provider. | **Not factual correctness**; opposite statements can have high similarity. |
+| `lexical_similarity` | `0.3.1` | Cosine similarity of hashed word and character 3-gram features. | Surface wording only; paraphrases score low and negations score high. |
 | `structured_output` | `0.2.0` | Validates JSON syntax, required keys, field types, and JSON Schema. | Structural validity is separate from factual value accuracy. |
 
 ---
 
 ## Documentation Index
 
-- [Installation Guide](docs/installation.md)
-- [Usage & CLI Reference](docs/usage.md)
-- [Architecture Overview](docs/architecture.md)
-- [Backward Compatibility Contract](docs/backward_compatibility.md)
-- [Dataset Catalog & Schema Guide](docs/dataset_catalog.md)
-- [Core Metrics Reference](docs/metrics.md)
-- [Advanced Metrics Reference (v0.2.0)](docs/advanced_metrics.md)
-- [Evaluation Methodology & Reproducibility](docs/evaluation_methodology.md)
-- [YAML Configuration Profiles](docs/configuration.md)
-- [Optional Model Integrations & Adapters](docs/integrations.md)
-- [Local Historical Tracking](docs/historical_tracking.md)
-- [Future Dashboard Architecture](docs/dashboard_architecture.md)
-- [Contributing Guide](CONTRIBUTING.md)
-- [v0.2.0 Migration Guide](V0_2_0_MIGRATION_GUIDE.md)
-- [v0.2.0 Build Instructions](V0_2_0_BUILD_INSTRUCTIONS.md)
-- [v0.2.0 Validation Checklist](V0_2_0_VALIDATION_CHECKLIST.md)
-- [Backward Compatibility Report](BACKWARD_COMPATIBILITY_REPORT.md)
-
----
-
-## Roadmap
-
-- **v0.1.0 (Completed)**: JSONL dataset loader, deterministic baseline metrics (`exact_match`, `accuracy`, `keyword_coverage`), model comparison, JSON/Markdown reports, Reproducibility Card, CLI, tests, and CI.
-- **v0.2.0 (Current Release)**: 200 examples across 10 categories, dataset catalog/stats, advanced metrics (`precision`, `recall`, `f1`, `rouge`, `bleu`, `semantic_similarity`, `structured_output`), category/difficulty breakdowns, CSV export, local run history, YAML profiles, and model adapters.
-- **v0.3.0**: Native local inference servers (llama.cpp / vLLM / Ollama runner integration) and execution-based code sandbox evaluation.
-- **v0.5.0**: Structured human evaluation workflows and pairwise Bradley-Terry/Elo ranking.
-- **v1.0.0**: Interactive web dashboard consuming OpenBench JSON/JSONL contracts and verified community benchmark leaderboards.
+- **Execution, Providers & Integrity**:
+  - [Model Execution Engine](docs/model_execution.md) | [Providers Overview](docs/providers.md) | [Local Ollama Guide](docs/ollama.md) | [Hugging Face Guide (Experimental)](docs/huggingface.md) | [Custom Provider Guide](docs/custom_provider.md)
+  - [Experiment Tracking](docs/experiment_tracking.md) | [Performance Monitoring](docs/performance_monitoring.md) | [Reliability & Caching](docs/reliability.md) | [Benchmark Integrity](docs/benchmark_integrity.md) | [Security & Privacy](docs/security_and_privacy.md)
+- **Datasets, Metrics & Compatibility**:
+  - [Installation Guide](docs/installation.md) | [Usage Reference](docs/usage.md) | [Architecture](docs/architecture.md)
+  - [Dataset Catalog](docs/dataset_catalog.md) | [Core Metrics](docs/metrics.md) | [Advanced Metrics (v0.3.1)](docs/advanced_metrics.md)
+  - [YAML Configuration Profiles](docs/configuration.md) | [Historical Tracking](docs/historical_tracking.md) | [Compatibility Guide](docs/v0_3_compatibility.md)
+- **v0.3.1 Release Deliverables**:
+  - [v0.3.1 Compatibility Report](V0_3_1_COMPATIBILITY_REPORT.md) | [v0.3.1 Validation Report](V0_3_1_VALIDATION_REPORT.md) | [v0.3.1 Integration Guide](V0_3_1_INTEGRATION_GUIDE.md) | [v0.3.1 Change Manifest](V0_3_1_CHANGE_MANIFEST.json)
 
 ---
 

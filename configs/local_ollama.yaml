@@ -1,0 +1,52 @@
+name: local-ollama-reasoning
+description: Local Ollama execution profile with retries, timeout, and performance monitoring.
+
+dataset:
+  path: datasets/reasoning/sample.jsonl
+  category: reasoning
+
+provider:
+  name: ollama
+  model: llama3.2
+  model_version: latest
+  endpoint: http://localhost:11434
+
+generation:
+  temperature: 0.0
+  max_tokens: 128
+  top_p: 1.0
+  seed: 42
+  stream: false
+
+execution:
+  timeout_seconds: 30.0
+  concurrency: 2
+  use_cache: true
+  max_attempts: 3
+  initial_backoff_seconds: 0.2
+  backoff_multiplier: 2.0
+  max_backoff_seconds: 2.0
+  retry_on_timeouts: true
+
+performance:
+  estimate_missing_tokens: false
+
+privacy:
+  privacy_mode: false
+
+metrics:
+  - exact_match
+  - accuracy
+  - keyword_coverage
+  - f1
+
+options:
+  difficulty:
+    - easy
+    - medium
+    - hard
+  record_history: true
+
+output_format:
+  - json
+  - markdown
