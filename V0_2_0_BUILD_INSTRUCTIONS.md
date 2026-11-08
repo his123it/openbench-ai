@@ -45,7 +45,7 @@ openbench dataset-stats datasets/
 ## 4. Running Tests & Linters
 
 ```bash
-# Run full pytest test suite (13 test files, 59 test functions)
+# Run full pytest test suite (13 test files, 61 test functions)
 pytest -v
 
 # Run Ruff linter

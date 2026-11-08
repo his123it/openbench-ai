@@ -46,7 +46,7 @@ OpenBench AI never treats arbitrary free-form text similarity as classification 
 ## 4. Semantic Similarity (`semantic_similarity`)
 
 - **Adapter Architecture**: Accepts any `EmbeddingProvider` implementation:
-  - `LocalNgramEmbeddingProvider` (default): Zero-dependency, deterministic SHA-256 word + character 3-gram feature hashing into a normalized vector space.
+  - `LocalNgramEmbeddingProvider` (default): Zero-dependency, deterministic SHA-256 word + character 3-gram feature hashing into a normalized vector space. This is a **lexical** measure: paraphrases with different wording score low and negated sentences score high. Use a neural `EmbeddingProvider` for semantic comparisons.
   - `CallableEmbeddingProvider`: Wraps any user-supplied function `fn(text: str) -> list[float]`.
   - `HuggingFaceEmbeddingProvider`: Optional adapter for `sentence-transformers` models (defaults to `local_files_only=True` so weights are never downloaded without explicit user consent).
 - **Methodological Warning**:
@@ -60,6 +60,7 @@ OpenBench AI never treats arbitrary free-form text similarity as classification 
   1. Verifies `json.loads()` syntactic validity (`valid_json`).
   2. Checks presence of all `metadata["required_keys"]` (or keys inferred from a JSON reference answer).
   3. Checks Python/JSON types specified in `metadata["field_types"]`.
-  4. Validates against `metadata["expected_schema"]` using `jsonschema` when installed.
+  4. Validates against `metadata["expected_schema"]` using `jsonschema` when installed. Without `jsonschema`, schema validation is skipped and reported as `schema_validated: false`.
+  - Responses wrapped in Markdown code fences (```` ```json ````) are not unwrapped and fail JSON parsing.
 - **Separation of Structure vs. Semantics**:
   Reports `valid_structure` (`structure_score`) separately from `value_match` (`value_match_rate`). By default (`require_value_match=False`), an item passes if its JSON structure and schema are 100% valid even if specific field values differ.

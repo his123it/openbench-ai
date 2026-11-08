@@ -35,11 +35,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **New CLI Commands (`openbench.cli`)**:
   - Added `openbench list-datasets`, `openbench inspect-dataset`, `openbench dataset-stats`, `openbench history list`, `openbench history show`, `openbench export --format csv`, and `openbench evaluate --config`.
 - **Documentation & Testing**:
-  - Added 7 new documentation guides in `docs/` and 7 new test modules in `tests/` (bringing the total test suite to 59 tests across 13 test files).
+  - Added 7 new documentation guides in `docs/` and 7 new test modules in `tests/` (bringing the total test suite to 61 tests across 13 test files).
 
 ### Changed
 - Bumped package version from `0.1.0` to `0.2.0` in `pyproject.toml` and `src/openbench/__init__.py`.
 - Added optional dependency groups (`metrics`, `semantic`, `config`, `huggingface`, `all`) in `pyproject.toml` while keeping core runtime dependencies empty (`dependencies = []`).
+
+### Fixed
+- JSON reports no longer write credential-like `inference_config` keys (e.g. `api_key`, `auth_token`) in plain text under `model.inference_config`; they are redacted as in the reproducibility card.
+- `precision`, `recall`, `f1`, `rouge`, and `bleu` now handle symbol-only answers (e.g. `$?`): identical answers score `1.0` and different symbols score `0.0`, instead of `0.0` and `1.0` respectively.
+- LaTeX formulas in metric docstrings no longer contain invalid escape sequences.
+- Corrected optional-dependency install hints in error messages.
+- Dataset fixes: removed contradictory alternative keywords from 5 new records, aligned 2 summarization references with their keywords, disambiguated `debugging_018` and `multilingual_004`, and set new records' `version` metadata to `0.2.0`.
 
 ---
 

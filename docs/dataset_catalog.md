@@ -35,7 +35,7 @@ OpenBench AI `v0.2.0` provides **200 original evaluation examples** across **10 
     "keywords": ["180"],
     "language": "en",
     "source": "original",
-    "version": "1.0"
+    "version": "0.2.0"
   }
 }
 ```

@@ -18,7 +18,7 @@
 
 ## What's New in v0.2.0
 
-OpenBench AI `v0.2.0` expands the `v0.1.0` baseline while maintaining **100% backward compatibility** with all `v0.1.0` APIs, CLI commands, datasets, and schemas:
+OpenBench AI `v0.2.0` expands the `v0.1.0` baseline while keeping the `v0.1.0` Python APIs, CLI commands, and dataset/response/report schemas backward compatible. The four original datasets grew from 12 to 20 items each, so response files written for `v0.1.0` will show the new items as missing (see the [Migration Guide](V0_2_0_MIGRATION_GUIDE.md)).
 
 1. **200 Original Benchmark Examples across 10 Categories**:
    - Expanded `reasoning`, `coding`, `instruction_following`, and `safety` to 20 items each (preserving all 48 original `v0.1.0` items verbatim).
@@ -33,7 +33,7 @@ OpenBench AI `v0.2.0` expands the `v0.1.0` baseline while maintaining **100% bac
 5. **CSV Export, Local Run History & Enhanced Reproducibility Cards**:
    - Export individual item results, aggregate scores, or model comparisons to `.csv`.
    - Track longitudinal evaluation runs in a local JSONL store (`openbench history list` / `show`).
-   - Extended **Benchmark Reproducibility Card** with SHA-256 dataset checksums, Python/OS environment details, model provider metadata, and automatic secret redaction.
+   - Extended **Benchmark Reproducibility Card** with SHA-256 dataset checksums, Python/OS environment details, model provider metadata, and redaction of credential-like configuration keys.
 6. **Declarative YAML Configuration Profiles & Optional Model Adapters**:
    - Run repeatable evaluations with `openbench evaluate --config configs/reasoning.yaml ...`.
    - Connect local Python functions (`LocalCallableAdapter`) or optional local Hugging Face pipelines (`HuggingFaceAdapter`).
@@ -143,7 +143,7 @@ openbench history show <EVALUATION_ID> --store results/history.jsonl
 | `f1` | `0.2.0` | Harmonic mean of `precision` and `recall`. | Ignores word order outside discrete elements. |
 | `rouge` / `rouge_1` / `rouge_l` | `0.2.0` | Unigram (`rouge_1`) and LCS (`rouge_l`) overlap F1. | Cannot detect factual hallucinations or antonym flips. |
 | `bleu` | `0.2.0` | Smoothed clipped $n$-gram precision with brevity penalty. | Penalizes valid synonyms and paraphrases. |
-| `semantic_similarity` | `0.2.0` | Embedding cosine similarity via configurable `EmbeddingProvider`. | **Not factual correctness**; opposite statements can have high similarity. |
+| `semantic_similarity` | `0.2.0` | Embedding cosine similarity via configurable `EmbeddingProvider`. | **Not factual correctness**; opposite statements can have high similarity. The default `local_ngram_hash` provider is lexical, not a neural semantic model. |
 | `structured_output` | `0.2.0` | Validates JSON syntax, required keys, field types, and JSON Schema. | Structural validity is separate from factual value accuracy. |
 
 ---

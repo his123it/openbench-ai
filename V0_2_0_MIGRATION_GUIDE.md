@@ -21,6 +21,7 @@ python -m pip install -e ".[dev,config,metrics]"
 - **Imports**: `from openbench import DatasetLoader, Evaluator, ModelComparator, ReportGenerator` works identically.
 - **CLI Commands**: `openbench validate-dataset`, `openbench evaluate`, `openbench compare`, and `openbench --version` retain all existing flags and exit codes.
 - **Built-in Datasets**: All 48 original records in `datasets/reasoning/sample.jsonl`, `datasets/coding/sample.jsonl`, `datasets/instruction_following/sample.jsonl`, and `datasets/safety/sample.jsonl` retain their exact IDs (`reasoning_001`–`012`, etc.). Note that each of those 4 files now includes 8 additional items (`_013`–`_020`) bringing each category to 20 items.
+  - **Score impact**: a `v0.1.0` response file that only answers the original 12 IDs will report the 8 new items as missing, and missing items count as `0.0` in aggregate scores. For like-for-like comparison with earlier results, use `evaluated_only_score` in each metric's `details`, add responses for the new IDs, or evaluate against the `v0.1.0` copy of the dataset.
 
 ---
 
