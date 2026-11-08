@@ -28,8 +28,12 @@ def _exp_dataset(tmp_path: Path) -> Dataset:
     return DatasetLoader.load_file(ds_file)
 
 
-def test_experiment_create_inspect_verify_and_tamper_detection(tmp_path: Path) -> None:
+def test_experiment_create_inspect_verify_and_tamper_detection(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """ExperimentManager creates all 7 run artifacts, passes integrity check, and detects tampered files."""
+    # Isolate the default .openbench_cache/ (cwd-relative) so runs never share cached responses.
+    monkeypatch.chdir(tmp_path)
     ds = _exp_dataset(tmp_path)
     manager = ExperimentManager(experiments_root=tmp_path / "experiments")
     mock = MockModelProvider(model_name="exp-mock-v1", simulated_latency_ms=0.5)
@@ -64,8 +68,12 @@ def test_experiment_create_inspect_verify_and_tamper_detection(tmp_path: Path) -
     assert "responses.json" in check_bad.invalid_checksums
 
 
-def test_experiment_interrupted_run_recovery_and_resumption(tmp_path: Path) -> None:
+def test_experiment_interrupted_run_recovery_and_resumption(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """An interrupted/partial run can be resumed via manager.resume_run without re-running completed items."""
+    # Isolate the default .openbench_cache/ (cwd-relative) so runs never share cached responses.
+    monkeypatch.chdir(tmp_path)
     ds = _exp_dataset(tmp_path)
     manager = ExperimentManager(experiments_root=tmp_path / "experiments")
 
