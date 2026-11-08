@@ -1,0 +1,54 @@
+{
+  "model_name": "AlphaBaseline-7B",
+  "model_version": "1.0",
+  "responses": [
+    {
+      "id": "reasoning_001",
+      "response": "180"
+    },
+    {
+      "id": "reasoning_002",
+      "response": "12"
+    },
+    {
+      "id": "reasoning_003",
+      "response": "37"
+    },
+    {
+      "id": "reasoning_004",
+      "response": "Yes"
+    },
+    {
+      "id": "reasoning_005",
+      "response": "The cargo train covers 260 kilometers."
+    },
+    {
+      "id": "reasoning_006",
+      "response": "120"
+    },
+    {
+      "id": "reasoning_007",
+      "response": "R2"
+    },
+    {
+      "id": "reasoning_008",
+      "response": "7"
+    },
+    {
+      "id": "reasoning_009",
+      "response": "60"
+    },
+    {
+      "id": "reasoning_010",
+      "response": "4"
+    },
+    {
+      "id": "reasoning_011",
+      "response": "84"
+    },
+    {
+      "id": "reasoning_012",
+      "response": "1/2"
+    }
+  ]
+}

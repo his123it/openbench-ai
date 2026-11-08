@@ -1,0 +1,307 @@
+{
+  "project": "OpenBench AI",
+  "version": "0.1.0",
+  "total_files": 50,
+  "files": [
+    {
+      "path": "src/openbench/__init__.py",
+      "purpose": "Package initialization, version string (0.1.0), and public API exports.",
+      "type": "python_source",
+      "required_for_baseline": true
+    },
+    {
+      "path": "src/openbench/exceptions.py",
+      "purpose": "Custom exception hierarchy with file path, line number, and record ID context.",
+      "type": "python_source",
+      "required_for_baseline": true
+    },
+    {
+      "path": "src/openbench/dataset.py",
+      "purpose": "JSONL dataset loader, directory loader, schema validator, and duplicate/missing ID detector.",
+      "type": "python_source",
+      "required_for_baseline": true
+    },
+    {
+      "path": "src/openbench/evaluator.py",
+      "purpose": "Model response JSON loader, central evaluation engine, and structured EvaluationResult.",
+      "type": "python_source",
+      "required_for_baseline": true
+    },
+    {
+      "path": "src/openbench/comparison.py",
+      "purpose": "Multi-model comparison engine identifying per-metric leaders without misleading composite rankings.",
+      "type": "python_source",
+      "required_for_baseline": true
+    },
+    {
+      "path": "src/openbench/reporting.py",
+      "purpose": "JSON and Markdown report generator including the Benchmark Reproducibility Card.",
+      "type": "python_source",
+      "required_for_baseline": true
+    },
+    {
+      "path": "src/openbench/cli.py",
+      "purpose": "Command-line interface implementing validate-dataset, evaluate, compare, and --version.",
+      "type": "python_source",
+      "required_for_baseline": true
+    },
+    {
+      "path": "src/openbench/metrics/__init__.py",
+      "purpose": "Metric registry, factory function (create_metric), and custom metric registration API.",
+      "type": "python_source",
+      "required_for_baseline": true
+    },
+    {
+      "path": "src/openbench/metrics/base.py",
+      "purpose": "Abstract BaseMetric interface and structured MetricResult/AggregateMetricResult dataclasses.",
+      "type": "python_source",
+      "required_for_baseline": true
+    },
+    {
+      "path": "src/openbench/metrics/normalization.py",
+      "purpose": "Configurable text normalization (whitespace, case sensitivity, punctuation preservation).",
+      "type": "python_source",
+      "required_for_baseline": true
+    },
+    {
+      "path": "src/openbench/metrics/exact_match.py",
+      "purpose": "Exact Match evaluation metric comparing normalized model output to expected answer.",
+      "type": "python_source",
+      "required_for_baseline": true
+    },
+    {
+      "path": "src/openbench/metrics/accuracy.py",
+      "purpose": "Deterministic Accuracy metric with exact and word-bounded containment rules.",
+      "type": "python_source",
+      "required_for_baseline": true
+    },
+    {
+      "path": "src/openbench/metrics/keyword_match.py",
+      "purpose": "Keyword Coverage metric returning matched/missing keywords and coverage percentage.",
+      "type": "python_source",
+      "required_for_baseline": true
+    },
+    {
+      "path": "datasets/reasoning/sample.jsonl",
+      "purpose": "Original 12-item reasoning evaluation dataset across easy, medium, and hard difficulties.",
+      "type": "dataset_jsonl",
+      "required_for_baseline": true
+    },
+    {
+      "path": "datasets/coding/sample.jsonl",
+      "purpose": "Original 12-item coding and computer science evaluation dataset.",
+      "type": "dataset_jsonl",
+      "required_for_baseline": true
+    },
+    {
+      "path": "datasets/instruction_following/sample.jsonl",
+      "purpose": "Original 12-item instruction-following and formatting constraint evaluation dataset.",
+      "type": "dataset_jsonl",
+      "required_for_baseline": true
+    },
+    {
+      "path": "datasets/safety/sample.jsonl",
+      "purpose": "Original 12-item reference-based safety and defensive guidance evaluation dataset.",
+      "type": "dataset_jsonl",
+      "required_for_baseline": true
+    },
+    {
+      "path": "examples/sample_responses.json",
+      "purpose": "Sample model response set (AlphaBaseline-7B) for testing and quickstart evaluation.",
+      "type": "json_data",
+      "required_for_baseline": true
+    },
+    {
+      "path": "examples/basic_evaluation.py",
+      "purpose": "Runnable example demonstrating single-model evaluation and report generation via the Python API.",
+      "type": "python_script",
+      "required_for_baseline": true
+    },
+    {
+      "path": "examples/compare_models.py",
+      "purpose": "Runnable example demonstrating multi-model evaluation and side-by-side comparison reports.",
+      "type": "python_script",
+      "required_for_baseline": true
+    },
+    {
+      "path": "tests/test_dataset.py",
+      "purpose": "Pytest unit tests for JSONL dataset loading, malformed JSON, missing fields, and duplicate IDs.",
+      "type": "python_test",
+      "required_for_baseline": true
+    },
+    {
+      "path": "tests/test_metrics.py",
+      "purpose": "Pytest unit tests for normalization, exact match, accuracy, keyword coverage, and custom metrics.",
+      "type": "python_test",
+      "required_for_baseline": true
+    },
+    {
+      "path": "tests/test_evaluator.py",
+      "purpose": "Pytest unit tests for response loading, duplicate response IDs, missing items, and multi-model evaluation.",
+      "type": "python_test",
+      "required_for_baseline": true
+    },
+    {
+      "path": "tests/test_comparison.py",
+      "purpose": "Pytest unit tests for multi-model comparison, per-metric leaders, and tie handling.",
+      "type": "python_test",
+      "required_for_baseline": true
+    },
+    {
+      "path": "tests/test_reporting.py",
+      "purpose": "Pytest unit tests for JSON/Markdown report generation and Benchmark Reproducibility Cards.",
+      "type": "python_test",
+      "required_for_baseline": true
+    },
+    {
+      "path": "tests/test_cli.py",
+      "purpose": "End-to-end pytest tests for CLI commands (validate-dataset, evaluate, compare, --version) and exit codes.",
+      "type": "python_test",
+      "required_for_baseline": true
+    },
+    {
+      "path": "docs/installation.md",
+      "purpose": "Detailed installation guide for editable, development, and offline environments.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true
+    },
+    {
+      "path": "docs/usage.md",
+      "purpose": "CLI and Python API usage guide.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true
+    },
+    {
+      "path": "docs/architecture.md",
+      "purpose": "Modular system architecture and component responsibility documentation.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true
+    },
+    {
+      "path": "docs/metrics.md",
+      "purpose": "Detailed metric specifications, normalization rules, and explicit limitations.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true
+    },
+    {
+      "path": "docs/evaluation_methodology.md",
+      "purpose": "Evaluation methodology, missing-response handling, reproducibility cards, and safety disclaimers.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true
+    },
+    {
+      "path": "docs/contributing.md",
+      "purpose": "Developer architecture notes for extending datasets, metrics, and CLI commands.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true
+    },
+    {
+      "path": "scripts/validate_datasets.py",
+      "purpose": "Utility script to validate all JSONL datasets and check cross-dataset ID uniqueness.",
+      "type": "python_script",
+      "required_for_baseline": true
+    },
+    {
+      "path": "scripts/run_example.py",
+      "purpose": "End-to-end runner executing dataset validation, basic evaluation, and model comparison examples.",
+      "type": "python_script",
+      "required_for_baseline": true
+    },
+    {
+      "path": ".github/workflows/tests.yml",
+      "purpose": "GitHub Actions workflow running dataset validation and pytest across Python 3.10, 3.11, and 3.12.",
+      "type": "ci_workflow_yaml",
+      "required_for_baseline": true
+    },
+    {
+      "path": ".github/workflows/lint.yml",
+      "purpose": "GitHub Actions workflow running Ruff linter checks.",
+      "type": "ci_workflow_yaml",
+      "required_for_baseline": true
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/bug_report.md",
+      "purpose": "GitHub issue template for structured bug reports.",
+      "type": "github_template",
+      "required_for_baseline": true
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/feature_request.md",
+      "purpose": "GitHub issue template for proposing new features, datasets, or metrics.",
+      "type": "github_template",
+      "required_for_baseline": true
+    },
+    {
+      "path": ".github/pull_request_template.md",
+      "purpose": "GitHub pull request template with verification checklist.",
+      "type": "github_template",
+      "required_for_baseline": true
+    },
+    {
+      "path": "README.md",
+      "purpose": "Primary project documentation, transparency statement, quickstart, CLI guide, and roadmap.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "purpose": "Root contributor guide covering environment setup, testing, dataset creation, and custom metrics.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true
+    },
+    {
+      "path": "CODE_OF_CONDUCT.md",
+      "purpose": "Contributor Covenant v2.1 Code of Conduct.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true
+    },
+    {
+      "path": "SECURITY.md",
+      "purpose": "Security policy and responsible vulnerability reporting instructions.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true
+    },
+    {
+      "path": "CHANGELOG.md",
+      "purpose": "Release history and changelog for v0.1.0.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true
+    },
+    {
+      "path": "LICENSE",
+      "purpose": "MIT open-source license.",
+      "type": "license",
+      "required_for_baseline": true
+    },
+    {
+      "path": "pyproject.toml",
+      "purpose": "PEP 621 package configuration, build system, CLI entry point, pytest, and Ruff settings.",
+      "type": "configuration_toml",
+      "required_for_baseline": true
+    },
+    {
+      "path": ".gitignore",
+      "purpose": "Git ignore rules for Python bytecode, virtualenvs, build artifacts, and local results.",
+      "type": "configuration_git",
+      "required_for_baseline": true
+    },
+    {
+      "path": "BUILD_INSTRUCTIONS.md",
+      "purpose": "Step-by-step build, installation, testing, linting, and CLI verification guide.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true
+    },
+    {
+      "path": "VALIDATION_CHECKLIST.md",
+      "purpose": "Pre-release quality and completeness verification checklist.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true
+    },
+    {
+      "path": "FILE_MANIFEST.json",
+      "purpose": "Machine-readable manifest of all files in the OpenBench AI v0.1.0 baseline repository.",
+      "type": "json_manifest",
+      "required_for_baseline": true
+    }
+  ]
+}
