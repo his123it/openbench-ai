@@ -39,7 +39,7 @@ def _lcs_length(xs: list[str], ys: list[str]) -> int:
 
 
 class RougeMetric(BaseMetric):
-    """Computes ROUGE-1 (unigram overlap) and ROUGE-L (LCS overlap) F1, precision, and recall.
+    r"""Computes ROUGE-1 (unigram overlap) and ROUGE-L (LCS overlap) F1, precision, and recall.
 
     Supported variants (`variant` parameter):
     - `"rouge_l"` (default when instantiated as `rouge` or `rouge_l`): Uses Longest Common

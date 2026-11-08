@@ -7,7 +7,12 @@ from openbench.adapters import (
     LocalCallableAdapter,
 )
 from openbench.catalog import DatasetCatalog, DatasetCatalogEntry
-from openbench.comparison import ComparisonResult, MetricLeader, ModelComparator, ModelComparisonEntry
+from openbench.comparison import (
+    ComparisonResult,
+    MetricLeader,
+    ModelComparator,
+    ModelComparisonEntry,
+)
 from openbench.configuration import EvaluationProfile, ProfileLoader
 from openbench.dataset import Dataset, DatasetLoader, DatasetRecord
 from openbench.evaluator import (

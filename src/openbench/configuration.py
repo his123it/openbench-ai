@@ -104,7 +104,7 @@ class ProfileLoader:
         except ImportError as exc:
             raise ConfigurationError(
                 "Optional dependency 'PyYAML' is required to load YAML configuration profiles. "
-                "Install it with `pip install -e '\".[config]\"'`."
+                "Install it with `pip install -e '.[config]'`."
             ) from exc
 
         raw_text = target.read_text(encoding="utf-8")

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from openbench.dataset import Dataset, DatasetLoader
+from openbench.dataset import DatasetLoader
 
 
 @dataclass(frozen=True)

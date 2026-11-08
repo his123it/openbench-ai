@@ -81,7 +81,8 @@ def test_huggingface_adapter_mock_pipeline_and_missing_dep_handling() -> None:
     ds = _mini_dataset()
 
     # 1. With mock pipeline
-    mock_pipe = lambda prompt, **kwargs: [{"generated_text": "180"}]
+    def mock_pipe(prompt, **kwargs):
+        return [{"generated_text": "180"}]
     hf_mock = HuggingFaceAdapter(
         model_id="org/test-tiny-llm",
         revision="v1.0",

@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from openbench.dataset import Dataset, DatasetLoader, DatasetRecord
+from openbench.dataset import Dataset, DatasetLoader
 from openbench.exceptions import ConfigurationError, ResponseValidationError
 from openbench.metrics import (
     AggregateMetricResult,

@@ -11,7 +11,7 @@ from openbench.metrics.precision import extract_decision_elements
 
 
 class RecallMetric(BaseMetric):
-    """Calculates recall for binary correctness decisions and element-set predictions.
+    r"""Calculates recall for binary correctness decisions and element-set predictions.
 
     Definition:
     - Item-level recall: $\text{Recall} = \frac{\text{TP}}{\text{TP} + \text{FN}}$

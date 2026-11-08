@@ -19,7 +19,7 @@ def extract_decision_elements(
     response_text: str,
     normalization: NormalizationConfig,
 ) -> tuple[str, int, int, int, int, dict[str, Any]]:
-    """Derive True Positives (TP), False Positives (FP), False Negatives (FN), and True Negatives (TN).
+    r"""Derive True Positives (TP), False Positives (FP), False Negatives (FN), and True Negatives (TN).
 
     Task Modes:
     1. Binary Classification Decision (`mode="binary_classification"`):
@@ -147,7 +147,7 @@ def extract_decision_elements(
 
 
 class PrecisionMetric(BaseMetric):
-    """Calculates precision for binary correctness decisions and element-set predictions.
+    r"""Calculates precision for binary correctness decisions and element-set predictions.
 
     Definition:
     - Item-level precision: $\text{Precision} = \frac{\text{TP}}{\text{TP} + \text{FP}}$

@@ -6,7 +6,8 @@ import hashlib
 import math
 import re
 from abc import ABC, abstractmethod
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from openbench.dataset import DatasetRecord
 from openbench.exceptions import MetricError
@@ -18,7 +19,7 @@ def cosine_similarity(vec_a: list[float], vec_b: list[float]) -> float:
     """Compute cosine similarity between two numeric vectors of equal length."""
     if len(vec_a) != len(vec_b) or not vec_a:
         raise MetricError("Embedding vectors must be non-empty and have equal dimensionality")
-    dot = sum(a * b for a, b in zip(vec_a, vec_b))
+    dot = sum(a * b for a, b in zip(vec_a, vec_b, strict=False))
     norm_a = math.sqrt(sum(a * a for a in vec_a))
     norm_b = math.sqrt(sum(b * b for b in vec_b))
     if norm_a == 0.0 or norm_b == 0.0:
@@ -145,7 +146,7 @@ class HuggingFaceEmbeddingProvider(EmbeddingProvider):
         except ImportError as exc:
             raise MetricError(
                 "Optional dependency 'sentence-transformers' is not installed. "
-                "Install it with `pip install -e '\".[semantic]\"'` or supply a local EmbeddingProvider."
+                "Install it with `pip install -e '.[semantic]'` or supply a local EmbeddingProvider."
             ) from exc
 
         self._model = SentenceTransformer(

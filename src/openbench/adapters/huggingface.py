@@ -67,7 +67,7 @@ class HuggingFaceAdapter(BaseModelAdapter):
         except ImportError as exc:
             raise ConfigurationError(
                 "Optional dependency 'transformers' is not installed. "
-                "Install it with `pip install -e '\".[huggingface]\"'` to use HuggingFaceAdapter."
+                "Install it with `pip install -e '.[huggingface]'` to use HuggingFaceAdapter."
             ) from exc
 
         self._pipeline = pipeline(

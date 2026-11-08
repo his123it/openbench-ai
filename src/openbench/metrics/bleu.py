@@ -19,7 +19,7 @@ def _extract_ngrams(tokens: list[str], n: int) -> Counter[tuple[str, ...]]:
 
 
 class BleuMetric(BaseMetric):
-    """Computes BLEU score with clipped n-gram precisions, brevity penalty, and Chen-Cherry smoothing.
+    r"""Computes BLEU score with clipped n-gram precisions, brevity penalty, and Chen-Cherry smoothing.
 
     Methodology & Behavior:
     - Tokenizes candidate and reference strings into normalized word tokens (`tokenize_words`).

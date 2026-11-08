@@ -11,7 +11,7 @@ from openbench.metrics.precision import extract_decision_elements
 
 
 class F1Metric(BaseMetric):
-    """Calculates F1 score as the harmonic mean of Precision and Recall.
+    r"""Calculates F1 score as the harmonic mean of Precision and Recall.
 
     Formula:
     $$\text{F1} = \frac{2 \cdot \text{Precision} \cdot \text{Recall}}{\text{Precision} + \text{Recall}} = \frac{2 \cdot \text{TP}}{2 \cdot \text{TP} + \text{FP} + \text{FN}}$$
