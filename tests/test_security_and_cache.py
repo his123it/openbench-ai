@@ -67,3 +67,18 @@ def test_validate_safe_output_path_prevents_workspace_escape(tmp_path: Path) -> 
 
     with pytest.raises(ConfigurationError, match="escapes restricted workspace root"):
         validate_safe_output_path(tmp_path.parent / "outside.json", allowed_root=tmp_path)
+
+
+def test_bare_auth_scheme_words_in_prose_are_not_redacted() -> None:
+    """Regression: ordinary prose such as 'bearer tokens' must survive; real credentials must not."""
+    from openbench.security import sanitize_error_message
+
+    assert sanitize_error_message("Never log API keys or bearer tokens.") == (
+        "Never log API keys or bearer tokens."
+    )
+    assert sanitize_error_message("This covers basic refusal patterns.") == (
+        "This covers basic refusal patterns."
+    )
+    assert "[REDACTED]" in sanitize_error_message("Authorization: Bearer abcdef")
+    assert "[REDACTED]" in sanitize_error_message("Bearer eyJhbGciOiJIUzI1NiJ9.e30.sig")
+    assert "[REDACTED]" in sanitize_error_message("header was Basic dXNlcjpwYXNz")

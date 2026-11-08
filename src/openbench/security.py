@@ -62,8 +62,23 @@ _URL_QUERY_SECRET_RE = re.compile(
 
 # 2. Authorization headers & schemes: Authorization: Bearer abc, Bearer eyJ..., Basic dXNlcjpwYXNz
 _AUTH_HEADER_RE = re.compile(
-    r"(?i)(\b(?:authorization\s*[:=]\s*(?:bearer|basic|token|apikey)\s+|bearer\s+|basic\s+))([A-Za-z0-9._\-~+/]+=*)"
+    r"(?i)(\bauthorization\s*[:=]\s*(?:bearer|basic|token|apikey)\s+)([A-Za-z0-9._\-~+/]+=*)"
 )
+# Bare "Bearer <x>" / "Basic <x>" outside an Authorization header: only redacted when <x> looks
+# like a credential, so ordinary prose such as "bearer tokens" or "basic refusal" is preserved.
+_BARE_AUTH_SCHEME_RE = re.compile(r"(?i)(\b(?:bearer|basic)\s+)([A-Za-z0-9._\-~+/]+=*)")
+
+
+def _looks_like_credential(candidate: str) -> bool:
+    core = candidate.rstrip(".,;:")
+    if len(core) < 8:
+        return False
+    if any(ch.isdigit() for ch in core) or "=" in core:
+        return True
+    if any(ch in "._-~+/" for ch in core):
+        return True
+    uppercase = sum(ch.isupper() for ch in core)
+    return uppercase >= 2 and any(ch.islower() for ch in core)
 
 # 3. Inline key=value or key: value assignments inside strings (e.g. password=example, client_secret=example, api_key="secret123")
 _INLINE_ASSIGNMENT_RE = re.compile(
@@ -95,6 +110,10 @@ def sanitize_error_message(message: str) -> str:
     msg = _URL_CRED_RE.sub(r"\1[REDACTED]:[REDACTED]@", message)
     msg = _URL_QUERY_SECRET_RE.sub(r"\1[REDACTED]", msg)
     msg = _AUTH_HEADER_RE.sub(r"\1[REDACTED]", msg)
+    msg = _BARE_AUTH_SCHEME_RE.sub(
+        lambda m: f"{m.group(1)}[REDACTED]" if _looks_like_credential(m.group(2)) else m.group(0),
+        msg,
+    )
 
     def _replace_assignment(match: re.Match[str]) -> str:
         prefix, val, suffix = match.group(1), match.group(2), match.group(3)
