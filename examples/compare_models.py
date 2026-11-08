@@ -5,7 +5,13 @@ from pathlib import Path
 
 from openbench.comparison import ModelComparator
 from openbench.dataset import DatasetLoader
-from openbench.evaluator import EvaluationConfig, Evaluator, ModelResponseSet, ResponseItem, ResponseLoader
+from openbench.evaluator import (
+    EvaluationConfig,
+    Evaluator,
+    ModelResponseSet,
+    ResponseItem,
+    ResponseLoader,
+)
 from openbench.reporting import ReportGenerator
 
 

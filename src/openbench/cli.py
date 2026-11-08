@@ -6,8 +6,8 @@ import argparse
 import json
 import re
 import sys
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
 from openbench import __version__
 from openbench.comparison import ModelComparator

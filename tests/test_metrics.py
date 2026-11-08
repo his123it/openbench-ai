@@ -70,7 +70,7 @@ def test_exact_match_metric_passes_and_fails_accurately() -> None:
     assert res_fail.score == 0.0
 
 
-def test_ExactMatchMetric_case_sensitive_option() -> None:
+def test_exact_match_metric_case_sensitive_option() -> None:
     """ExactMatchMetric respects case_sensitive=True when configured."""
     record = _make_record(expected="ACKNOWLEDGED")
     metric = ExactMatchMetric(
