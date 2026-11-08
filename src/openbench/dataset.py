@@ -1,7 +1,8 @@
-"""Dataset loading and validation for OpenBench AI."""
+"""Dataset loading, validation, filtering, and checksum calculation for OpenBench AI."""
 
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -11,6 +12,7 @@ from openbench.exceptions import DatasetValidationError, EmptyDatasetError
 
 REQUIRED_RECORD_FIELDS = ("id", "category", "prompt", "expected_answer")
 ALLOWED_DIFFICULTIES = {"easy", "medium", "hard"}
+ALLOWED_FIELD_TYPES = {"str", "int", "float", "bool", "list", "dict", "number", "string", "integer", "boolean", "array", "object"}
 
 
 @dataclass(frozen=True)
@@ -49,11 +51,34 @@ class DatasetRecord:
         raw_keywords = self.metadata.get("keywords")
         if isinstance(raw_keywords, list) and raw_keywords:
             return [str(k) for k in raw_keywords if str(k).strip()]
-        # Fallback: extract meaningful tokens or use expected_answer as a single keyword phrase
         cleaned = self.expected_answer.strip()
         if not cleaned:
             return []
         return [cleaned]
+
+    @property
+    def language(self) -> str:
+        """Return ISO language code from metadata, defaulting to 'en'."""
+        val = self.metadata.get("language", "en")
+        return str(val).strip() if val is not None and str(val).strip() else "en"
+
+    @property
+    def source(self) -> str:
+        """Return dataset record provenance/source from metadata, defaulting to 'original'."""
+        val = self.metadata.get("source", "original")
+        return str(val).strip() if val is not None and str(val).strip() else "original"
+
+    @property
+    def record_version(self) -> str:
+        """Return record-level version from metadata, defaulting to '0.1.0'."""
+        val = self.metadata.get("version", "0.1.0")
+        return str(val).strip() if val is not None and str(val).strip() else "0.1.0"
+
+    @property
+    def rationale(self) -> str | None:
+        """Return optional evaluation rationale (used especially in safety datasets)."""
+        val = self.metadata.get("rationale")
+        return str(val).strip() if val is not None and str(val).strip() else None
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize record to a plain dictionary."""
@@ -73,7 +98,7 @@ class Dataset:
     name: str
     records: list[DatasetRecord]
     source_path: str
-    version: str = "0.1.0"
+    version: str = "0.2.0"
 
     def __len__(self) -> int:
         return len(self.records)
@@ -87,18 +112,85 @@ class Dataset:
         return sorted({record.category for record in self.records})
 
     @property
+    def difficulties(self) -> list[str]:
+        """Return sorted unique difficulties present in the dataset."""
+        return sorted({record.difficulty for record in self.records})
+
+    @property
+    def languages(self) -> list[str]:
+        """Return sorted unique language codes present in the dataset."""
+        return sorted({record.language for record in self.records})
+
+    @property
     def record_map(self) -> dict[str, DatasetRecord]:
         """Return a mapping of record ID to DatasetRecord."""
         return {record.id: record for record in self.records}
 
+    @property
+    def checksum(self) -> str:
+        """Compute a deterministic SHA-256 checksum across all records in the dataset."""
+        hasher = hashlib.sha256()
+        for rec in self.records:
+            canonical = json.dumps(rec.to_dict(), sort_keys=True, ensure_ascii=False)
+            hasher.update(canonical.encode("utf-8"))
+            hasher.update(b"\n")
+        return hasher.hexdigest()
+
+    def filter(
+        self,
+        categories: list[str] | None = None,
+        difficulties: list[str] | None = None,
+        tags: list[str] | None = None,
+        languages: list[str] | None = None,
+    ) -> Dataset:
+        """Return a new Dataset filtered by the specified metadata criteria."""
+        cat_set = {c.strip().lower() for c in categories if c.strip()} if categories else None
+        diff_set = {d.strip().lower() for d in difficulties if d.strip()} if difficulties else None
+        tag_set = {t.strip().lower() for t in tags if t.strip()} if tags else None
+        lang_set = {lg.strip().lower() for lg in languages if lg.strip()} if languages else None
+
+        filtered: list[DatasetRecord] = []
+        for rec in self.records:
+            if cat_set is not None and rec.category.lower() not in cat_set:
+                continue
+            if diff_set is not None and rec.difficulty.lower() not in diff_set:
+                continue
+            if tag_set is not None:
+                rec_tags = {t.lower() for t in rec.tags}
+                if not (rec_tags & tag_set):
+                    continue
+            if lang_set is not None and rec.language.lower() not in lang_set:
+                continue
+            filtered.append(rec)
+
+        if not filtered:
+            raise EmptyDatasetError(
+                f"Applying metadata filters resulted in 0 matching records for dataset '{self.name}'",
+                file_path=self.source_path,
+            )
+
+        return Dataset(
+            name=self.name,
+            records=filtered,
+            source_path=self.source_path,
+            version=self.version,
+        )
+
     def summary(self) -> dict[str, Any]:
-        """Return summary statistics for the dataset."""
+        """Return summary statistics for the dataset (preserving v0.1.0 keys and adding v0.2.0 metadata)."""
         category_counts: dict[str, int] = {}
         difficulty_counts: dict[str, int] = {}
+        language_counts: dict[str, int] = {}
+        tag_counts: dict[str, int] = {}
+
         for rec in self.records:
             category_counts[rec.category] = category_counts.get(rec.category, 0) + 1
             diff = rec.difficulty
             difficulty_counts[diff] = difficulty_counts.get(diff, 0) + 1
+            lang = rec.language
+            language_counts[lang] = language_counts.get(lang, 0) + 1
+            for tag in rec.tags:
+                tag_counts[tag] = tag_counts.get(tag, 0) + 1
 
         return {
             "name": self.name,
@@ -107,6 +199,9 @@ class Dataset:
             "total_records": len(self.records),
             "categories": category_counts,
             "difficulties": difficulty_counts,
+            "languages": language_counts,
+            "tags": tag_counts,
+            "checksum": self.checksum,
         }
 
 
@@ -114,15 +209,32 @@ class DatasetLoader:
     """Loads and validates JSONL evaluation datasets from files or directories."""
 
     @staticmethod
-    def load(path: str | Path, dataset_name: str | None = None) -> Dataset:
+    def load(
+        path: str | Path,
+        dataset_name: str | None = None,
+        categories: list[str] | None = None,
+        difficulties: list[str] | None = None,
+        tags: list[str] | None = None,
+        languages: list[str] | None = None,
+    ) -> Dataset:
         """Load a dataset from either a single JSONL file or a directory of JSONL files."""
         target = Path(path)
         if not target.exists():
             raise FileNotFoundError(f"Dataset path does not exist: {target}")
 
         if target.is_dir():
-            return DatasetLoader.load_directory(target, dataset_name=dataset_name)
-        return DatasetLoader.load_file(target, dataset_name=dataset_name)
+            ds = DatasetLoader.load_directory(target, dataset_name=dataset_name)
+        else:
+            ds = DatasetLoader.load_file(target, dataset_name=dataset_name)
+
+        if any(x is not None for x in (categories, difficulties, tags, languages)):
+            return ds.filter(
+                categories=categories,
+                difficulties=difficulties,
+                tags=tags,
+                languages=languages,
+            )
+        return ds
 
     @staticmethod
     def load_file(file_path: str | Path, dataset_name: str | None = None) -> Dataset:
@@ -183,10 +295,19 @@ class DatasetLoader:
             raise EmptyDatasetError("Dataset contains no valid records", file_path=target)
 
         resolved_name = dataset_name or DatasetLoader._infer_dataset_name(target)
+        # Infer dataset version from records if explicitly consistent, else default to 0.1.0 for backward compatibility
+        versions = {
+            str(r.metadata["version"])
+            for r in records
+            if "version" in r.metadata and r.metadata["version"] is not None
+        }
+        inferred_version = sorted(versions)[-1] if len(versions) == 1 else "0.1.0"
+
         return Dataset(
             name=resolved_name,
             records=records,
             source_path=str(target),
+            version=inferred_version,
         )
 
     @staticmethod
@@ -231,6 +352,7 @@ class DatasetLoader:
             name=resolved_name,
             records=combined_records,
             source_path=str(target),
+            version="0.2.0",
         )
 
     @staticmethod
@@ -247,7 +369,6 @@ class DatasetLoader:
                 line_number=line_number,
             )
 
-        # Check ID first so we can report missing IDs clearly
         if "id" not in payload or payload["id"] is None:
             raise DatasetValidationError(
                 "Missing required field 'id'",
@@ -316,6 +437,52 @@ class DatasetLoader:
             ):
                 raise DatasetValidationError(
                     "Metadata field 'keywords' must be a list of non-empty strings",
+                    file_path=file_path,
+                    line_number=line_number,
+                    record_id=record_id,
+                )
+
+        # Additive v0.2.0 optional metadata validation
+        for str_meta_field in ("language", "source", "version", "rationale"):
+            if str_meta_field in metadata and metadata[str_meta_field] is not None:
+                val = metadata[str_meta_field]
+                if not isinstance(val, str) or not val.strip():
+                    raise DatasetValidationError(
+                        f"Metadata field '{str_meta_field}' must be a non-empty string if provided",
+                        file_path=file_path,
+                        line_number=line_number,
+                        record_id=record_id,
+                    )
+
+        if "required_keys" in metadata and metadata["required_keys"] is not None:
+            req_keys = metadata["required_keys"]
+            if not isinstance(req_keys, list) or not all(
+                isinstance(k, str) and k.strip() for k in req_keys
+            ):
+                raise DatasetValidationError(
+                    "Metadata field 'required_keys' must be a list of non-empty strings",
+                    file_path=file_path,
+                    line_number=line_number,
+                    record_id=record_id,
+                )
+
+        if "field_types" in metadata and metadata["field_types"] is not None:
+            ft = metadata["field_types"]
+            if not isinstance(ft, dict) or not all(
+                isinstance(k, str) and isinstance(v, str) and v in ALLOWED_FIELD_TYPES
+                for k, v in ft.items()
+            ):
+                raise DatasetValidationError(
+                    f"Metadata field 'field_types' must map field names to valid types {sorted(ALLOWED_FIELD_TYPES)}",
+                    file_path=file_path,
+                    line_number=line_number,
+                    record_id=record_id,
+                )
+
+        if "expected_schema" in metadata and metadata["expected_schema"] is not None:
+            if not isinstance(metadata["expected_schema"], dict):
+                raise DatasetValidationError(
+                    "Metadata field 'expected_schema' must be a JSON object (JSON Schema)",
                     file_path=file_path,
                     line_number=line_number,
                     record_id=record_id,
