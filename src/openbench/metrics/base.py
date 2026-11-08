@@ -1,4 +1,4 @@
-"""Base metric interfaces and structured result dataclasses."""
+"""Base metric interfaces, metadata, and structured result dataclasses."""
 
 from __future__ import annotations
 
@@ -7,6 +7,28 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from openbench.dataset import DatasetRecord
+
+
+@dataclass(frozen=True)
+class MetricMetadata:
+    """Descriptive metadata for a registered OpenBench metric."""
+
+    name: str
+    version: str
+    description: str
+    limitation_note: str
+    is_optional: bool = False
+    optional_dependencies: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "name": self.name,
+            "version": self.version,
+            "description": self.description,
+            "limitation_note": self.limitation_note,
+            "is_optional": self.is_optional,
+            "optional_dependencies": list(self.optional_dependencies),
+        }
 
 
 @dataclass(frozen=True)
@@ -64,6 +86,20 @@ class BaseMetric(ABC):
     version: str = "0.1.0"
     description: str = "Abstract base metric."
     limitation_note: str = ""
+    is_optional: bool = False
+    optional_dependencies: tuple[str, ...] = ()
+
+    @classmethod
+    def get_metadata(cls) -> MetricMetadata:
+        """Return structured metadata describing this metric class."""
+        return MetricMetadata(
+            name=cls.name,
+            version=cls.version,
+            description=cls.description,
+            limitation_note=cls.limitation_note,
+            is_optional=cls.is_optional,
+            optional_dependencies=list(cls.optional_dependencies),
+        )
 
     @abstractmethod
     def compute_item(self, record: DatasetRecord, response_text: str) -> MetricResult:
@@ -77,10 +113,8 @@ class BaseMetric(ABC):
         """Compute aggregate statistics over all evaluated item results.
 
         Note: Missing responses are counted in `total_dataset_items` and penalized
-        as 0.0 in `overall_score_including_missing`, while `score` reflects the mean
-        across all dataset items (treating missing items as 0.0) so models cannot
-        inflate scores by omitting difficult prompts. Both numbers are reported in
-        `details`.
+        as 0.0 in `score` so models cannot inflate scores by omitting difficult prompts.
+        Both `score` and `evaluated_only_score` are reported.
         """
         evaluated_count = len(item_results)
         passed_count = sum(1 for r in item_results if r.passed)
