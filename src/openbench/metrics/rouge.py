@@ -17,7 +17,12 @@ _WORD_TOKEN_RE = re.compile(r"[\w]+", re.UNICODE)
 def tokenize_words(text: str, normalization: NormalizationConfig) -> list[str]:
     """Tokenize text into normalized word tokens after applying NormalizationConfig."""
     norm = normalize_text(text, normalization)
-    return _WORD_TOKEN_RE.findall(norm)
+    tokens = _WORD_TOKEN_RE.findall(norm)
+    if not tokens and norm.strip():
+        # Symbol-only text (e.g. "$?") has no word tokens; fall back to whitespace tokens so
+        # identical symbol answers match and different ones do not.
+        tokens = norm.split()
+    return tokens
 
 
 def _lcs_length(xs: list[str], ys: list[str]) -> int:

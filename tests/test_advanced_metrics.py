@@ -170,3 +170,17 @@ def test_metric_registry_lists_all_metrics_and_validates_kwargs() -> None:
 
     with pytest.raises(MetricError, match="does not accept configuration parameter"):
         create_metric("exact_match", unknown_param=123)
+
+
+def test_symbol_only_answers_are_not_scored_as_empty() -> None:
+    """Regression: symbol-only references like '$?' must match themselves and not other symbols."""
+    from openbench.dataset import DatasetRecord
+    from openbench.metrics import create_metric
+
+    record = DatasetRecord(
+        id="sym_001", category="coding", prompt="Exit status variable?", expected_answer="$?"
+    )
+    for name in ("precision", "recall", "f1", "rouge", "bleu"):
+        metric = create_metric(name)
+        assert metric.compute_item(record, "$?").score == 1.0, name
+        assert metric.compute_item(record, "!!").score == 0.0, name

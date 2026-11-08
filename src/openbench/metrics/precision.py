@@ -117,8 +117,8 @@ def extract_decision_elements(
             if normalize_text(part, normalization)
         ]
     else:
-        expected_elems = re.findall(r"[\w./+-]+", norm_expected)
-        pred_elems = re.findall(r"[\w./+-]+", norm_response)
+        expected_elems = re.findall(r"[\w./+-]+", norm_expected) or norm_expected.split()
+        pred_elems = re.findall(r"[\w./+-]+", norm_response) or norm_response.split()
 
     exp_set = set(expected_elems)
     pred_set = set(pred_elems)
