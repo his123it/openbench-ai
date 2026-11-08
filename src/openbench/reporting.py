@@ -10,22 +10,9 @@ from pathlib import Path
 from typing import Any
 
 from openbench.comparison import ComparisonResult
-from openbench.evaluator import EvaluationResult
+from openbench.evaluator import EvaluationResult, redact_secrets
 
-_SECRET_SUBSTRINGS = ("key", "token", "secret", "password", "credential", "auth")
-
-
-def _redact_secrets(config_dict: dict[str, Any]) -> dict[str, Any]:
-    """Ensure API keys, tokens, or credentials are never serialized into reproducibility cards."""
-    cleaned: dict[str, Any] = {}
-    for k, v in config_dict.items():
-        if any(sub in k.lower() for sub in _SECRET_SUBSTRINGS):
-            cleaned[k] = "[REDACTED]"
-        elif isinstance(v, dict):
-            cleaned[k] = _redact_secrets(v)
-        else:
-            cleaned[k] = v
-    return cleaned
+_redact_secrets = redact_secrets
 
 
 class ReportGenerator:

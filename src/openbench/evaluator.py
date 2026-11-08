@@ -21,6 +21,22 @@ from openbench.metrics import (
 
 DEFAULT_METRIC_NAMES = ("exact_match", "accuracy", "keyword_coverage")
 
+_SECRET_SUBSTRINGS = ("key", "token", "secret", "password", "credential", "auth")
+
+
+def redact_secrets(config_dict: dict[str, Any]) -> dict[str, Any]:
+    """Return a copy of a config dict with credential-like keys replaced by '[REDACTED]'."""
+    cleaned: dict[str, Any] = {}
+    for k, v in config_dict.items():
+        if any(sub in str(k).lower() for sub in _SECRET_SUBSTRINGS):
+            cleaned[k] = "[REDACTED]"
+        elif isinstance(v, dict):
+            cleaned[k] = redact_secrets(v)
+        else:
+            cleaned[k] = v
+    return cleaned
+
+
 
 @dataclass(frozen=True)
 class ResponseItem:
@@ -392,7 +408,7 @@ class EvaluationResult:
                 "model_name": self.model_name,
                 "model_version": self.model_version,
                 "model_provider": self.model_provider,
-                "inference_config": dict(self.inference_config),
+                "inference_config": redact_secrets(self.inference_config),
                 "total_dataset_items": self.total_dataset_items,
                 "evaluated_items": self.evaluated_items_count,
                 "missing_responses_count": self.missing_responses_count,

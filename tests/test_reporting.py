@@ -75,3 +75,26 @@ def test_comparison_markdown_report_generation(tmp_path: Path) -> None:
     assert "# OpenBench AI Model Comparison Report" in content
     assert "## Model Comparison Table" in content
     assert "## Highest Score by Metric" in content
+
+
+def test_inference_config_secrets_are_redacted_everywhere_in_json_report() -> None:
+    """Regression: credential-like inference_config keys must not appear anywhere in JSON output."""
+    from openbench.dataset import DatasetRecord
+    from openbench.evaluator import Evaluator, ModelResponseSet, ResponseItem
+    from openbench.metrics import create_metric
+
+    record = DatasetRecord(id="r1", category="reasoning", prompt="2+2?", expected_answer="4")
+    dataset = Dataset(name="secret_test", source_path="memory", records=[record])
+    responses = ModelResponseSet(
+        model_name="M",
+        model_version="1",
+        responses=[ResponseItem(id="r1", response="4")],
+        inference_config={"api_key": "sk-FAKE-123", "nested": {"auth_token": "tok-abc"}, "temperature": 0.0},
+    )
+    result = Evaluator([create_metric("exact_match")]).evaluate(dataset, responses)
+    payload = ReportGenerator.to_json(result)
+    assert "sk-FAKE-123" not in payload
+    assert "tok-abc" not in payload
+    loaded = json.loads(payload)
+    assert loaded["model"]["inference_config"]["api_key"] == "[REDACTED]"
+    assert loaded["model"]["inference_config"]["temperature"] == 0.0
