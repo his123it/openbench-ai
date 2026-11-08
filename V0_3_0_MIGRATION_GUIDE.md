@@ -1,6 +1,6 @@
 # OpenBench AI v0.3.0 — Migration Guide
 
-Upgrading from **OpenBench AI v0.1.0 or v0.2.0** to **v0.3.0** is 100% backward-compatible. No existing imports, CLI commands, dataset files, response JSON files, or YAML profiles require modification.
+Upgrading from **OpenBench AI v0.1.0 or v0.2.0** to **v0.3.0** keeps existing imports, CLI commands, dataset files, response JSON files, and YAML profiles working without modification. See the CHANGELOG for intentional behavioral changes.
 
 ---
 

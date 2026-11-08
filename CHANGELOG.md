@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Explicit `lexical_similarity` Metric Identifier**:
   - Added `LexicalSimilarityMetric` (`lexical_similarity`) alongside `SemanticSimilarityMetric` (`semantic_similarity`).
 - **Dataset Self-Consistency Validation**:
-  - Extended `scripts/validate_datasets.py` with automated self-consistency verification checking that every reference answer scores `1.0` against itself on applicable deterministic metrics while reporting the 5 known `v0.1.0` legacy keyword exceptions (`coding_003`, `coding_007`, `coding_010`, `reasoning_004`, `reasoning_012`) and `v0.2.0` synonym keyword records separately.
+  - Extended `scripts/validate_datasets.py` with automated self-consistency verification checking that every reference answer scores `1.0` against itself on applicable deterministic metrics while reporting the 5 known `v0.1.0` legacy keyword exceptions (`coding_003`, `coding_007`, `coding_010`, `reasoning_004`, `reasoning_012`) separately. The records corrected in `v0.2.0` are not exempt.
 - **Typing & Citation Metadata**:
   - Added `CITATION.cff` and PEP 561 `src/openbench/py.typed` marker.
 
@@ -33,8 +33,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **SPDX License Metadata & Repository URLs**:
   - Updated `pyproject.toml` from `license = { text = "MIT" }` to `license = "MIT"`.
   - Replaced placeholder `<your-username>` clone URLs with `https://github.com/lakshaychhaba0001-sys/openbench-ai.git`.
-- **Raw Docstrings for LaTeX Formulas**:
-  - Converted metric docstrings containing LaTeX backslashes to raw strings (`r"""..."""`) so `pytest -W error::SyntaxWarning` passes with zero warnings.
+- **Prose no longer mistaken for credentials**: a bare `Bearer`/`Basic` word is only redacted when followed by a credential-like value, so text such as "bearer tokens" or "basic refusal" in prompts, answers, and reports is preserved. `Authorization:` headers are always redacted.
+- **Test isolation**: experiment tests no longer share the working-directory `.openbench_cache/`, which made a second test run fail.
+- **Lint**: resolved unused imports, import ordering, an unnecessary f-string, and `typing.Callable` imports.
 
 ### Improved
 - **Experiment Directory Resilience (`openbench.experiments`)**:
@@ -42,13 +43,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **CI Workflow Matrix (`.github/workflows/tests.yml`)**:
   - Added Python `3.13` to the test matrix (`3.10`, `3.11`, `3.12`, `3.13`), added `-W error::SyntaxWarning` to `pytest`, and added a dedicated `test-core-only` CI job (`pip install -e .` with no optional extras).
 
+### Changed
+- Removed the unused `ollama` (`httpx`) and `performance` (`tabulate`) optional dependency groups; neither package is imported. The Ollama adapter uses the standard library HTTP client.
+- `redact_secrets()` in `openbench.evaluator` is kept as a backward-compatible alias of `openbench.security.redact_sensitive_data()`.
+
 ### Compatibility Notes
-- Existing `v0.1.0`, `v0.2.0`, and `v0.3.0` public Python APIs, CLI commands, dataset schemas, and `v0.3.0` experiment run directories remain supported.
+- Existing `v0.1.0` and `v0.2.0` public Python APIs, CLI commands, and dataset/response/report schemas remain supported. Experiment run directories use artifact schema version `0.3.0`.
 - Minor observable behavioral refinements: `openbench evaluate` now writes report warnings to `stderr` (previously only stored inside the report files), Markdown tables escape `|` as `\|`, and `semantic_similarity` with the default `local_ngram_hash` provider records `details["similarity_type"] = "lexical_similarity"`.
 
 ---
 
 ## [0.3.0] - 2026-11-08
+
+_Not published as a separate release; these changes ship in 0.3.1._
 
 ### Added
 - **Model Execution Engine (`openbench.execution`)**:
@@ -76,7 +83,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - Added `openbench run`, `openbench runs list|show|verify|resume|compare`, `openbench providers list|check`, and `openbench cache clear|stats`.
 - **Configuration, Documentation & Tests**:
   - Added 4 new YAML profiles (`configs/local_ollama.yaml`, `configs/huggingface_local.yaml`, `configs/mock_experiment.yaml`, `configs/repeated_benchmark.yaml`).
-  - Added 11 new documentation guides in `docs/` and 6 new test suites in `tests/` (totaling 80 tests across 19 test files).
+  - Added 11 new documentation guides in `docs/` and 6 new test suites in `tests/`.
 
 ### Changed
 - Bumped package version from `0.2.0` to `0.3.0`.

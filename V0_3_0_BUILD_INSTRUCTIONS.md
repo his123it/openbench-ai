@@ -33,7 +33,7 @@ python -m pip install -e ".[dev]"
 # Validate all 10 built-in datasets (200 unique examples)
 python scripts/validate_datasets.py
 
-# Run the full test suite (19 test files, 80 tests)
+# Run the full test suite
 pytest -v
 
 # Run Ruff linter
