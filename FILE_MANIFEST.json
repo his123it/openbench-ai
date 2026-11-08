@@ -1,307 +1,651 @@
 {
   "project": "OpenBench AI",
-  "version": "0.1.0",
-  "total_files": 50,
+  "version": "0.2.0",
+  "total_files": 92,
   "files": [
     {
-      "path": "src/openbench/__init__.py",
-      "purpose": "Package initialization, version string (0.1.0), and public API exports.",
-      "type": "python_source",
-      "required_for_baseline": true
+      "path": ".github/ISSUE_TEMPLATE/bug_report.md",
+      "purpose": "GitHub bug report template.",
+      "type": "github_template",
+      "required_for_baseline": true,
+      "feature_area": "ci_cd"
     },
     {
-      "path": "src/openbench/exceptions.py",
-      "purpose": "Custom exception hierarchy with file path, line number, and record ID context.",
-      "type": "python_source",
-      "required_for_baseline": true
+      "path": ".github/ISSUE_TEMPLATE/feature_request.md",
+      "purpose": "GitHub feature request template.",
+      "type": "github_template",
+      "required_for_baseline": true,
+      "feature_area": "ci_cd"
     },
     {
-      "path": "src/openbench/dataset.py",
-      "purpose": "JSONL dataset loader, directory loader, schema validator, and duplicate/missing ID detector.",
-      "type": "python_source",
-      "required_for_baseline": true
+      "path": ".github/pull_request_template.md",
+      "purpose": "GitHub pull request template.",
+      "type": "github_template",
+      "required_for_baseline": true,
+      "feature_area": "ci_cd"
     },
     {
-      "path": "src/openbench/evaluator.py",
-      "purpose": "Model response JSON loader, central evaluation engine, and structured EvaluationResult.",
-      "type": "python_source",
-      "required_for_baseline": true
+      "path": ".github/workflows/lint.yml",
+      "purpose": "GitHub Actions Ruff lint workflow.",
+      "type": "ci_workflow_yaml",
+      "required_for_baseline": true,
+      "feature_area": "ci_cd"
     },
     {
-      "path": "src/openbench/comparison.py",
-      "purpose": "Multi-model comparison engine identifying per-metric leaders without misleading composite rankings.",
-      "type": "python_source",
-      "required_for_baseline": true
+      "path": ".github/workflows/tests.yml",
+      "purpose": "GitHub Actions test & CLI smoke workflow across Python 3.10, 3.11, and 3.12.",
+      "type": "ci_workflow_yaml",
+      "required_for_baseline": true,
+      "feature_area": "ci_cd"
     },
     {
-      "path": "src/openbench/reporting.py",
-      "purpose": "JSON and Markdown report generator including the Benchmark Reproducibility Card.",
-      "type": "python_source",
-      "required_for_baseline": true
+      "path": ".gitignore",
+      "purpose": "Git ignore rules.",
+      "type": "configuration_git",
+      "required_for_baseline": true,
+      "feature_area": "packaging"
     },
     {
-      "path": "src/openbench/cli.py",
-      "purpose": "Command-line interface implementing validate-dataset, evaluate, compare, and --version.",
-      "type": "python_source",
-      "required_for_baseline": true
+      "path": "BACKWARD_COMPATIBILITY_REPORT.md",
+      "purpose": "Detailed report verifying all v0.1.0 behaviors and contracts in v0.2.0.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "release_management"
     },
     {
-      "path": "src/openbench/metrics/__init__.py",
-      "purpose": "Metric registry, factory function (create_metric), and custom metric registration API.",
-      "type": "python_source",
-      "required_for_baseline": true
+      "path": "BUILD_INSTRUCTIONS.md",
+      "purpose": "Baseline v0.1.0 build instructions (preserved).",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "release_management"
     },
     {
-      "path": "src/openbench/metrics/base.py",
-      "purpose": "Abstract BaseMetric interface and structured MetricResult/AggregateMetricResult dataclasses.",
-      "type": "python_source",
-      "required_for_baseline": true
+      "path": "CHANGELOG.md",
+      "purpose": "Release changelog containing both v0.2.0 and v0.1.0 histories.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "release_management"
     },
     {
-      "path": "src/openbench/metrics/normalization.py",
-      "purpose": "Configurable text normalization (whitespace, case sensitivity, punctuation preservation).",
-      "type": "python_source",
-      "required_for_baseline": true
+      "path": "CODE_OF_CONDUCT.md",
+      "purpose": "Contributor Covenant Code of Conduct.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation"
     },
     {
-      "path": "src/openbench/metrics/exact_match.py",
-      "purpose": "Exact Match evaluation metric comparing normalized model output to expected answer.",
-      "type": "python_source",
-      "required_for_baseline": true
+      "path": "CONTRIBUTING.md",
+      "purpose": "Contributor guide.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation"
     },
     {
-      "path": "src/openbench/metrics/accuracy.py",
-      "purpose": "Deterministic Accuracy metric with exact and word-bounded containment rules.",
-      "type": "python_source",
-      "required_for_baseline": true
+      "path": "FILE_MANIFEST.json",
+      "purpose": "Complete machine-readable manifest of all files in OpenBench AI v0.2.0.",
+      "type": "json_manifest",
+      "required_for_baseline": true,
+      "feature_area": "release_management"
     },
     {
-      "path": "src/openbench/metrics/keyword_match.py",
-      "purpose": "Keyword Coverage metric returning matched/missing keywords and coverage percentage.",
-      "type": "python_source",
-      "required_for_baseline": true
+      "path": "LICENSE",
+      "purpose": "MIT License.",
+      "type": "license",
+      "required_for_baseline": true,
+      "feature_area": "legal"
     },
     {
-      "path": "datasets/reasoning/sample.jsonl",
-      "purpose": "Original 12-item reasoning evaluation dataset across easy, medium, and hard difficulties.",
-      "type": "dataset_jsonl",
-      "required_for_baseline": true
+      "path": "README.md",
+      "purpose": "Updated v0.2.0 primary documentation, dataset catalog, metrics reference, and CLI guide.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation"
+    },
+    {
+      "path": "SECURITY.md",
+      "purpose": "Security policy.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation"
+    },
+    {
+      "path": "V0_2_0_BUILD_INSTRUCTIONS.md",
+      "purpose": "Build, installation, test, lint, and CLI verification guide for v0.2.0.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "release_management"
+    },
+    {
+      "path": "V0_2_0_CHANGE_MANIFEST.json",
+      "purpose": "Machine-readable change manifest detailing added, modified, and removed files in v0.2.0.",
+      "type": "json_manifest",
+      "required_for_baseline": true,
+      "feature_area": "release_management"
+    },
+    {
+      "path": "V0_2_0_MIGRATION_GUIDE.md",
+      "purpose": "Step-by-step migration guide from v0.1.0 to v0.2.0.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "release_management"
+    },
+    {
+      "path": "V0_2_0_VALIDATION_CHECKLIST.md",
+      "purpose": "Comprehensive validation checklist for v0.2.0.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "release_management"
+    },
+    {
+      "path": "VALIDATION_CHECKLIST.md",
+      "purpose": "Baseline v0.1.0 validation checklist (preserved).",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "release_management"
+    },
+    {
+      "path": "configs/coding.yaml",
+      "purpose": "YAML evaluation profile for coding datasets.",
+      "type": "configuration_yaml",
+      "required_for_baseline": false,
+      "feature_area": "configuration_profiles"
+    },
+    {
+      "path": "configs/instruction_following.yaml",
+      "purpose": "YAML evaluation profile for instruction-following datasets with case sensitivity.",
+      "type": "configuration_yaml",
+      "required_for_baseline": false,
+      "feature_area": "configuration_profiles"
+    },
+    {
+      "path": "configs/reasoning.yaml",
+      "purpose": "YAML evaluation profile for reasoning datasets.",
+      "type": "configuration_yaml",
+      "required_for_baseline": false,
+      "feature_area": "configuration_profiles"
     },
     {
       "path": "datasets/coding/sample.jsonl",
-      "purpose": "Original 12-item coding and computer science evaluation dataset.",
+      "purpose": "20 original coding evaluation items (12 original v0.1.0 + 8 new v0.2.0).",
       "type": "dataset_jsonl",
-      "required_for_baseline": true
+      "required_for_baseline": true,
+      "feature_area": "datasets"
+    },
+    {
+      "path": "datasets/debugging/sample.jsonl",
+      "purpose": "20 original software debugging evaluation items.",
+      "type": "dataset_jsonl",
+      "required_for_baseline": true,
+      "feature_area": "datasets"
+    },
+    {
+      "path": "datasets/factual_knowledge/sample.jsonl",
+      "purpose": "20 original factual knowledge evaluation items with source provenance.",
+      "type": "dataset_jsonl",
+      "required_for_baseline": true,
+      "feature_area": "datasets"
     },
     {
       "path": "datasets/instruction_following/sample.jsonl",
-      "purpose": "Original 12-item instruction-following and formatting constraint evaluation dataset.",
+      "purpose": "20 original instruction-following evaluation items (12 original v0.1.0 + 8 new v0.2.0).",
       "type": "dataset_jsonl",
-      "required_for_baseline": true
+      "required_for_baseline": true,
+      "feature_area": "datasets"
+    },
+    {
+      "path": "datasets/mathematics/sample.jsonl",
+      "purpose": "20 original mathematics evaluation items.",
+      "type": "dataset_jsonl",
+      "required_for_baseline": true,
+      "feature_area": "datasets"
+    },
+    {
+      "path": "datasets/multilingual/sample.jsonl",
+      "purpose": "20 original multilingual evaluation items across 11 languages.",
+      "type": "dataset_jsonl",
+      "required_for_baseline": true,
+      "feature_area": "datasets"
+    },
+    {
+      "path": "datasets/reasoning/sample.jsonl",
+      "purpose": "20 original reasoning evaluation items (12 original v0.1.0 + 8 new v0.2.0).",
+      "type": "dataset_jsonl",
+      "required_for_baseline": true,
+      "feature_area": "datasets"
     },
     {
       "path": "datasets/safety/sample.jsonl",
-      "purpose": "Original 12-item reference-based safety and defensive guidance evaluation dataset.",
+      "purpose": "20 original safety evaluation items with rationale metadata (12 original v0.1.0 + 8 new v0.2.0).",
       "type": "dataset_jsonl",
-      "required_for_baseline": true
+      "required_for_baseline": true,
+      "feature_area": "datasets"
     },
     {
-      "path": "examples/sample_responses.json",
-      "purpose": "Sample model response set (AlphaBaseline-7B) for testing and quickstart evaluation.",
-      "type": "json_data",
-      "required_for_baseline": true
+      "path": "datasets/structured_output/sample.jsonl",
+      "purpose": "20 original structured JSON generation evaluation items with schema metadata.",
+      "type": "dataset_jsonl",
+      "required_for_baseline": true,
+      "feature_area": "datasets"
     },
     {
-      "path": "examples/basic_evaluation.py",
-      "purpose": "Runnable example demonstrating single-model evaluation and report generation via the Python API.",
-      "type": "python_script",
-      "required_for_baseline": true
+      "path": "datasets/summarization/sample.jsonl",
+      "purpose": "20 original single-sentence summarization evaluation items.",
+      "type": "dataset_jsonl",
+      "required_for_baseline": true,
+      "feature_area": "datasets"
     },
     {
-      "path": "examples/compare_models.py",
-      "purpose": "Runnable example demonstrating multi-model evaluation and side-by-side comparison reports.",
-      "type": "python_script",
-      "required_for_baseline": true
+      "path": "docs/advanced_metrics.md",
+      "purpose": "Documentation for Precision, Recall, F1, ROUGE, BLEU, Semantic Similarity, and Structured Output metrics.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation"
     },
     {
-      "path": "tests/test_dataset.py",
-      "purpose": "Pytest unit tests for JSONL dataset loading, malformed JSON, missing fields, and duplicate IDs.",
-      "type": "python_test",
-      "required_for_baseline": true
+      "path": "docs/architecture.md",
+      "purpose": "System architecture overview.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation"
     },
     {
-      "path": "tests/test_metrics.py",
-      "purpose": "Pytest unit tests for normalization, exact match, accuracy, keyword coverage, and custom metrics.",
-      "type": "python_test",
-      "required_for_baseline": true
+      "path": "docs/backward_compatibility.md",
+      "purpose": "Comprehensive documentation of v0.1.0 backward compatibility guarantees in v0.2.0.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation"
     },
     {
-      "path": "tests/test_evaluator.py",
-      "purpose": "Pytest unit tests for response loading, duplicate response IDs, missing items, and multi-model evaluation.",
-      "type": "python_test",
-      "required_for_baseline": true
+      "path": "docs/configuration.md",
+      "purpose": "Documentation for YAML evaluation configuration profiles.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation"
     },
     {
-      "path": "tests/test_comparison.py",
-      "purpose": "Pytest unit tests for multi-model comparison, per-metric leaders, and tie handling.",
-      "type": "python_test",
-      "required_for_baseline": true
+      "path": "docs/contributing.md",
+      "purpose": "Developer and contributor guide.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation"
     },
     {
-      "path": "tests/test_reporting.py",
-      "purpose": "Pytest unit tests for JSON/Markdown report generation and Benchmark Reproducibility Cards.",
-      "type": "python_test",
-      "required_for_baseline": true
+      "path": "docs/dashboard_architecture.md",
+      "purpose": "Data contract specification and architectural blueprint for future dashboard consumption.",
+      "type": "documentation_markdown",
+      "required_for_baseline": false,
+      "feature_area": "documentation"
     },
     {
-      "path": "tests/test_cli.py",
-      "purpose": "End-to-end pytest tests for CLI commands (validate-dataset, evaluate, compare, --version) and exit codes.",
-      "type": "python_test",
-      "required_for_baseline": true
+      "path": "docs/dataset_catalog.md",
+      "purpose": "Documentation for the 10-category dataset catalog, additive schema, and CLI inspection commands.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation"
+    },
+    {
+      "path": "docs/evaluation_methodology.md",
+      "purpose": "Evaluation methodology and reproducibility guide.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation"
+    },
+    {
+      "path": "docs/historical_tracking.md",
+      "purpose": "Documentation for local JSONL result history tracking and longitudinal comparisons.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation"
     },
     {
       "path": "docs/installation.md",
-      "purpose": "Detailed installation guide for editable, development, and offline environments.",
+      "purpose": "Installation guide.",
       "type": "documentation_markdown",
-      "required_for_baseline": true
+      "required_for_baseline": true,
+      "feature_area": "documentation"
+    },
+    {
+      "path": "docs/integrations.md",
+      "purpose": "Documentation for local and Hugging Face model adapters.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation"
+    },
+    {
+      "path": "docs/metrics.md",
+      "purpose": "Baseline metrics reference.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation"
     },
     {
       "path": "docs/usage.md",
       "purpose": "CLI and Python API usage guide.",
       "type": "documentation_markdown",
-      "required_for_baseline": true
+      "required_for_baseline": true,
+      "feature_area": "documentation"
     },
     {
-      "path": "docs/architecture.md",
-      "purpose": "Modular system architecture and component responsibility documentation.",
-      "type": "documentation_markdown",
-      "required_for_baseline": true
-    },
-    {
-      "path": "docs/metrics.md",
-      "purpose": "Detailed metric specifications, normalization rules, and explicit limitations.",
-      "type": "documentation_markdown",
-      "required_for_baseline": true
-    },
-    {
-      "path": "docs/evaluation_methodology.md",
-      "purpose": "Evaluation methodology, missing-response handling, reproducibility cards, and safety disclaimers.",
-      "type": "documentation_markdown",
-      "required_for_baseline": true
-    },
-    {
-      "path": "docs/contributing.md",
-      "purpose": "Developer architecture notes for extending datasets, metrics, and CLI commands.",
-      "type": "documentation_markdown",
-      "required_for_baseline": true
-    },
-    {
-      "path": "scripts/validate_datasets.py",
-      "purpose": "Utility script to validate all JSONL datasets and check cross-dataset ID uniqueness.",
+      "path": "examples/basic_evaluation.py",
+      "purpose": "Runnable single-model evaluation example script.",
       "type": "python_script",
-      "required_for_baseline": true
+      "required_for_baseline": true,
+      "feature_area": "examples"
     },
     {
-      "path": "scripts/run_example.py",
-      "purpose": "End-to-end runner executing dataset validation, basic evaluation, and model comparison examples.",
+      "path": "examples/compare_models.py",
+      "purpose": "Runnable multi-model comparison example script.",
       "type": "python_script",
-      "required_for_baseline": true
+      "required_for_baseline": true,
+      "feature_area": "examples"
     },
     {
-      "path": ".github/workflows/tests.yml",
-      "purpose": "GitHub Actions workflow running dataset validation and pytest across Python 3.10, 3.11, and 3.12.",
-      "type": "ci_workflow_yaml",
-      "required_for_baseline": true
-    },
-    {
-      "path": ".github/workflows/lint.yml",
-      "purpose": "GitHub Actions workflow running Ruff linter checks.",
-      "type": "ci_workflow_yaml",
-      "required_for_baseline": true
-    },
-    {
-      "path": ".github/ISSUE_TEMPLATE/bug_report.md",
-      "purpose": "GitHub issue template for structured bug reports.",
-      "type": "github_template",
-      "required_for_baseline": true
-    },
-    {
-      "path": ".github/ISSUE_TEMPLATE/feature_request.md",
-      "purpose": "GitHub issue template for proposing new features, datasets, or metrics.",
-      "type": "github_template",
-      "required_for_baseline": true
-    },
-    {
-      "path": ".github/pull_request_template.md",
-      "purpose": "GitHub pull request template with verification checklist.",
-      "type": "github_template",
-      "required_for_baseline": true
-    },
-    {
-      "path": "README.md",
-      "purpose": "Primary project documentation, transparency statement, quickstart, CLI guide, and roadmap.",
-      "type": "documentation_markdown",
-      "required_for_baseline": true
-    },
-    {
-      "path": "CONTRIBUTING.md",
-      "purpose": "Root contributor guide covering environment setup, testing, dataset creation, and custom metrics.",
-      "type": "documentation_markdown",
-      "required_for_baseline": true
-    },
-    {
-      "path": "CODE_OF_CONDUCT.md",
-      "purpose": "Contributor Covenant v2.1 Code of Conduct.",
-      "type": "documentation_markdown",
-      "required_for_baseline": true
-    },
-    {
-      "path": "SECURITY.md",
-      "purpose": "Security policy and responsible vulnerability reporting instructions.",
-      "type": "documentation_markdown",
-      "required_for_baseline": true
-    },
-    {
-      "path": "CHANGELOG.md",
-      "purpose": "Release history and changelog for v0.1.0.",
-      "type": "documentation_markdown",
-      "required_for_baseline": true
-    },
-    {
-      "path": "LICENSE",
-      "purpose": "MIT open-source license.",
-      "type": "license",
-      "required_for_baseline": true
+      "path": "examples/sample_responses.json",
+      "purpose": "Sample model response set (AlphaBaseline-7B) covering all 20 reasoning items.",
+      "type": "json_data",
+      "required_for_baseline": true,
+      "feature_area": "examples"
     },
     {
       "path": "pyproject.toml",
-      "purpose": "PEP 621 package configuration, build system, CLI entry point, pytest, and Ruff settings.",
+      "purpose": "PEP 621 package configuration (v0.2.0) with optional dependency groups.",
       "type": "configuration_toml",
-      "required_for_baseline": true
+      "required_for_baseline": true,
+      "feature_area": "packaging"
     },
     {
-      "path": ".gitignore",
-      "purpose": "Git ignore rules for Python bytecode, virtualenvs, build artifacts, and local results.",
-      "type": "configuration_git",
-      "required_for_baseline": true
+      "path": "scripts/run_example.py",
+      "purpose": "End-to-end example workflow runner.",
+      "type": "python_script",
+      "required_for_baseline": true,
+      "feature_area": "scripts"
     },
     {
-      "path": "BUILD_INSTRUCTIONS.md",
-      "purpose": "Step-by-step build, installation, testing, linting, and CLI verification guide.",
-      "type": "documentation_markdown",
-      "required_for_baseline": true
+      "path": "scripts/validate_datasets.py",
+      "purpose": "Validates all built-in JSONL datasets and checks cross-dataset ID uniqueness.",
+      "type": "python_script",
+      "required_for_baseline": true,
+      "feature_area": "scripts"
     },
     {
-      "path": "VALIDATION_CHECKLIST.md",
-      "purpose": "Pre-release quality and completeness verification checklist.",
-      "type": "documentation_markdown",
-      "required_for_baseline": true
+      "path": "src/openbench/__init__.py",
+      "purpose": "Package initialization, version 0.2.0, and exports of v0.1.0 + v0.2.0 public symbols.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "core_api"
     },
     {
-      "path": "FILE_MANIFEST.json",
-      "purpose": "Machine-readable manifest of all files in the OpenBench AI v0.1.0 baseline repository.",
-      "type": "json_manifest",
-      "required_for_baseline": true
+      "path": "src/openbench/adapters/__init__.py",
+      "purpose": "Model inference adapters package exports.",
+      "type": "python_source",
+      "required_for_baseline": false,
+      "feature_area": "model_integrations"
+    },
+    {
+      "path": "src/openbench/adapters/base.py",
+      "purpose": "Abstract BaseModelAdapter interface and reproducibility metadata contract.",
+      "type": "python_source",
+      "required_for_baseline": false,
+      "feature_area": "model_integrations"
+    },
+    {
+      "path": "src/openbench/adapters/huggingface.py",
+      "purpose": "Experimental HuggingFaceAdapter for local transformers pipelines (offline-first by default).",
+      "type": "python_source",
+      "required_for_baseline": false,
+      "feature_area": "model_integrations"
+    },
+    {
+      "path": "src/openbench/adapters/local.py",
+      "purpose": "LocalCallableAdapter and DeterministicLookupAdapter for local Python model functions.",
+      "type": "python_source",
+      "required_for_baseline": false,
+      "feature_area": "model_integrations"
+    },
+    {
+      "path": "src/openbench/catalog.py",
+      "purpose": "Dataset catalog discovery, metadata inspection, filtering, and statistical analysis.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "dataset_management"
+    },
+    {
+      "path": "src/openbench/cli.py",
+      "purpose": "Command-line interface supporting all v0.1.0 commands plus list-datasets, inspect-dataset, dataset-stats, history, export, and --config.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "cli"
+    },
+    {
+      "path": "src/openbench/comparison.py",
+      "purpose": "Multi-model comparator with category/difficulty breakdowns, score margins, historical comparison, and optional explicit weighted scoring.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "model_comparison"
+    },
+    {
+      "path": "src/openbench/configuration.py",
+      "purpose": "YAML evaluation configuration profile loader and validator with CLI override support.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "configuration_profiles"
+    },
+    {
+      "path": "src/openbench/dataset.py",
+      "purpose": "JSONL dataset loader, directory loader, metadata filter, SHA-256 checksum, and schema validator.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "dataset_system"
+    },
+    {
+      "path": "src/openbench/evaluator.py",
+      "purpose": "Response loader (with optional latency/token telemetry) and central evaluation engine with category/difficulty/missing/invalid breakdowns.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "evaluation_engine"
+    },
+    {
+      "path": "src/openbench/exceptions.py",
+      "purpose": "Custom exception hierarchy with file path, line number, and record ID context.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "core_api"
+    },
+    {
+      "path": "src/openbench/history.py",
+      "purpose": "Zero-server local JSONL result history store for longitudinal benchmark tracking.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "historical_tracking"
+    },
+    {
+      "path": "src/openbench/metrics/__init__.py",
+      "purpose": "Metric registry, factory function, metadata listing, and custom metric registration.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "metrics"
+    },
+    {
+      "path": "src/openbench/metrics/accuracy.py",
+      "purpose": "AccuracyMetric with deterministic exact and word-bounded containment rules.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "metrics"
+    },
+    {
+      "path": "src/openbench/metrics/base.py",
+      "purpose": "BaseMetric abstract interface, MetricMetadata, MetricResult, and AggregateMetricResult.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "metrics"
+    },
+    {
+      "path": "src/openbench/metrics/bleu.py",
+      "purpose": "BleuMetric computing smoothed clipped n-gram precision with brevity penalty.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "advanced_metrics"
+    },
+    {
+      "path": "src/openbench/metrics/exact_match.py",
+      "purpose": "ExactMatchMetric comparing normalized model output to expected answer.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "metrics"
+    },
+    {
+      "path": "src/openbench/metrics/f1.py",
+      "purpose": "F1Metric computing harmonic mean of precision and recall.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "advanced_metrics"
+    },
+    {
+      "path": "src/openbench/metrics/keyword_match.py",
+      "purpose": "KeywordCoverageMetric returning matched/missing keywords and coverage percentage.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "metrics"
+    },
+    {
+      "path": "src/openbench/metrics/normalization.py",
+      "purpose": "Configurable text normalization (whitespace, case sensitivity, punctuation preservation).",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "metrics"
+    },
+    {
+      "path": "src/openbench/metrics/precision.py",
+      "purpose": "PrecisionMetric for binary classification decisions and discrete element-set predictions.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "advanced_metrics"
+    },
+    {
+      "path": "src/openbench/metrics/recall.py",
+      "purpose": "RecallMetric for binary classification decisions and discrete element-set predictions.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "advanced_metrics"
+    },
+    {
+      "path": "src/openbench/metrics/rouge.py",
+      "purpose": "RougeMetric, Rouge1Metric, and RougeLMetric for unigram and LCS overlap.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "advanced_metrics"
+    },
+    {
+      "path": "src/openbench/metrics/semantic_similarity.py",
+      "purpose": "SemanticSimilarityMetric with pluggable EmbeddingProvider adapters.",
+      "type": "python_source",
+      "required_for_baseline": false,
+      "feature_area": "advanced_metrics"
+    },
+    {
+      "path": "src/openbench/metrics/structured_output.py",
+      "purpose": "StructuredOutputMetric validating JSON parsing, required keys, field types, and JSON Schema.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "advanced_metrics"
+    },
+    {
+      "path": "src/openbench/reporting.py",
+      "purpose": "JSON, Markdown, and CSV report generator with enhanced Benchmark Reproducibility Card and secret redaction.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "reporting"
+    },
+    {
+      "path": "tests/test_advanced_metrics.py",
+      "purpose": "Unit tests for precision, recall, F1, ROUGE, BLEU, and semantic similarity.",
+      "type": "python_test",
+      "required_for_baseline": true,
+      "feature_area": "testing"
+    },
+    {
+      "path": "tests/test_backward_compatibility.py",
+      "purpose": "Dedicated backward compatibility test suite verifying v0.1.0 contracts.",
+      "type": "python_test",
+      "required_for_baseline": true,
+      "feature_area": "testing"
+    },
+    {
+      "path": "tests/test_catalog.py",
+      "purpose": "Unit tests for DatasetCatalog, filtering, inspection, and stats.",
+      "type": "python_test",
+      "required_for_baseline": true,
+      "feature_area": "testing"
+    },
+    {
+      "path": "tests/test_cli.py",
+      "purpose": "End-to-end CLI tests for v0.1.0 commands.",
+      "type": "python_test",
+      "required_for_baseline": true,
+      "feature_area": "testing"
+    },
+    {
+      "path": "tests/test_comparison.py",
+      "purpose": "Unit tests for ModelComparator.",
+      "type": "python_test",
+      "required_for_baseline": true,
+      "feature_area": "testing"
+    },
+    {
+      "path": "tests/test_configuration.py",
+      "purpose": "Unit tests for YAML configuration profiles and strict validation.",
+      "type": "python_test",
+      "required_for_baseline": true,
+      "feature_area": "testing"
+    },
+    {
+      "path": "tests/test_dataset.py",
+      "purpose": "Unit tests for JSONL dataset loading and error reporting.",
+      "type": "python_test",
+      "required_for_baseline": true,
+      "feature_area": "testing"
+    },
+    {
+      "path": "tests/test_evaluator.py",
+      "purpose": "Unit tests for ResponseLoader and Evaluator.",
+      "type": "python_test",
+      "required_for_baseline": true,
+      "feature_area": "testing"
+    },
+    {
+      "path": "tests/test_history.py",
+      "purpose": "Unit tests for ResultHistoryStore and historical run comparisons.",
+      "type": "python_test",
+      "required_for_baseline": true,
+      "feature_area": "testing"
+    },
+    {
+      "path": "tests/test_integrations.py",
+      "purpose": "Unit tests for LocalCallableAdapter, DeterministicLookupAdapter, HuggingFaceAdapter, and telemetry.",
+      "type": "python_test",
+      "required_for_baseline": true,
+      "feature_area": "testing"
+    },
+    {
+      "path": "tests/test_metrics.py",
+      "purpose": "Unit tests for baseline metrics and normalization.",
+      "type": "python_test",
+      "required_for_baseline": true,
+      "feature_area": "testing"
+    },
+    {
+      "path": "tests/test_reporting.py",
+      "purpose": "Unit tests for JSON/Markdown reporting and Reproducibility Cards.",
+      "type": "python_test",
+      "required_for_baseline": true,
+      "feature_area": "testing"
+    },
+    {
+      "path": "tests/test_structured_output.py",
+      "purpose": "Unit tests for StructuredOutputMetric.",
+      "type": "python_test",
+      "required_for_baseline": true,
+      "feature_area": "testing"
     }
   ]
 }
