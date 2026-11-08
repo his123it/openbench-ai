@@ -1,0 +1,33 @@
+name: instruction-following-profile
+description: Strict formatting and constraint verification profile for instruction following.
+
+dataset:
+  path: datasets/instruction_following/sample.jsonl
+  category: instruction_following
+
+metrics:
+  - exact_match
+  - accuracy
+  - precision
+  - recall
+  - f1
+  - rouge_l
+  - bleu
+
+normalization:
+  strip_whitespace: true
+  case_sensitive: true
+  collapse_whitespace: true
+  strip_punctuation: false
+
+options:
+  difficulty:
+    - easy
+    - medium
+    - hard
+  strict_unknown_ids: true
+  record_history: true
+
+output_format:
+  - json
+  - markdown

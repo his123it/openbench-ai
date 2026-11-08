@@ -1,0 +1,30 @@
+name: coding-profile
+description: Evaluation profile for coding, algorithms, and debugging benchmarks.
+
+dataset:
+  path: datasets/coding/sample.jsonl
+  category: coding
+
+metrics:
+  - exact_match
+  - accuracy
+  - keyword_coverage
+  - f1
+
+normalization:
+  strip_whitespace: true
+  case_sensitive: false
+  collapse_whitespace: true
+  strip_punctuation: false
+
+options:
+  difficulty:
+    - easy
+    - medium
+    - hard
+  strict_unknown_ids: false
+  record_history: true
+
+output_format:
+  - json
+  - markdown
