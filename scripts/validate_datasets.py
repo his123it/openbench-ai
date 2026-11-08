@@ -10,9 +10,8 @@ from openbench.dataset import Dataset, DatasetLoader
 from openbench.exceptions import OpenBenchError
 from openbench.metrics import create_metric
 
-# Five known v0.1.0 legacy records with extra synonym/explanation keywords in metadata.keywords
-# that do not appear verbatim in expected_answer (preserved unmodified per compatibility policy),
-# plus v0.2.0 records with alternative synonym keywords.
+# Five known v0.1.0 legacy records with extra explanation keywords in metadata.keywords that do
+# not appear verbatim in expected_answer (preserved unmodified per compatibility policy).
 KNOWN_LEGACY_KEYWORD_EXCEPTIONS = {
     "coding_003",
     "coding_007",
@@ -20,15 +19,10 @@ KNOWN_LEGACY_KEYWORD_EXCEPTIONS = {
     "reasoning_004",
     "reasoning_012",
 }
-KNOWN_V0_2_SYNONYM_KEYWORD_RECORDS = {
-    "coding_019",
-    "factual_005",
-    "factual_007",
-    "factual_018",
-    "multilingual_006",
-    "summarization_004",
-    "summarization_017",
-}
+# The v0.2.0 synonym-keyword records (coding_019, factual_005, factual_007, factual_018,
+# multilingual_006, summarization_004, summarization_017) were corrected in v0.2.0 and must
+# self-score 1.0, so no v0.2.0 exceptions are allowed.
+KNOWN_V0_2_SYNONYM_KEYWORD_RECORDS: set[str] = set()
 
 
 def check_dataset_self_consistency(dataset: Dataset) -> tuple[list[str], list[str], list[str]]:
