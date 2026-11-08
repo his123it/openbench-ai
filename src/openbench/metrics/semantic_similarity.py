@@ -1,4 +1,4 @@
-"""Semantic Similarity metric with pluggable embedding provider architecture."""
+"""Lexical and Semantic Similarity metrics with pluggable provider architecture (v0.3.1)."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from typing import Any
 
 from openbench.dataset import DatasetRecord
 from openbench.exceptions import MetricError
-from openbench.metrics.base import BaseMetric, MetricResult
+from openbench.metrics.base import AggregateMetricResult, BaseMetric, MetricResult
 from openbench.metrics.normalization import NormalizationConfig, normalize_text
 
 
@@ -29,35 +29,56 @@ def cosine_similarity(vec_a: list[float], vec_b: list[float]) -> float:
 
 
 class EmbeddingProvider(ABC):
-    """Abstract adapter interface for text embedding providers."""
+    """Abstract adapter interface for text vector providers.
+
+    Methodological Classification (`is_semantic_embedding`):
+    - `is_semantic_embedding = False`: Indicates a lexical or surface n-gram hashing
+      provider (such as `LocalNgramEmbeddingProvider`) that measures surface character/word
+      overlap rather than semantic meaning.
+    - `is_semantic_embedding = True`: Indicates a genuine neural/distributional embedding
+      model (such as `HuggingFaceEmbeddingProvider` or a verified embedding callable).
+    """
 
     provider_name: str = "base_embedding_provider"
     model_id: str = "unspecified"
     model_version: str = "0.1.0"
+    is_semantic_embedding: bool = False
 
     @abstractmethod
     def embed(self, text: str) -> list[float]:
         """Convert a text string into a fixed-length float vector."""
+
+    @property
+    def similarity_kind(self) -> str:
+        """Return `'semantic_similarity'` only for true embedding providers, else `'lexical_similarity'`."""
+        return "semantic_similarity" if self.is_semantic_embedding else "lexical_similarity"
 
     def metadata(self) -> dict[str, Any]:
         return {
             "provider_name": self.provider_name,
             "model_id": self.model_id,
             "model_version": self.model_version,
+            "is_semantic_embedding": self.is_semantic_embedding,
+            "similarity_kind": self.similarity_kind,
         }
 
 
 class LocalNgramEmbeddingProvider(EmbeddingProvider):
-    """Offline, zero-dependency deterministic feature-hashing embedding provider.
+    r"""Offline, zero-dependency deterministic lexical feature-hashing provider.
 
     Projects word unigrams and character 3-grams into a fixed-dimensional vector space
-    using SHA-256 feature hashing. Requires no external libraries, network access, or
-    model weight downloads.
+    using SHA-256 feature hashing.
+
+    Important Methodological Note:
+    `LocalNgramEmbeddingProvider` performs **lexical comparison** (`is_semantic_embedding = False`,
+    `similarity_kind = "lexical_similarity"`). It does NOT understand paraphrasing, negation,
+    context, or semantic meaning.
     """
 
     provider_name = "local_ngram_hash"
     model_id = "sha256-word-char3-v1"
-    model_version = "0.2.0"
+    model_version = "0.3.1"
+    is_semantic_embedding = False
 
     def __init__(self, dimensions: int = 128) -> None:
         if dimensions < 8:
@@ -98,12 +119,14 @@ class CallableEmbeddingProvider(EmbeddingProvider):
         embed_fn: Callable[[str], list[float]],
         model_id: str = "custom-embedding-fn",
         model_version: str = "1.0",
+        is_semantic_embedding: bool = True,
     ) -> None:
         if not callable(embed_fn):
             raise MetricError("embed_fn must be callable")
         self._embed_fn = embed_fn
         self.model_id = model_id
         self.model_version = model_version
+        self.is_semantic_embedding = bool(is_semantic_embedding)
 
     def embed(self, text: str) -> list[float]:
         vec = self._embed_fn(text)
@@ -113,15 +136,17 @@ class CallableEmbeddingProvider(EmbeddingProvider):
 
 
 class HuggingFaceEmbeddingProvider(EmbeddingProvider):
-    """Optional adapter for local Hugging Face `sentence-transformers` models.
+    """Optional adapter for local Hugging Face `sentence-transformers` neural embedding models.
 
     Safety & Reproducibility Guarantees:
-    - Does NOT import `sentence_transformers` unless instantiated.
+    - Does NOT import `sentence_transformers` unless instantiated and called.
     - Defaults to `local_files_only=True` so model weights are NEVER automatically
       downloaded from the internet without explicit user opt-in (`allow_download=True`).
+    - Marked `is_semantic_embedding = True`.
     """
 
     provider_name = "huggingface_sentence_transformers"
+    is_semantic_embedding = True
 
     def __init__(
         self,
@@ -164,24 +189,32 @@ class HuggingFaceEmbeddingProvider(EmbeddingProvider):
 
 
 class SemanticSimilarityMetric(BaseMetric):
-    """Computes embedding cosine similarity between normalized response and expected answer.
+    """Computes vector cosine similarity between normalized response and expected answer.
 
-    Critical Methodological Warning:
-    Semantic similarity measures vector-space topical/lexical proximity.
-    It is NOT factual correctness and must never be represented as proof that an
-    answer is factually or logically valid (for instance, 'The patient should take 10 mg'
-    and 'The patient should NOT take 100 mg' have very high embedding similarity).
+    Methodological Transparency & Naming (v0.3.1):
+    - When configured with the default `LocalNgramEmbeddingProvider`, this metric performs
+      surface word/character n-gram feature hashing (`is_semantic_embedding=False`). Results
+      are explicitly labeled with `similarity_type = "lexical_similarity"` in item and
+      aggregate details, and `semantic_similarity` serves as a backward-compatible legacy alias.
+    - Only when configured with a genuine embedding provider (`is_semantic_embedding=True`,
+      such as `HuggingFaceEmbeddingProvider` or a verified embedding `CallableEmbeddingProvider`)
+      are results labeled `similarity_type = "semantic_similarity"`.
+    - If `require_semantic_provider=True` is passed, attempting to evaluate with a lexical
+      provider raises `MetricError`.
+    - Neither lexical similarity nor embedding cosine similarity is equivalent to factual correctness.
     """
 
     name = "semantic_similarity"
-    version = "0.2.0"
+    version = "0.3.1"
     description = (
-        "Computes cosine similarity between embeddings of the normalized expected answer "
-        "and model response using a configurable EmbeddingProvider."
+        "Computes vector cosine similarity between the normalized expected answer and model response. "
+        "Uses lexical n-gram hashing by default (labeled as 'lexical_similarity') unless an embedding "
+        "provider (e.g., sentence-transformers) is configured."
     )
     limitation_note = (
-        "Semantic similarity is NOT factual correctness. High vector similarity indicates "
-        "topical or lexical closeness and cannot verify truth, negation, or numerical precision."
+        "The default local_ngram_hash provider measures lexical surface overlap (lexical_similarity) "
+        "and does NOT understand paraphrasing, negation, context, or meaning. Semantic similarity is "
+        "NOT factual correctness and is NOT proof of factual correctness."
     )
     is_optional = True
     optional_dependencies = ("sentence-transformers",)
@@ -191,14 +224,33 @@ class SemanticSimilarityMetric(BaseMetric):
         normalization: NormalizationConfig | None = None,
         provider: EmbeddingProvider | None = None,
         similarity_threshold: float = 0.75,
+        require_semantic_provider: bool = False,
     ) -> None:
         if not -1.0 <= similarity_threshold <= 1.0:
             raise MetricError("similarity_threshold must be between -1.0 and 1.0")
         self.normalization = normalization or NormalizationConfig()
         self.provider = provider or LocalNgramEmbeddingProvider()
         self.similarity_threshold = similarity_threshold
+        self.require_semantic_provider = require_semantic_provider
+
+        if self.require_semantic_provider and not self.provider.is_semantic_embedding:
+            raise MetricError(
+                f"Provider '{self.provider.provider_name}' performs lexical comparison "
+                "(is_semantic_embedding=False). Configure a genuine embedding provider "
+                "(e.g., HuggingFaceEmbeddingProvider) when require_semantic_provider=True."
+            )
+
+    @property
+    def similarity_type(self) -> str:
+        """Return `'semantic_similarity'` only if the active provider is a true embedding model, else `'lexical_similarity'`."""
+        return self.provider.similarity_kind
 
     def compute_item(self, record: DatasetRecord, response_text: str) -> MetricResult:
+        if self.require_semantic_provider and not self.provider.is_semantic_embedding:
+            raise MetricError(
+                f"Provider '{self.provider.provider_name}' is not a semantic embedding provider."
+            )
+
         norm_expected = normalize_text(record.expected_answer, self.normalization)
         norm_response = normalize_text(response_text, self.normalization)
 
@@ -212,7 +264,6 @@ class SemanticSimilarityMetric(BaseMetric):
             vec_exp = self.provider.embed(norm_expected)
             vec_resp = self.provider.embed(norm_response)
             raw_cos = cosine_similarity(vec_exp, vec_resp)
-            # Clamp score to [0.0, 1.0] for standard metric reporting while recording raw cosine
             sim = max(0.0, raw_cos)
 
         passed = sim >= self.similarity_threshold
@@ -221,6 +272,8 @@ class SemanticSimilarityMetric(BaseMetric):
             score=sim,
             passed=passed,
             details={
+                "similarity_type": self.similarity_type,
+                "is_semantic_embedding": self.provider.is_semantic_embedding,
                 "cosine_similarity": round(sim, 6),
                 "similarity_threshold": self.similarity_threshold,
                 "provider": self.provider.metadata(),
@@ -228,12 +281,72 @@ class SemanticSimilarityMetric(BaseMetric):
             },
         )
 
+    def aggregate(
+        self,
+        item_results: list[MetricResult],
+        total_dataset_items: int,
+    ) -> AggregateMetricResult:
+        base_agg = super().aggregate(item_results, total_dataset_items)
+        details = dict(base_agg.details)
+        details.update(
+            {
+                "similarity_type": self.similarity_type,
+                "is_semantic_embedding": self.provider.is_semantic_embedding,
+                "provider": self.provider.metadata(),
+                "legacy_alias_note": (
+                    "Metric key 'semantic_similarity' is retained as a legacy alias when using "
+                    "the default local_ngram_hash provider; actual measurement is 'lexical_similarity'."
+                    if not self.provider.is_semantic_embedding
+                    else "Evaluated using a semantic embedding provider."
+                ),
+            }
+        )
+        return AggregateMetricResult(
+            metric_name=base_agg.metric_name,
+            metric_version=base_agg.metric_version,
+            score=base_agg.score,
+            total_items=base_agg.total_items,
+            evaluated_items=base_agg.evaluated_items,
+            passed_items=base_agg.passed_items,
+            details=details,
+        )
+
     def config_summary(self) -> dict[str, Any]:
         return {
             "name": self.name,
             "version": self.version,
             "description": self.description,
+            "similarity_type": self.similarity_type,
+            "is_semantic_embedding": self.provider.is_semantic_embedding,
             "similarity_threshold": self.similarity_threshold,
+            "require_semantic_provider": self.require_semantic_provider,
             "provider": self.provider.metadata(),
             "normalization": self.normalization.to_dict(),
         }
+
+
+class LexicalSimilarityMetric(SemanticSimilarityMetric):
+    """Explicitly named `lexical_similarity` metric using `LocalNgramEmbeddingProvider`."""
+
+    name = "lexical_similarity"
+    version = "0.3.1"
+    description = (
+        "Computes lexical word/character n-gram cosine similarity using deterministic SHA-256 feature hashing."
+    )
+    limitation_note = (
+        "Measures surface lexical overlap only; does not understand paraphrasing, negation, context, or meaning."
+    )
+    is_optional = False
+    optional_dependencies = ()
+
+    def __init__(
+        self,
+        normalization: NormalizationConfig | None = None,
+        similarity_threshold: float = 0.75,
+    ) -> None:
+        super().__init__(
+            normalization=normalization,
+            provider=LocalNgramEmbeddingProvider(),
+            similarity_threshold=similarity_threshold,
+            require_semantic_provider=False,
+        )

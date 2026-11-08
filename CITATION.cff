@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+title: "OpenBench AI"
+message: "If you use OpenBench AI in your research or evaluation workflows, please cite it using the metadata below."
+type: software
+authors:
+  - family-names: "Chhaba"
+    given-names: "Lakshay"
+repository-code: "https://github.com/lakshaychhaba0001-sys/openbench-ai"
+url: "https://github.com/lakshaychhaba0001-sys/openbench-ai"
+license: "MIT"
+version: "0.3.1"
+date-released: "2026-11-08"
+keywords:
+  - "large language models"
+  - "evaluation"
+  - "benchmarking"
+  - "reproducibility"

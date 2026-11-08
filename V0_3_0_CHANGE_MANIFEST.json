@@ -1,0 +1,840 @@
+{
+  "project": "OpenBench AI",
+  "from_version": "0.2.0",
+  "to_version": "0.3.0",
+  "summary": {
+    "total_files_in_v0_3_0": 128,
+    "added_files_count": 36,
+    "modified_files_count": 15,
+    "unchanged_files_count": 77,
+    "removed_files_count": 0
+  },
+  "added_files": [
+    {
+      "path": "V0_3_0_BUILD_INSTRUCTIONS.md",
+      "purpose": "Build, installation, test, and CLI verification guide for v0.3.0.",
+      "type": "documentation_markdown",
+      "feature_area": "release_management",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "V0_3_0_CHANGE_MANIFEST.json",
+      "purpose": "Machine-readable change manifest detailing added, modified, unchanged, and removed files in v0.3.0.",
+      "type": "json_manifest",
+      "feature_area": "release_management",
+      "dependencies": [],
+      "compatibility_impact": "new_manifest",
+      "associated_tests": [],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "V0_3_0_COMPATIBILITY_REPORT.md",
+      "purpose": "Detailed compatibility verification matrix for v0.1.0 and v0.2.0 features in v0.3.0.",
+      "type": "documentation_markdown",
+      "feature_area": "release_management",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_backward_compatibility.py",
+        "tests/test_v0_3_compatibility.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "V0_3_0_MIGRATION_GUIDE.md",
+      "purpose": "Migration guide for upgrading to OpenBench AI v0.3.0.",
+      "type": "documentation_markdown",
+      "feature_area": "release_management",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_v0_3_compatibility.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "V0_3_0_SECURITY_REVIEW.md",
+      "purpose": "Security and privacy threat model, mitigations, and operational boundary review for v0.3.0.",
+      "type": "documentation_markdown",
+      "feature_area": "security_and_privacy",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_security_and_cache.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "V0_3_0_VALIDATION_CHECKLIST.md",
+      "purpose": "Pre-release validation checklist for v0.3.0.",
+      "type": "documentation_markdown",
+      "feature_area": "release_management",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "configs/huggingface_local.yaml",
+      "purpose": "Example YAML configuration profile for offline-first local Hugging Face execution.",
+      "type": "configuration_yaml",
+      "feature_area": "configuration",
+      "dependencies": [
+        "PyYAML (optional)",
+        "transformers (optional)"
+      ],
+      "compatibility_impact": "new_file",
+      "associated_tests": [
+        "tests/test_v0_3_compatibility.py"
+      ],
+      "required": false,
+      "optional": true,
+      "experimental": true
+    },
+    {
+      "path": "configs/local_ollama.yaml",
+      "purpose": "Example YAML configuration profile for local Ollama model execution.",
+      "type": "configuration_yaml",
+      "feature_area": "configuration",
+      "dependencies": [
+        "PyYAML (optional)"
+      ],
+      "compatibility_impact": "new_file",
+      "associated_tests": [
+        "tests/test_v0_3_compatibility.py"
+      ],
+      "required": false,
+      "optional": true,
+      "experimental": false
+    },
+    {
+      "path": "configs/mock_experiment.yaml",
+      "purpose": "Example YAML configuration profile for deterministic mock experiment runs with pricing config.",
+      "type": "configuration_yaml",
+      "feature_area": "configuration",
+      "dependencies": [
+        "PyYAML (optional)"
+      ],
+      "compatibility_impact": "new_file",
+      "associated_tests": [
+        "tests/test_v0_3_compatibility.py"
+      ],
+      "required": false,
+      "optional": true,
+      "experimental": false
+    },
+    {
+      "path": "configs/repeated_benchmark.yaml",
+      "purpose": "Example YAML configuration profile for repeated experiment runs (repeat_count=3) and variance analysis.",
+      "type": "configuration_yaml",
+      "feature_area": "configuration",
+      "dependencies": [
+        "PyYAML (optional)"
+      ],
+      "compatibility_impact": "new_file",
+      "associated_tests": [
+        "tests/test_v0_3_compatibility.py"
+      ],
+      "required": false,
+      "optional": true,
+      "experimental": false
+    },
+    {
+      "path": "docs/benchmark_integrity.md",
+      "purpose": "Documentation for cryptographic SHA-256 artifact checksums and provenance verification.",
+      "type": "documentation_markdown",
+      "feature_area": "documentation",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_experiments_and_integrity.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "docs/custom_provider.md",
+      "purpose": "Developer guide for implementing and registering custom model providers.",
+      "type": "documentation_markdown",
+      "feature_area": "documentation",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_providers.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "docs/experiment_tracking.md",
+      "purpose": "Documentation for structured experiment run storage and lifecycle commands.",
+      "type": "documentation_markdown",
+      "feature_area": "documentation",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_experiments_and_integrity.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "docs/huggingface.md",
+      "purpose": "Documentation for the experimental local Hugging Face integration.",
+      "type": "documentation_markdown",
+      "feature_area": "documentation",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_providers.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": true
+    },
+    {
+      "path": "docs/model_execution.md",
+      "purpose": "Documentation for the provider-independent ExecutionEngine.",
+      "type": "documentation_markdown",
+      "feature_area": "documentation",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_execution.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "docs/ollama.md",
+      "purpose": "Documentation for the local Ollama integration.",
+      "type": "documentation_markdown",
+      "feature_area": "documentation",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_providers.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "docs/performance_monitoring.md",
+      "purpose": "Documentation for latency percentiles, token provenance, and optional cost estimation.",
+      "type": "documentation_markdown",
+      "feature_area": "documentation",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_performance_and_analytics.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "docs/providers.md",
+      "purpose": "Documentation for the model provider framework and CLI commands.",
+      "type": "documentation_markdown",
+      "feature_area": "documentation",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_providers.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "docs/reliability.md",
+      "purpose": "Documentation for retry policies, exponential backoff, run resumption, and response caching.",
+      "type": "documentation_markdown",
+      "feature_area": "documentation",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_execution.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "docs/security_and_privacy.md",
+      "purpose": "Documentation for credential redaction, privacy mode, URL validation, and untrusted output handling.",
+      "type": "documentation_markdown",
+      "feature_area": "documentation",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_security_and_cache.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "docs/v0_3_compatibility.md",
+      "purpose": "Backward compatibility guide for v0.1.0 and v0.2.0 users upgrading to v0.3.0.",
+      "type": "documentation_markdown",
+      "feature_area": "documentation",
+      "dependencies": [],
+      "compatibility_impact": "new_documentation",
+      "associated_tests": [
+        "tests/test_v0_3_compatibility.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/adapters/mock.py",
+      "purpose": "Deterministic MockModelProvider (is_mock=True) for offline tests, CI, and failure/timeout simulation.",
+      "type": "python_source",
+      "feature_area": "model_providers",
+      "dependencies": [],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_providers.py",
+        "tests/test_execution.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/adapters/ollama.py",
+      "purpose": "Local Ollama HTTP adapter (/api/generate & /api/tags) with streaming, token extraction, and connection checks.",
+      "type": "python_source",
+      "feature_area": "model_providers",
+      "dependencies": [
+        "httpx (optional; uses stdlib urllib.request by default)"
+      ],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_providers.py"
+      ],
+      "required": false,
+      "optional": true,
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/analytics.py",
+      "purpose": "BenchmarkAnalytics for failure analysis, error categorization, repeated-run variance, and item disagreement.",
+      "type": "python_source",
+      "feature_area": "advanced_analytics",
+      "dependencies": [],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_performance_and_analytics.py",
+        "tests/test_v0_3_compatibility.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/cache.py",
+      "purpose": "Deterministic configuration-aware SHA-256 response cache with audit stats and clear support.",
+      "type": "python_source",
+      "feature_area": "reliable_execution",
+      "dependencies": [],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_execution.py",
+        "tests/test_v0_3_compatibility.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/execution.py",
+      "purpose": "Provider-independent ExecutionEngine with RetryPolicy, exponential backoff, timeouts, concurrency, and cancellation.",
+      "type": "python_source",
+      "feature_area": "model_execution_engine",
+      "dependencies": [],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_execution.py",
+        "tests/test_experiments_and_integrity.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/experiments.py",
+      "purpose": "ExperimentManager managing structured run directories (experiments/run_<id>/), resumption, and comparison.",
+      "type": "python_source",
+      "feature_area": "experiment_management",
+      "dependencies": [],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_experiments_and_integrity.py",
+        "tests/test_v0_3_compatibility.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/integrity.py",
+      "purpose": "RunIntegrityVerifier verifying SHA-256 artifact checksums, schema versions, and execution origin provenance.",
+      "type": "python_source",
+      "feature_area": "benchmark_integrity",
+      "dependencies": [],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_experiments_and_integrity.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/performance.py",
+      "purpose": "PerformanceMonitor, latency percentiles (P50/P95/P99), token source accounting, and optional PricingConfig.",
+      "type": "python_source",
+      "feature_area": "performance_monitoring",
+      "dependencies": [],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_performance_and_analytics.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/security.py",
+      "purpose": "Credential redaction, error message token scrubbing, privacy mode hashing, and endpoint/path validation.",
+      "type": "python_source",
+      "feature_area": "security_and_privacy",
+      "dependencies": [],
+      "compatibility_impact": "new_module",
+      "associated_tests": [
+        "tests/test_security_and_cache.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "tests/test_execution.py",
+      "purpose": "Unit tests for ExecutionEngine retries, backoff, timeouts, concurrency, cache isolation, and cancellation.",
+      "type": "python_test",
+      "feature_area": "testing",
+      "dependencies": [
+        "pytest"
+      ],
+      "compatibility_impact": "new_test_suite",
+      "associated_tests": [
+        "tests/test_execution.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "tests/test_experiments_and_integrity.py",
+      "purpose": "Unit tests for ExperimentManager, run resumption, tamper detection, and provenance verification.",
+      "type": "python_test",
+      "feature_area": "testing",
+      "dependencies": [
+        "pytest"
+      ],
+      "compatibility_impact": "new_test_suite",
+      "associated_tests": [
+        "tests/test_experiments_and_integrity.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "tests/test_performance_and_analytics.py",
+      "purpose": "Unit tests for PerformanceMonitor latency percentiles, token provenance, PricingConfig, and BenchmarkAnalytics.",
+      "type": "python_test",
+      "feature_area": "testing",
+      "dependencies": [
+        "pytest"
+      ],
+      "compatibility_impact": "new_test_suite",
+      "associated_tests": [
+        "tests/test_performance_and_analytics.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "tests/test_providers.py",
+      "purpose": "Unit tests for provider registry, MockModelProvider, OllamaAdapter (sync & streaming), and HuggingFaceAdapter.",
+      "type": "python_test",
+      "feature_area": "testing",
+      "dependencies": [
+        "pytest"
+      ],
+      "compatibility_impact": "new_test_suite",
+      "associated_tests": [
+        "tests/test_providers.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "tests/test_security_and_cache.py",
+      "purpose": "Unit tests for secret redaction, error sanitization, URL validation, privacy mode, and safe output paths.",
+      "type": "python_test",
+      "feature_area": "testing",
+      "dependencies": [
+        "pytest"
+      ],
+      "compatibility_impact": "new_test_suite",
+      "associated_tests": [
+        "tests/test_security_and_cache.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "tests/test_v0_3_compatibility.py",
+      "purpose": "End-to-end CLI and configuration compatibility tests for v0.3.0 commands and repeated runs.",
+      "type": "python_test",
+      "feature_area": "testing",
+      "dependencies": [
+        "pytest"
+      ],
+      "compatibility_impact": "new_test_suite",
+      "associated_tests": [
+        "tests/test_v0_3_compatibility.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    }
+  ],
+  "modified_files": [
+    {
+      "path": ".github/workflows/tests.yml",
+      "purpose": "GitHub Actions test & CLI smoke workflow across Python 3.10, 3.11, and 3.12.",
+      "type": "ci_workflow_yaml",
+      "feature_area": "ci_cd",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_cli.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": ".gitignore",
+      "purpose": "Git ignore rules.",
+      "type": "configuration_git",
+      "feature_area": "packaging",
+      "dependencies": [],
+      "compatibility_impact": "unchanged",
+      "associated_tests": [],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "CHANGELOG.md",
+      "purpose": "Release changelog containing both v0.2.0 and v0.1.0 histories.",
+      "type": "documentation_markdown",
+      "feature_area": "release_management",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "FILE_MANIFEST.json",
+      "purpose": "Complete machine-readable manifest of all files in OpenBench AI v0.2.0.",
+      "type": "json_manifest",
+      "feature_area": "release_management",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "README.md",
+      "purpose": "Updated v0.2.0 primary documentation, dataset catalog, metrics reference, and CLI guide.",
+      "type": "documentation_markdown",
+      "feature_area": "documentation",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "pyproject.toml",
+      "purpose": "PEP 621 package configuration (v0.2.0) with optional dependency groups.",
+      "type": "configuration_toml",
+      "feature_area": "packaging",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_backward_compatibility.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/__init__.py",
+      "purpose": "Package initialization (v0.3.0) exporting all v0.1.0, v0.2.0, and v0.3.0 public classes and functions.",
+      "type": "python_source",
+      "feature_area": "core_api",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_backward_compatibility.py",
+        "tests/test_v0_3_compatibility.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/adapters/__init__.py",
+      "purpose": "Model provider registry and adapter exports (Mock, Ollama, HuggingFace, LocalCallable, DeterministicLookup).",
+      "type": "python_source",
+      "feature_area": "model_providers",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_providers.py",
+        "tests/test_integrations.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/adapters/base.py",
+      "purpose": "BaseModelAdapter, GenerationConfig, ProviderHealthStatus, and PROVIDER_REGISTRY.",
+      "type": "python_source",
+      "feature_area": "model_providers",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_providers.py",
+        "tests/test_integrations.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/adapters/huggingface.py",
+      "purpose": "Experimental local Hugging Face transformers pipeline adapter (offline-first local_files_only=True).",
+      "type": "python_source",
+      "feature_area": "model_providers",
+      "dependencies": [
+        "transformers (optional)",
+        "torch (optional)"
+      ],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_providers.py",
+        "tests/test_integrations.py"
+      ],
+      "required": false,
+      "optional": true,
+      "experimental": true
+    },
+    {
+      "path": "src/openbench/adapters/local.py",
+      "purpose": "LocalCallableAdapter and DeterministicLookupAdapter.",
+      "type": "python_source",
+      "feature_area": "model_providers",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_integrations.py"
+      ],
+      "required": false,
+      "optional": true,
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/cli.py",
+      "purpose": "Expanded CLI supporting all v0.1/v0.2 commands plus run, runs (list/show/verify/resume/compare), providers, and cache.",
+      "type": "python_source",
+      "feature_area": "cli",
+      "dependencies": [],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_cli.py",
+        "tests/test_v0_3_compatibility.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/configuration.py",
+      "purpose": "Extended YAML configuration loader supporting provider, generation, execution, performance, and privacy blocks.",
+      "type": "python_source",
+      "feature_area": "configuration",
+      "dependencies": [
+        "PyYAML (optional)"
+      ],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_configuration.py",
+        "tests/test_v0_3_compatibility.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "tests/test_cli.py",
+      "purpose": "End-to-end CLI tests for v0.1.0 commands.",
+      "type": "python_test",
+      "feature_area": "testing",
+      "dependencies": [
+        "pytest"
+      ],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_cli.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    },
+    {
+      "path": "tests/test_reporting.py",
+      "purpose": "Unit tests for JSON/Markdown reporting and Reproducibility Cards.",
+      "type": "python_test",
+      "feature_area": "testing",
+      "dependencies": [
+        "pytest"
+      ],
+      "compatibility_impact": "additive_backward_compatible",
+      "associated_tests": [
+        "tests/test_reporting.py"
+      ],
+      "required": true,
+      "optional": false,
+      "experimental": false
+    }
+  ],
+  "removed_files": [],
+  "unchanged_files": [
+    ".github/ISSUE_TEMPLATE/bug_report.md",
+    ".github/ISSUE_TEMPLATE/feature_request.md",
+    ".github/pull_request_template.md",
+    ".github/workflows/lint.yml",
+    "BACKWARD_COMPATIBILITY_REPORT.md",
+    "BUILD_INSTRUCTIONS.md",
+    "CODE_OF_CONDUCT.md",
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "SECURITY.md",
+    "V0_2_0_BUILD_INSTRUCTIONS.md",
+    "V0_2_0_CHANGE_MANIFEST.json",
+    "V0_2_0_MIGRATION_GUIDE.md",
+    "V0_2_0_VALIDATION_CHECKLIST.md",
+    "VALIDATION_CHECKLIST.md",
+    "configs/coding.yaml",
+    "configs/instruction_following.yaml",
+    "configs/reasoning.yaml",
+    "datasets/coding/sample.jsonl",
+    "datasets/debugging/sample.jsonl",
+    "datasets/factual_knowledge/sample.jsonl",
+    "datasets/instruction_following/sample.jsonl",
+    "datasets/mathematics/sample.jsonl",
+    "datasets/multilingual/sample.jsonl",
+    "datasets/reasoning/sample.jsonl",
+    "datasets/safety/sample.jsonl",
+    "datasets/structured_output/sample.jsonl",
+    "datasets/summarization/sample.jsonl",
+    "docs/advanced_metrics.md",
+    "docs/architecture.md",
+    "docs/backward_compatibility.md",
+    "docs/configuration.md",
+    "docs/contributing.md",
+    "docs/dashboard_architecture.md",
+    "docs/dataset_catalog.md",
+    "docs/evaluation_methodology.md",
+    "docs/historical_tracking.md",
+    "docs/installation.md",
+    "docs/integrations.md",
+    "docs/metrics.md",
+    "docs/usage.md",
+    "examples/basic_evaluation.py",
+    "examples/compare_models.py",
+    "examples/sample_responses.json",
+    "scripts/run_example.py",
+    "scripts/validate_datasets.py",
+    "src/openbench/catalog.py",
+    "src/openbench/comparison.py",
+    "src/openbench/dataset.py",
+    "src/openbench/evaluator.py",
+    "src/openbench/exceptions.py",
+    "src/openbench/history.py",
+    "src/openbench/metrics/__init__.py",
+    "src/openbench/metrics/accuracy.py",
+    "src/openbench/metrics/base.py",
+    "src/openbench/metrics/bleu.py",
+    "src/openbench/metrics/exact_match.py",
+    "src/openbench/metrics/f1.py",
+    "src/openbench/metrics/keyword_match.py",
+    "src/openbench/metrics/normalization.py",
+    "src/openbench/metrics/precision.py",
+    "src/openbench/metrics/recall.py",
+    "src/openbench/metrics/rouge.py",
+    "src/openbench/metrics/semantic_similarity.py",
+    "src/openbench/metrics/structured_output.py",
+    "src/openbench/reporting.py",
+    "tests/test_advanced_metrics.py",
+    "tests/test_backward_compatibility.py",
+    "tests/test_catalog.py",
+    "tests/test_comparison.py",
+    "tests/test_configuration.py",
+    "tests/test_dataset.py",
+    "tests/test_evaluator.py",
+    "tests/test_history.py",
+    "tests/test_integrations.py",
+    "tests/test_metrics.py",
+    "tests/test_structured_output.py"
+  ]
+}

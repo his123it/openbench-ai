@@ -1,0 +1,36 @@
+name: huggingface-local-coding
+description: Offline-first local Hugging Face transformers execution profile (no automatic weight downloads).
+
+dataset:
+  path: datasets/coding/sample.jsonl
+  category: coding
+
+provider:
+  name: huggingface
+  model: gpt2
+  revision: main
+  device: cpu
+  allow_download: false
+
+generation:
+  temperature: 0.0
+  max_tokens: 64
+  top_p: 1.0
+
+execution:
+  timeout_seconds: 60.0
+  concurrency: 1
+  use_cache: true
+  max_attempts: 2
+
+performance:
+  estimate_missing_tokens: true
+
+metrics:
+  - exact_match
+  - accuracy
+  - keyword_coverage
+
+output_format:
+  - json
+  - markdown

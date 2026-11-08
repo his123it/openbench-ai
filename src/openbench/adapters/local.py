@@ -6,7 +6,7 @@ import time
 from collections.abc import Callable
 from typing import Any
 
-from openbench.adapters.base import BaseModelAdapter
+from openbench.adapters.base import BaseModelAdapter, GenerationConfig
 from openbench.dataset import DatasetRecord
 from openbench.evaluator import ResponseItem
 from openbench.exceptions import ConfigurationError
@@ -21,7 +21,9 @@ class LocalCallableAdapter(BaseModelAdapter):
     """
 
     provider_name = "local_callable"
+    description = "Wraps a user-supplied Python callable `fn(prompt) -> str | dict`."
     is_experimental = False
+    is_mock = False
 
     def __init__(
         self,
@@ -30,11 +32,15 @@ class LocalCallableAdapter(BaseModelAdapter):
         model_version: str = "1.0",
         measure_latency: bool = True,
         inference_config: dict[str, Any] | None = None,
+        generation_config: GenerationConfig | None = None,
+        timeout_seconds: float = 30.0,
     ) -> None:
         super().__init__(
             model_name=model_name,
             model_version=model_version,
             inference_config=inference_config,
+            generation_config=generation_config,
+            timeout_seconds=timeout_seconds,
         )
         if not callable(generate_fn):
             raise ConfigurationError("generate_fn must be a callable accepting a prompt string")
@@ -71,17 +77,26 @@ class DeterministicLookupAdapter(BaseModelAdapter):
     """Deterministic local adapter backed by an in-memory lookup dictionary for testing."""
 
     provider_name = "local_lookup"
+    description = "Deterministic in-memory ID lookup adapter for testing."
     is_experimental = False
+    is_mock = True
 
     def __init__(
         self,
         model_name: str,
-        lookup_by_id: dict[str, str],
+        lookup_by_id: dict[str, str] | None = None,
         default_response: str = "",
         model_version: str = "1.0",
+        generation_config: GenerationConfig | None = None,
+        timeout_seconds: float = 30.0,
     ) -> None:
-        super().__init__(model_name=model_name, model_version=model_version)
-        self.lookup_by_id = dict(lookup_by_id)
+        super().__init__(
+            model_name=model_name,
+            model_version=model_version,
+            generation_config=generation_config,
+            timeout_seconds=timeout_seconds,
+        )
+        self.lookup_by_id = dict(lookup_by_id or {})
         self.default_response = default_response
 
     def generate_one(self, record: DatasetRecord) -> ResponseItem:

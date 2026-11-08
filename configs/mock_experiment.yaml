@@ -1,0 +1,48 @@
+name: mock-deterministic-experiment
+description: Offline deterministic mock execution profile for CI smoke tests and experiment pipeline verification.
+
+dataset:
+  path: datasets/mathematics/sample.jsonl
+  category: mathematics
+
+provider:
+  name: mock
+  model: mock-deterministic-v1
+  model_version: 0.3.0
+  use_expected_answer: true
+  simulated_latency_ms: 1.5
+
+generation:
+  temperature: 0.0
+  max_tokens: 64
+  seed: 100
+
+execution:
+  timeout_seconds: 10.0
+  concurrency: 2
+  use_cache: true
+  max_attempts: 3
+  initial_backoff_seconds: 0.01
+
+performance:
+  estimate_missing_tokens: false
+  pricing:
+    prompt_cost_per_1k_tokens: 0.001
+    completion_cost_per_1k_tokens: 0.002
+    currency: USD
+
+privacy:
+  privacy_mode: false
+
+metrics:
+  - exact_match
+  - accuracy
+  - keyword_coverage
+  - precision
+  - recall
+  - f1
+
+output_format:
+  - json
+  - markdown
+  - csv

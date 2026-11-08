@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import uuid
 from dataclasses import dataclass, field
@@ -9,7 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from openbench.dataset import Dataset, DatasetLoader
+from openbench.dataset import Dataset, DatasetLoader, load_ids_file
 from openbench.exceptions import ConfigurationError, ResponseValidationError
 from openbench.metrics import (
     AggregateMetricResult,
@@ -18,23 +19,13 @@ from openbench.metrics import (
     NormalizationConfig,
     create_metric,
 )
+from openbench.security import redact_sensitive_data
 
 DEFAULT_METRIC_NAMES = ("exact_match", "accuracy", "keyword_coverage")
 
-_SECRET_SUBSTRINGS = ("key", "token", "secret", "password", "credential", "auth")
-
-
 def redact_secrets(config_dict: dict[str, Any]) -> dict[str, Any]:
-    """Return a copy of a config dict with credential-like keys replaced by '[REDACTED]'."""
-    cleaned: dict[str, Any] = {}
-    for k, v in config_dict.items():
-        if any(sub in str(k).lower() for sub in _SECRET_SUBSTRINGS):
-            cleaned[k] = "[REDACTED]"
-        elif isinstance(v, dict):
-            cleaned[k] = redact_secrets(v)
-        else:
-            cleaned[k] = v
-    return cleaned
+    """Backward-compatible alias (v0.2.0) for ``openbench.security.redact_sensitive_data``."""
+    return redact_sensitive_data(dict(config_dict))
 
 
 
@@ -103,13 +94,7 @@ class ResponseLoader:
 
     @staticmethod
     def load_all(file_path: str | Path) -> list[ModelResponseSet]:
-        """Load one or more model response sets from a JSON file.
-
-        Supports either:
-        - A single JSON object: `{"model_name": "...", "model_version": "...", "responses": [...]}`
-        - A JSON object with `"models": [...]`
-        - A top-level JSON list of model objects
-        """
+        """Load one or more model response sets from a JSON file."""
         target = Path(file_path)
         if not target.exists():
             raise FileNotFoundError(f"Response file does not exist: {target}")
@@ -236,9 +221,11 @@ class ResponseLoader:
 
             latency_ms: float | None = None
             if "latency_ms" in raw_item and raw_item["latency_ms"] is not None:
-                if not isinstance(raw_item["latency_ms"], (int, float)) or isinstance(
-                    raw_item["latency_ms"], bool
-                ) or raw_item["latency_ms"] < 0:
+                if (
+                    not isinstance(raw_item["latency_ms"], (int, float))
+                    or isinstance(raw_item["latency_ms"], bool)
+                    or raw_item["latency_ms"] < 0
+                ):
                     raise ResponseValidationError(
                         f"Field 'latency_ms' for ID '{item_id}' must be a non-negative number",
                         file_path=file_path,
@@ -299,6 +286,8 @@ class EvaluationConfig:
     difficulties: list[str] | None = None
     tags: list[str] | None = None
     languages: list[str] | None = None
+    selected_ids: list[str] | None = None
+    ids_file: str | None = None
     profile_name: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
@@ -308,13 +297,25 @@ class EvaluationConfig:
             "strict_unknown_ids": self.strict_unknown_ids,
         }
         if self.metric_options:
-            payload["metric_options"] = dict(self.metric_options)
-        if any(x is not None for x in (self.categories, self.difficulties, self.tags, self.languages)):
+            payload["metric_options"] = redact_sensitive_data(dict(self.metric_options))
+        if any(
+            x is not None
+            for x in (
+                self.categories,
+                self.difficulties,
+                self.tags,
+                self.languages,
+                self.selected_ids,
+                self.ids_file,
+            )
+        ):
             payload["filters"] = {
                 "categories": self.categories,
                 "difficulties": self.difficulties,
                 "tags": self.tags,
                 "languages": self.languages,
+                "selected_ids": self.selected_ids,
+                "ids_file": self.ids_file,
             }
         if self.profile_name:
             payload["profile_name"] = self.profile_name
@@ -384,6 +385,7 @@ class EvaluationResult:
     missing_breakdown: dict[str, Any] = field(default_factory=dict)
     invalid_response_breakdown: dict[str, Any] = field(default_factory=dict)
     performance_summary: dict[str, Any] = field(default_factory=dict)
+    id_filter_summary: dict[str, Any] | None = None
 
     @property
     def total_dataset_items(self) -> int:
@@ -397,9 +399,15 @@ class EvaluationResult:
     def missing_responses_count(self) -> int:
         return len(self.missing_response_ids)
 
+    @property
+    def excluded_ids(self) -> list[str]:
+        if self.id_filter_summary:
+            return list(self.id_filter_summary.get("excluded_ids", []))
+        return []
+
     def to_dict(self) -> dict[str, Any]:
         """Serialize complete evaluation result to a JSON-compatible dictionary."""
-        return {
+        payload: dict[str, Any] = {
             "evaluation_id": self.evaluation_id,
             "project_version": self.project_version,
             "evaluation_timestamp": self.evaluation_timestamp,
@@ -408,13 +416,13 @@ class EvaluationResult:
                 "model_name": self.model_name,
                 "model_version": self.model_version,
                 "model_provider": self.model_provider,
-                "inference_config": redact_secrets(self.inference_config),
+                "inference_config": redact_sensitive_data(dict(self.inference_config)),
                 "total_dataset_items": self.total_dataset_items,
                 "evaluated_items": self.evaluated_items_count,
                 "missing_responses_count": self.missing_responses_count,
                 "unknown_responses_count": len(self.unknown_response_ids),
             },
-            "configuration": dict(self.config),
+            "configuration": redact_sensitive_data(dict(self.config)),
             "metrics_used": list(self.metrics_used),
             "aggregate_results": {
                 k: v.to_dict() for k, v in self.aggregate_results.items()
@@ -430,6 +438,9 @@ class EvaluationResult:
             "warnings": list(self.warnings),
             "limitations": list(self.limitations),
         }
+        if self.id_filter_summary is not None:
+            payload["id_filter"] = dict(self.id_filter_summary)
+        return payload
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> EvaluationResult:
@@ -508,6 +519,7 @@ class EvaluationResult:
             unknown_response_ids=list(payload.get("unknown_response_ids", [])),
             warnings=list(payload.get("warnings", [])),
             limitations=list(payload.get("limitations", [])),
+            id_filter_summary=dict(payload["id_filter"]) if "id_filter" in payload and payload["id_filter"] is not None else None,
         )
 
 
@@ -536,7 +548,91 @@ class Evaluator:
                 for name in self.config.metric_names
             ]
 
+    def _resolve_id_filter(
+        self,
+        full_dataset: Dataset,
+    ) -> tuple[list[str] | None, dict[str, Any] | None, list[str]]:
+        """Resolve `ids_file` and/or `selected_ids` against `full_dataset`.
+
+        Returns `(selected_id_list_or_None, id_filter_summary_or_None, filter_warnings)`.
+        """
+        filter_warnings: list[str] = []
+        raw_selected: list[str] = []
+        duplicates_removed: list[str] = []
+        source_path: str | None = None
+
+        if self.config.ids_file:
+            spec = load_ids_file(self.config.ids_file)
+            raw_selected.extend(spec.selected_ids)
+            duplicates_removed.extend(spec.duplicate_ids_removed)
+            source_path = spec.source_path
+
+        if self.config.selected_ids is not None:
+            seen_curr = set(raw_selected)
+            for item_id in self.config.selected_ids:
+                clean_id = str(item_id).strip()
+                if not clean_id:
+                    continue
+                if clean_id in seen_curr:
+                    if clean_id not in duplicates_removed:
+                        duplicates_removed.append(clean_id)
+                else:
+                    seen_curr.add(clean_id)
+                    raw_selected.append(clean_id)
+
+        if not self.config.ids_file and self.config.selected_ids is None:
+            return None, None, []
+
+        if duplicates_removed:
+            filter_warnings.append(
+                f"ID filter contained {len(duplicates_removed)} duplicate ID(s) which were deduplicated: "
+                f"{', '.join(duplicates_removed)}"
+            )
+
+        all_dataset_ids = [rec.id for rec in full_dataset.records]
+        all_dataset_id_set = set(all_dataset_ids)
+        requested_set = set(raw_selected)
+
+        unknown_filter_ids = [i for i in raw_selected if i not in all_dataset_id_set]
+        if unknown_filter_ids:
+            if self.config.strict_unknown_ids:
+                raise ResponseValidationError(
+                    f"ID filter contains {len(unknown_filter_ids)} unknown dataset ID(s): "
+                    f"{', '.join(unknown_filter_ids)}"
+                )
+            filter_warnings.append(
+                f"ID filter specified {len(unknown_filter_ids)} unknown ID(s) not present in dataset "
+                f"'{full_dataset.name}': {', '.join(unknown_filter_ids)}"
+            )
+
+        matched_selected_ids = [rec_id for rec_id in all_dataset_ids if rec_id in requested_set]
+        excluded_ids = [rec_id for rec_id in all_dataset_ids if rec_id not in requested_set]
+
+        if excluded_ids:
+            filter_warnings.append(
+                f"ID filter active: selected {len(matched_selected_ids)} of {len(all_dataset_ids)} dataset record(s); "
+                f"excluded {len(excluded_ids)} record(s) from evaluation."
+            )
+
+        checksum = hashlib.sha256(
+            json.dumps(matched_selected_ids, ensure_ascii=False).encode("utf-8")
+        ).hexdigest()
+
+        id_filter_summary = {
+            "source_path": source_path,
+            "requested_ids_count": len(raw_selected),
+            "selected_ids_count": len(matched_selected_ids),
+            "selected_ids": matched_selected_ids,
+            "excluded_ids_count": len(excluded_ids),
+            "excluded_ids": excluded_ids,
+            "duplicate_ids_removed": duplicates_removed,
+            "unknown_filter_ids": unknown_filter_ids,
+            "selected_ids_checksum": checksum,
+        }
+        return matched_selected_ids, id_filter_summary, filter_warnings
+
     def _apply_configured_filters(self, dataset: Dataset) -> Dataset:
+        selected_ids, _, _ = self._resolve_id_filter(dataset)
         if any(
             x is not None
             for x in (
@@ -544,6 +640,7 @@ class Evaluator:
                 self.config.difficulties,
                 self.config.tags,
                 self.config.languages,
+                selected_ids,
             )
         ):
             return dataset.filter(
@@ -551,6 +648,7 @@ class Evaluator:
                 difficulties=self.config.difficulties,
                 tags=self.config.tags,
                 languages=self.config.languages,
+                ids=selected_ids,
             )
         return dataset
 
@@ -562,11 +660,39 @@ class Evaluator:
         """Evaluate a single ModelResponseSet against a validated Dataset."""
         from openbench import __version__
 
-        active_dataset = self._apply_configured_filters(dataset)
-        dataset_ids = {rec.id for rec in active_dataset.records}
+        full_dataset_ids = {rec.id for rec in dataset.records}
+        selected_ids, id_filter_summary, id_filter_warnings = self._resolve_id_filter(dataset)
+
+        if any(
+            x is not None
+            for x in (
+                self.config.categories,
+                self.config.difficulties,
+                self.config.tags,
+                self.config.languages,
+                selected_ids,
+            )
+        ):
+            active_dataset = dataset.filter(
+                categories=self.config.categories,
+                difficulties=self.config.difficulties,
+                tags=self.config.tags,
+                languages=self.config.languages,
+                ids=selected_ids,
+            )
+        else:
+            active_dataset = dataset
+
+        active_dataset_ids = {rec.id for rec in active_dataset.records}
+        excluded_dataset_ids = full_dataset_ids - active_dataset_ids
         response_item_map = response_set.response_item_map
 
-        unknown_ids = sorted(rid for rid in response_item_map if rid not in dataset_ids)
+        # Responses matching an intentionally excluded dataset ID are NOT unknown IDs; only IDs absent from the full dataset are unknown.
+        unknown_ids = sorted(
+            rid
+            for rid in response_item_map
+            if rid not in active_dataset_ids and rid not in excluded_dataset_ids
+        )
         if unknown_ids and self.config.strict_unknown_ids:
             raise ResponseValidationError(
                 f"Response set contains {len(unknown_ids)} unknown dataset ID(s): "
@@ -583,7 +709,6 @@ class Evaluator:
         individual_results: list[ItemEvaluationResult] = []
         per_metric_items: dict[str, list[MetricResult]] = {m.name: [] for m in self.metrics}
 
-        # Groupings for category-wise and difficulty-wise aggregation
         cat_total_counts: dict[str, int] = {}
         cat_evaluated_counts: dict[str, int] = {}
         cat_metric_results: dict[str, dict[str, list[MetricResult]]] = {}
@@ -646,7 +771,6 @@ class Evaluator:
                         + resp_item.token_usage["completion_tokens"]
                     )
 
-            # Check response validity (e.g., empty/whitespace-only or broken structured JSON when expected)
             is_valid_resp = True
             inv_reason: str | None = None
             if not resp_text.strip():
@@ -655,8 +779,15 @@ class Evaluator:
             elif record.category == "structured_output" or any(
                 k in record.metadata for k in ("required_keys", "field_types", "expected_schema")
             ):
+                # Check if StructuredOutputMetric with strip_markdown_fence=True is active
+                struct_candidate = resp_text.strip()
+                for m in self.metrics:
+                    if getattr(m, "name", "") == "structured_output" and getattr(m, "strip_markdown_fence", False):
+                        from openbench.metrics.structured_output import extract_fenced_json
+                        struct_candidate, _ = extract_fenced_json(resp_text)
+                        break
                 try:
-                    json.loads(resp_text.strip())
+                    json.loads(struct_candidate)
                 except json.JSONDecodeError as exc:
                     is_valid_resp = False
                     inv_reason = f"invalid_json_structure: {exc.msg}"
@@ -690,6 +821,8 @@ class Evaluator:
                 )
             )
 
+        # Notice: Intentionally excluded dataset records are NOT part of active_dataset.records
+        # and are never counted as failed/missing responses.
         aggregate_results: dict[str, AggregateMetricResult] = {}
         for metric in self.metrics:
             aggregate_results[metric.name] = metric.aggregate(
@@ -762,7 +895,7 @@ class Evaluator:
                 "mean_total_tokens": round(sum(total_tokens_list) / len(total_tokens_list), 2),
             }
 
-        warnings: list[str] = []
+        warnings: list[str] = list(id_filter_warnings)
         if missing_ids:
             warnings.append(
                 f"{len(missing_ids)} dataset item(s) had no matching response from model "
@@ -780,14 +913,23 @@ class Evaluator:
                 f"{', '.join(invalid_response_ids)}"
             )
 
+        if id_filter_summary is not None:
+            evaluated_selected_ids = [
+                item.id for item in individual_results if item.status == "evaluated"
+            ]
+            id_filter_summary["evaluated_ids_count"] = len(evaluated_selected_ids)
+            id_filter_summary["evaluated_ids"] = evaluated_selected_ids
+            id_filter_summary["missing_selected_ids"] = list(missing_ids)
+
         limitations = [
             "OpenBench AI uses deterministic and reference-based metrics and does not "
             "measure general LLM intelligence or open-ended reasoning quality.",
             "Keyword coverage checks lexical presence only and is not equivalent to semantic correctness.",
         ]
-        if any(m.name == "semantic_similarity" for m in self.metrics):
+        if any(m.name in {"semantic_similarity", "lexical_similarity"} for m in self.metrics):
             limitations.append(
-                "Semantic similarity measures vector-space proximity and is NOT proof of factual correctness."
+                "The default local_ngram_hash provider performs lexical comparison (lexical_similarity) "
+                "and is NOT semantic understanding or proof of factual correctness."
             )
         if "safety" in active_dataset.categories:
             limitations.append(
@@ -795,11 +937,16 @@ class Evaluator:
                 "does NOT provide comprehensive safety or alignment certification."
             )
 
+        ds_summary = active_dataset.summary()
+        if id_filter_summary is not None:
+            ds_summary["unfiltered_total_records"] = len(dataset.records)
+            ds_summary["selected_ids_checksum"] = id_filter_summary["selected_ids_checksum"]
+
         timestamp = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
         return EvaluationResult(
             project_version=__version__,
             evaluation_timestamp=timestamp,
-            dataset_summary=active_dataset.summary(),
+            dataset_summary=ds_summary,
             model_name=response_set.model_name,
             model_version=response_set.model_version,
             model_provider=response_set.model_provider,
@@ -817,6 +964,7 @@ class Evaluator:
             unknown_response_ids=unknown_ids,
             warnings=warnings,
             limitations=limitations,
+            id_filter_summary=id_filter_summary,
         )
 
     def evaluate_multiple(

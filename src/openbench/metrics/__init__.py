@@ -25,11 +25,12 @@ from openbench.metrics.semantic_similarity import (
     CallableEmbeddingProvider,
     EmbeddingProvider,
     HuggingFaceEmbeddingProvider,
+    LexicalSimilarityMetric,
     LocalNgramEmbeddingProvider,
     SemanticSimilarityMetric,
     cosine_similarity,
 )
-from openbench.metrics.structured_output import StructuredOutputMetric
+from openbench.metrics.structured_output import StructuredOutputMetric, extract_fenced_json
 
 METRIC_REGISTRY: dict[str, type[BaseMetric]] = {
     # v0.1.0 core metrics
@@ -37,7 +38,7 @@ METRIC_REGISTRY: dict[str, type[BaseMetric]] = {
     AccuracyMetric.name: AccuracyMetric,
     KeywordCoverageMetric.name: KeywordCoverageMetric,
     "keyword_match": KeywordCoverageMetric,
-    # v0.2.0 advanced metrics
+    # v0.2.0 & v0.3.1 advanced metrics
     PrecisionMetric.name: PrecisionMetric,
     RecallMetric.name: RecallMetric,
     F1Metric.name: F1Metric,
@@ -46,6 +47,7 @@ METRIC_REGISTRY: dict[str, type[BaseMetric]] = {
     RougeLMetric.name: RougeLMetric,
     BleuMetric.name: BleuMetric,
     SemanticSimilarityMetric.name: SemanticSimilarityMetric,
+    LexicalSimilarityMetric.name: LexicalSimilarityMetric,
     StructuredOutputMetric.name: StructuredOutputMetric,
 }
 
@@ -103,6 +105,7 @@ __all__ = [
     "F1Metric",
     "HuggingFaceEmbeddingProvider",
     "KeywordCoverageMetric",
+    "LexicalSimilarityMetric",
     "LocalNgramEmbeddingProvider",
     "METRIC_REGISTRY",
     "MetricMetadata",
@@ -117,6 +120,7 @@ __all__ = [
     "StructuredOutputMetric",
     "cosine_similarity",
     "create_metric",
+    "extract_fenced_json",
     "list_registered_metrics",
     "normalize_text",
     "register_metric",

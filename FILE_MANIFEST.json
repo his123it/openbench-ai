@@ -1,651 +1,1063 @@
 {
   "project": "OpenBench AI",
-  "version": "0.2.0",
-  "total_files": 92,
+  "version": "0.3.1",
+  "total_files": 132,
   "files": [
     {
       "path": ".github/ISSUE_TEMPLATE/bug_report.md",
       "purpose": "GitHub bug report template.",
       "type": "github_template",
       "required_for_baseline": true,
-      "feature_area": "ci_cd"
+      "feature_area": "ci_cd",
+      "experimental": false
     },
     {
       "path": ".github/ISSUE_TEMPLATE/feature_request.md",
       "purpose": "GitHub feature request template.",
       "type": "github_template",
       "required_for_baseline": true,
-      "feature_area": "ci_cd"
+      "feature_area": "ci_cd",
+      "experimental": false
     },
     {
       "path": ".github/pull_request_template.md",
       "purpose": "GitHub pull request template.",
       "type": "github_template",
       "required_for_baseline": true,
-      "feature_area": "ci_cd"
+      "feature_area": "ci_cd",
+      "experimental": false
     },
     {
       "path": ".github/workflows/lint.yml",
       "purpose": "GitHub Actions Ruff lint workflow.",
       "type": "ci_workflow_yaml",
       "required_for_baseline": true,
-      "feature_area": "ci_cd"
+      "feature_area": "ci_cd",
+      "experimental": false
     },
     {
       "path": ".github/workflows/tests.yml",
       "purpose": "GitHub Actions test & CLI smoke workflow across Python 3.10, 3.11, and 3.12.",
       "type": "ci_workflow_yaml",
       "required_for_baseline": true,
-      "feature_area": "ci_cd"
+      "feature_area": "ci_cd",
+      "experimental": false
     },
     {
       "path": ".gitignore",
       "purpose": "Git ignore rules.",
       "type": "configuration_git",
       "required_for_baseline": true,
-      "feature_area": "packaging"
+      "feature_area": "packaging",
+      "experimental": false
     },
     {
       "path": "BACKWARD_COMPATIBILITY_REPORT.md",
       "purpose": "Detailed report verifying all v0.1.0 behaviors and contracts in v0.2.0.",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "release_management"
+      "feature_area": "release_management",
+      "experimental": false
     },
     {
       "path": "BUILD_INSTRUCTIONS.md",
       "purpose": "Baseline v0.1.0 build instructions (preserved).",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "release_management"
+      "feature_area": "release_management",
+      "experimental": false
     },
     {
       "path": "CHANGELOG.md",
       "purpose": "Release changelog containing both v0.2.0 and v0.1.0 histories.",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "release_management"
+      "feature_area": "release_management",
+      "experimental": false
+    },
+    {
+      "path": "CITATION.cff",
+      "purpose": "Standard academic/software citation metadata file.",
+      "type": "citation_cff",
+      "required_for_baseline": true,
+      "feature_area": "release_management",
+      "experimental": false
     },
     {
       "path": "CODE_OF_CONDUCT.md",
       "purpose": "Contributor Covenant Code of Conduct.",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "documentation"
+      "feature_area": "documentation",
+      "experimental": false
     },
     {
       "path": "CONTRIBUTING.md",
       "purpose": "Contributor guide.",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "documentation"
+      "feature_area": "documentation",
+      "experimental": false
     },
     {
       "path": "FILE_MANIFEST.json",
       "purpose": "Complete machine-readable manifest of all files in OpenBench AI v0.2.0.",
       "type": "json_manifest",
       "required_for_baseline": true,
-      "feature_area": "release_management"
+      "feature_area": "release_management",
+      "experimental": false
     },
     {
       "path": "LICENSE",
       "purpose": "MIT License.",
       "type": "license",
       "required_for_baseline": true,
-      "feature_area": "legal"
+      "feature_area": "legal",
+      "experimental": false
     },
     {
       "path": "README.md",
       "purpose": "Updated v0.2.0 primary documentation, dataset catalog, metrics reference, and CLI guide.",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "documentation"
+      "feature_area": "documentation",
+      "experimental": false
     },
     {
       "path": "SECURITY.md",
       "purpose": "Security policy.",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "documentation"
+      "feature_area": "documentation",
+      "experimental": false
     },
     {
       "path": "V0_2_0_BUILD_INSTRUCTIONS.md",
       "purpose": "Build, installation, test, lint, and CLI verification guide for v0.2.0.",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "release_management"
+      "feature_area": "release_management",
+      "experimental": false
     },
     {
       "path": "V0_2_0_CHANGE_MANIFEST.json",
       "purpose": "Machine-readable change manifest detailing added, modified, and removed files in v0.2.0.",
       "type": "json_manifest",
       "required_for_baseline": true,
-      "feature_area": "release_management"
+      "feature_area": "release_management",
+      "experimental": false
     },
     {
       "path": "V0_2_0_MIGRATION_GUIDE.md",
       "purpose": "Step-by-step migration guide from v0.1.0 to v0.2.0.",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "release_management"
+      "feature_area": "release_management",
+      "experimental": false
     },
     {
       "path": "V0_2_0_VALIDATION_CHECKLIST.md",
       "purpose": "Comprehensive validation checklist for v0.2.0.",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "release_management"
+      "feature_area": "release_management",
+      "experimental": false
+    },
+    {
+      "path": "V0_3_0_BUILD_INSTRUCTIONS.md",
+      "purpose": "Build, installation, test, and CLI verification guide for v0.3.0.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "release_management",
+      "experimental": false
+    },
+    {
+      "path": "V0_3_0_CHANGE_MANIFEST.json",
+      "purpose": "Machine-readable change manifest detailing added, modified, unchanged, and removed files in v0.3.0.",
+      "type": "json_manifest",
+      "required_for_baseline": true,
+      "feature_area": "release_management",
+      "experimental": false
+    },
+    {
+      "path": "V0_3_0_COMPATIBILITY_REPORT.md",
+      "purpose": "Detailed compatibility verification matrix for v0.1.0 and v0.2.0 features in v0.3.0.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "release_management",
+      "experimental": false
+    },
+    {
+      "path": "V0_3_0_MIGRATION_GUIDE.md",
+      "purpose": "Migration guide for upgrading to OpenBench AI v0.3.0.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "release_management",
+      "experimental": false
+    },
+    {
+      "path": "V0_3_0_SECURITY_REVIEW.md",
+      "purpose": "Security and privacy threat model, mitigations, and operational boundary review for v0.3.0.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "security_and_privacy",
+      "experimental": false
+    },
+    {
+      "path": "V0_3_0_VALIDATION_CHECKLIST.md",
+      "purpose": "Pre-release validation checklist for v0.3.0.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "release_management",
+      "experimental": false
+    },
+    {
+      "path": "V0_3_1_COMPATIBILITY_REPORT.md",
+      "purpose": "Compatibility report for OpenBench AI v0.3.1.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "release_management",
+      "experimental": false
     },
     {
       "path": "VALIDATION_CHECKLIST.md",
       "purpose": "Baseline v0.1.0 validation checklist (preserved).",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "release_management"
+      "feature_area": "release_management",
+      "experimental": false
     },
     {
       "path": "configs/coding.yaml",
       "purpose": "YAML evaluation profile for coding datasets.",
       "type": "configuration_yaml",
       "required_for_baseline": false,
-      "feature_area": "configuration_profiles"
+      "feature_area": "configuration_profiles",
+      "experimental": false
+    },
+    {
+      "path": "configs/huggingface_local.yaml",
+      "purpose": "Example YAML configuration profile for offline-first local Hugging Face execution.",
+      "type": "configuration_yaml",
+      "required_for_baseline": false,
+      "feature_area": "configuration",
+      "experimental": true
     },
     {
       "path": "configs/instruction_following.yaml",
       "purpose": "YAML evaluation profile for instruction-following datasets with case sensitivity.",
       "type": "configuration_yaml",
       "required_for_baseline": false,
-      "feature_area": "configuration_profiles"
+      "feature_area": "configuration_profiles",
+      "experimental": false
+    },
+    {
+      "path": "configs/local_ollama.yaml",
+      "purpose": "Example YAML configuration profile for local Ollama model execution.",
+      "type": "configuration_yaml",
+      "required_for_baseline": false,
+      "feature_area": "configuration",
+      "experimental": false
+    },
+    {
+      "path": "configs/mock_experiment.yaml",
+      "purpose": "Example YAML configuration profile for deterministic mock experiment runs with pricing config.",
+      "type": "configuration_yaml",
+      "required_for_baseline": false,
+      "feature_area": "configuration",
+      "experimental": false
     },
     {
       "path": "configs/reasoning.yaml",
       "purpose": "YAML evaluation profile for reasoning datasets.",
       "type": "configuration_yaml",
       "required_for_baseline": false,
-      "feature_area": "configuration_profiles"
+      "feature_area": "configuration_profiles",
+      "experimental": false
+    },
+    {
+      "path": "configs/repeated_benchmark.yaml",
+      "purpose": "Example YAML configuration profile for repeated experiment runs (repeat_count=3) and variance analysis.",
+      "type": "configuration_yaml",
+      "required_for_baseline": false,
+      "feature_area": "configuration",
+      "experimental": false
     },
     {
       "path": "datasets/coding/sample.jsonl",
       "purpose": "20 original coding evaluation items (12 original v0.1.0 + 8 new v0.2.0).",
       "type": "dataset_jsonl",
       "required_for_baseline": true,
-      "feature_area": "datasets"
+      "feature_area": "datasets",
+      "experimental": false
     },
     {
       "path": "datasets/debugging/sample.jsonl",
       "purpose": "20 original software debugging evaluation items.",
       "type": "dataset_jsonl",
       "required_for_baseline": true,
-      "feature_area": "datasets"
+      "feature_area": "datasets",
+      "experimental": false
     },
     {
       "path": "datasets/factual_knowledge/sample.jsonl",
       "purpose": "20 original factual knowledge evaluation items with source provenance.",
       "type": "dataset_jsonl",
       "required_for_baseline": true,
-      "feature_area": "datasets"
+      "feature_area": "datasets",
+      "experimental": false
     },
     {
       "path": "datasets/instruction_following/sample.jsonl",
       "purpose": "20 original instruction-following evaluation items (12 original v0.1.0 + 8 new v0.2.0).",
       "type": "dataset_jsonl",
       "required_for_baseline": true,
-      "feature_area": "datasets"
+      "feature_area": "datasets",
+      "experimental": false
     },
     {
       "path": "datasets/mathematics/sample.jsonl",
       "purpose": "20 original mathematics evaluation items.",
       "type": "dataset_jsonl",
       "required_for_baseline": true,
-      "feature_area": "datasets"
+      "feature_area": "datasets",
+      "experimental": false
     },
     {
       "path": "datasets/multilingual/sample.jsonl",
       "purpose": "20 original multilingual evaluation items across 11 languages.",
       "type": "dataset_jsonl",
       "required_for_baseline": true,
-      "feature_area": "datasets"
+      "feature_area": "datasets",
+      "experimental": false
     },
     {
       "path": "datasets/reasoning/sample.jsonl",
       "purpose": "20 original reasoning evaluation items (12 original v0.1.0 + 8 new v0.2.0).",
       "type": "dataset_jsonl",
       "required_for_baseline": true,
-      "feature_area": "datasets"
+      "feature_area": "datasets",
+      "experimental": false
     },
     {
       "path": "datasets/safety/sample.jsonl",
       "purpose": "20 original safety evaluation items with rationale metadata (12 original v0.1.0 + 8 new v0.2.0).",
       "type": "dataset_jsonl",
       "required_for_baseline": true,
-      "feature_area": "datasets"
+      "feature_area": "datasets",
+      "experimental": false
     },
     {
       "path": "datasets/structured_output/sample.jsonl",
       "purpose": "20 original structured JSON generation evaluation items with schema metadata.",
       "type": "dataset_jsonl",
       "required_for_baseline": true,
-      "feature_area": "datasets"
+      "feature_area": "datasets",
+      "experimental": false
     },
     {
       "path": "datasets/summarization/sample.jsonl",
       "purpose": "20 original single-sentence summarization evaluation items.",
       "type": "dataset_jsonl",
       "required_for_baseline": true,
-      "feature_area": "datasets"
+      "feature_area": "datasets",
+      "experimental": false
     },
     {
       "path": "docs/advanced_metrics.md",
       "purpose": "Documentation for Precision, Recall, F1, ROUGE, BLEU, Semantic Similarity, and Structured Output metrics.",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "documentation"
+      "feature_area": "documentation",
+      "experimental": false
     },
     {
       "path": "docs/architecture.md",
       "purpose": "System architecture overview.",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "documentation"
+      "feature_area": "documentation",
+      "experimental": false
     },
     {
       "path": "docs/backward_compatibility.md",
       "purpose": "Comprehensive documentation of v0.1.0 backward compatibility guarantees in v0.2.0.",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "documentation"
+      "feature_area": "documentation",
+      "experimental": false
+    },
+    {
+      "path": "docs/benchmark_integrity.md",
+      "purpose": "Documentation for cryptographic SHA-256 artifact checksums and provenance verification.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation",
+      "experimental": false
     },
     {
       "path": "docs/configuration.md",
       "purpose": "Documentation for YAML evaluation configuration profiles.",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "documentation"
+      "feature_area": "documentation",
+      "experimental": false
     },
     {
       "path": "docs/contributing.md",
       "purpose": "Developer and contributor guide.",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "documentation"
+      "feature_area": "documentation",
+      "experimental": false
+    },
+    {
+      "path": "docs/custom_provider.md",
+      "purpose": "Developer guide for implementing and registering custom model providers.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation",
+      "experimental": false
     },
     {
       "path": "docs/dashboard_architecture.md",
       "purpose": "Data contract specification and architectural blueprint for future dashboard consumption.",
       "type": "documentation_markdown",
       "required_for_baseline": false,
-      "feature_area": "documentation"
+      "feature_area": "documentation",
+      "experimental": false
     },
     {
       "path": "docs/dataset_catalog.md",
       "purpose": "Documentation for the 10-category dataset catalog, additive schema, and CLI inspection commands.",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "documentation"
+      "feature_area": "documentation",
+      "experimental": false
     },
     {
       "path": "docs/evaluation_methodology.md",
       "purpose": "Evaluation methodology and reproducibility guide.",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "documentation"
+      "feature_area": "documentation",
+      "experimental": false
+    },
+    {
+      "path": "docs/experiment_tracking.md",
+      "purpose": "Documentation for structured experiment run storage and lifecycle commands.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation",
+      "experimental": false
     },
     {
       "path": "docs/historical_tracking.md",
       "purpose": "Documentation for local JSONL result history tracking and longitudinal comparisons.",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "documentation"
+      "feature_area": "documentation",
+      "experimental": false
+    },
+    {
+      "path": "docs/huggingface.md",
+      "purpose": "Documentation for the experimental local Hugging Face integration.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation",
+      "experimental": true
     },
     {
       "path": "docs/installation.md",
       "purpose": "Installation guide.",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "documentation"
+      "feature_area": "documentation",
+      "experimental": false
     },
     {
       "path": "docs/integrations.md",
       "purpose": "Documentation for local and Hugging Face model adapters.",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "documentation"
+      "feature_area": "documentation",
+      "experimental": false
     },
     {
       "path": "docs/metrics.md",
       "purpose": "Baseline metrics reference.",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "documentation"
+      "feature_area": "documentation",
+      "experimental": false
+    },
+    {
+      "path": "docs/model_execution.md",
+      "purpose": "Documentation for the provider-independent ExecutionEngine.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation",
+      "experimental": false
+    },
+    {
+      "path": "docs/ollama.md",
+      "purpose": "Documentation for the local Ollama integration.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation",
+      "experimental": false
+    },
+    {
+      "path": "docs/performance_monitoring.md",
+      "purpose": "Documentation for latency percentiles, token provenance, and optional cost estimation.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation",
+      "experimental": false
+    },
+    {
+      "path": "docs/providers.md",
+      "purpose": "Documentation for the model provider framework and CLI commands.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation",
+      "experimental": false
+    },
+    {
+      "path": "docs/reliability.md",
+      "purpose": "Documentation for retry policies, exponential backoff, run resumption, and response caching.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation",
+      "experimental": false
+    },
+    {
+      "path": "docs/security_and_privacy.md",
+      "purpose": "Documentation for credential redaction, privacy mode, URL validation, and untrusted output handling.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation",
+      "experimental": false
     },
     {
       "path": "docs/usage.md",
       "purpose": "CLI and Python API usage guide.",
       "type": "documentation_markdown",
       "required_for_baseline": true,
-      "feature_area": "documentation"
+      "feature_area": "documentation",
+      "experimental": false
+    },
+    {
+      "path": "docs/v0_3_compatibility.md",
+      "purpose": "Backward compatibility guide for v0.1.0 and v0.2.0 users upgrading to v0.3.0.",
+      "type": "documentation_markdown",
+      "required_for_baseline": true,
+      "feature_area": "documentation",
+      "experimental": false
     },
     {
       "path": "examples/basic_evaluation.py",
       "purpose": "Runnable single-model evaluation example script.",
       "type": "python_script",
       "required_for_baseline": true,
-      "feature_area": "examples"
+      "feature_area": "examples",
+      "experimental": false
     },
     {
       "path": "examples/compare_models.py",
       "purpose": "Runnable multi-model comparison example script.",
       "type": "python_script",
       "required_for_baseline": true,
-      "feature_area": "examples"
+      "feature_area": "examples",
+      "experimental": false
     },
     {
       "path": "examples/sample_responses.json",
       "purpose": "Sample model response set (AlphaBaseline-7B) covering all 20 reasoning items.",
       "type": "json_data",
       "required_for_baseline": true,
-      "feature_area": "examples"
+      "feature_area": "examples",
+      "experimental": false
     },
     {
       "path": "pyproject.toml",
       "purpose": "PEP 621 package configuration (v0.2.0) with optional dependency groups.",
       "type": "configuration_toml",
       "required_for_baseline": true,
-      "feature_area": "packaging"
+      "feature_area": "packaging",
+      "experimental": false
     },
     {
       "path": "scripts/run_example.py",
       "purpose": "End-to-end example workflow runner.",
       "type": "python_script",
       "required_for_baseline": true,
-      "feature_area": "scripts"
+      "feature_area": "scripts",
+      "experimental": false
     },
     {
       "path": "scripts/validate_datasets.py",
       "purpose": "Validates all built-in JSONL datasets and checks cross-dataset ID uniqueness.",
       "type": "python_script",
       "required_for_baseline": true,
-      "feature_area": "scripts"
+      "feature_area": "scripts",
+      "experimental": false
     },
     {
       "path": "src/openbench/__init__.py",
-      "purpose": "Package initialization, version 0.2.0, and exports of v0.1.0 + v0.2.0 public symbols.",
+      "purpose": "Package initialization (v0.3.0) exporting all v0.1.0, v0.2.0, and v0.3.0 public classes and functions.",
       "type": "python_source",
       "required_for_baseline": true,
-      "feature_area": "core_api"
+      "feature_area": "core_api",
+      "experimental": false
     },
     {
       "path": "src/openbench/adapters/__init__.py",
-      "purpose": "Model inference adapters package exports.",
+      "purpose": "Model provider registry and adapter exports (Mock, Ollama, HuggingFace, LocalCallable, DeterministicLookup).",
       "type": "python_source",
-      "required_for_baseline": false,
-      "feature_area": "model_integrations"
+      "required_for_baseline": true,
+      "feature_area": "model_providers",
+      "experimental": false
     },
     {
       "path": "src/openbench/adapters/base.py",
-      "purpose": "Abstract BaseModelAdapter interface and reproducibility metadata contract.",
+      "purpose": "BaseModelAdapter, GenerationConfig, ProviderHealthStatus, and PROVIDER_REGISTRY.",
       "type": "python_source",
-      "required_for_baseline": false,
-      "feature_area": "model_integrations"
+      "required_for_baseline": true,
+      "feature_area": "model_providers",
+      "experimental": false
     },
     {
       "path": "src/openbench/adapters/huggingface.py",
-      "purpose": "Experimental HuggingFaceAdapter for local transformers pipelines (offline-first by default).",
+      "purpose": "Experimental local Hugging Face transformers pipeline adapter (offline-first local_files_only=True).",
       "type": "python_source",
       "required_for_baseline": false,
-      "feature_area": "model_integrations"
+      "feature_area": "model_providers",
+      "experimental": true
     },
     {
       "path": "src/openbench/adapters/local.py",
-      "purpose": "LocalCallableAdapter and DeterministicLookupAdapter for local Python model functions.",
+      "purpose": "LocalCallableAdapter and DeterministicLookupAdapter.",
       "type": "python_source",
       "required_for_baseline": false,
-      "feature_area": "model_integrations"
+      "feature_area": "model_providers",
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/adapters/mock.py",
+      "purpose": "Deterministic MockModelProvider (is_mock=True) for offline tests, CI, and failure/timeout simulation.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "model_providers",
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/adapters/ollama.py",
+      "purpose": "Local Ollama HTTP adapter (/api/generate & /api/tags) with streaming, token extraction, and connection checks.",
+      "type": "python_source",
+      "required_for_baseline": false,
+      "feature_area": "model_providers",
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/analytics.py",
+      "purpose": "BenchmarkAnalytics for failure analysis, error categorization, repeated-run variance, and item disagreement.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "advanced_analytics",
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/cache.py",
+      "purpose": "Deterministic configuration-aware SHA-256 response cache with audit stats and clear support.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "reliable_execution",
+      "experimental": false
     },
     {
       "path": "src/openbench/catalog.py",
       "purpose": "Dataset catalog discovery, metadata inspection, filtering, and statistical analysis.",
       "type": "python_source",
       "required_for_baseline": true,
-      "feature_area": "dataset_management"
+      "feature_area": "dataset_management",
+      "experimental": false
     },
     {
       "path": "src/openbench/cli.py",
-      "purpose": "Command-line interface supporting all v0.1.0 commands plus list-datasets, inspect-dataset, dataset-stats, history, export, and --config.",
+      "purpose": "Expanded CLI supporting all v0.1/v0.2 commands plus run, runs (list/show/verify/resume/compare), providers, and cache.",
       "type": "python_source",
       "required_for_baseline": true,
-      "feature_area": "cli"
+      "feature_area": "cli",
+      "experimental": false
     },
     {
       "path": "src/openbench/comparison.py",
       "purpose": "Multi-model comparator with category/difficulty breakdowns, score margins, historical comparison, and optional explicit weighted scoring.",
       "type": "python_source",
       "required_for_baseline": true,
-      "feature_area": "model_comparison"
+      "feature_area": "model_comparison",
+      "experimental": false
     },
     {
       "path": "src/openbench/configuration.py",
-      "purpose": "YAML evaluation configuration profile loader and validator with CLI override support.",
+      "purpose": "Extended YAML configuration loader supporting provider, generation, execution, performance, and privacy blocks.",
       "type": "python_source",
       "required_for_baseline": true,
-      "feature_area": "configuration_profiles"
+      "feature_area": "configuration",
+      "experimental": false
     },
     {
       "path": "src/openbench/dataset.py",
       "purpose": "JSONL dataset loader, directory loader, metadata filter, SHA-256 checksum, and schema validator.",
       "type": "python_source",
       "required_for_baseline": true,
-      "feature_area": "dataset_system"
+      "feature_area": "dataset_system",
+      "experimental": false
     },
     {
       "path": "src/openbench/evaluator.py",
       "purpose": "Response loader (with optional latency/token telemetry) and central evaluation engine with category/difficulty/missing/invalid breakdowns.",
       "type": "python_source",
       "required_for_baseline": true,
-      "feature_area": "evaluation_engine"
+      "feature_area": "evaluation_engine",
+      "experimental": false
     },
     {
       "path": "src/openbench/exceptions.py",
       "purpose": "Custom exception hierarchy with file path, line number, and record ID context.",
       "type": "python_source",
       "required_for_baseline": true,
-      "feature_area": "core_api"
+      "feature_area": "core_api",
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/execution.py",
+      "purpose": "Provider-independent ExecutionEngine with RetryPolicy, exponential backoff, timeouts, concurrency, and cancellation.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "model_execution_engine",
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/experiments.py",
+      "purpose": "ExperimentManager managing structured run directories (experiments/run_<id>/), resumption, and comparison.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "experiment_management",
+      "experimental": false
     },
     {
       "path": "src/openbench/history.py",
       "purpose": "Zero-server local JSONL result history store for longitudinal benchmark tracking.",
       "type": "python_source",
       "required_for_baseline": true,
-      "feature_area": "historical_tracking"
+      "feature_area": "historical_tracking",
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/integrity.py",
+      "purpose": "RunIntegrityVerifier verifying SHA-256 artifact checksums, schema versions, and execution origin provenance.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "benchmark_integrity",
+      "experimental": false
     },
     {
       "path": "src/openbench/metrics/__init__.py",
       "purpose": "Metric registry, factory function, metadata listing, and custom metric registration.",
       "type": "python_source",
       "required_for_baseline": true,
-      "feature_area": "metrics"
+      "feature_area": "metrics",
+      "experimental": false
     },
     {
       "path": "src/openbench/metrics/accuracy.py",
       "purpose": "AccuracyMetric with deterministic exact and word-bounded containment rules.",
       "type": "python_source",
       "required_for_baseline": true,
-      "feature_area": "metrics"
+      "feature_area": "metrics",
+      "experimental": false
     },
     {
       "path": "src/openbench/metrics/base.py",
       "purpose": "BaseMetric abstract interface, MetricMetadata, MetricResult, and AggregateMetricResult.",
       "type": "python_source",
       "required_for_baseline": true,
-      "feature_area": "metrics"
+      "feature_area": "metrics",
+      "experimental": false
     },
     {
       "path": "src/openbench/metrics/bleu.py",
       "purpose": "BleuMetric computing smoothed clipped n-gram precision with brevity penalty.",
       "type": "python_source",
       "required_for_baseline": true,
-      "feature_area": "advanced_metrics"
+      "feature_area": "advanced_metrics",
+      "experimental": false
     },
     {
       "path": "src/openbench/metrics/exact_match.py",
       "purpose": "ExactMatchMetric comparing normalized model output to expected answer.",
       "type": "python_source",
       "required_for_baseline": true,
-      "feature_area": "metrics"
+      "feature_area": "metrics",
+      "experimental": false
     },
     {
       "path": "src/openbench/metrics/f1.py",
       "purpose": "F1Metric computing harmonic mean of precision and recall.",
       "type": "python_source",
       "required_for_baseline": true,
-      "feature_area": "advanced_metrics"
+      "feature_area": "advanced_metrics",
+      "experimental": false
     },
     {
       "path": "src/openbench/metrics/keyword_match.py",
       "purpose": "KeywordCoverageMetric returning matched/missing keywords and coverage percentage.",
       "type": "python_source",
       "required_for_baseline": true,
-      "feature_area": "metrics"
+      "feature_area": "metrics",
+      "experimental": false
     },
     {
       "path": "src/openbench/metrics/normalization.py",
       "purpose": "Configurable text normalization (whitespace, case sensitivity, punctuation preservation).",
       "type": "python_source",
       "required_for_baseline": true,
-      "feature_area": "metrics"
+      "feature_area": "metrics",
+      "experimental": false
     },
     {
       "path": "src/openbench/metrics/precision.py",
       "purpose": "PrecisionMetric for binary classification decisions and discrete element-set predictions.",
       "type": "python_source",
       "required_for_baseline": true,
-      "feature_area": "advanced_metrics"
+      "feature_area": "advanced_metrics",
+      "experimental": false
     },
     {
       "path": "src/openbench/metrics/recall.py",
       "purpose": "RecallMetric for binary classification decisions and discrete element-set predictions.",
       "type": "python_source",
       "required_for_baseline": true,
-      "feature_area": "advanced_metrics"
+      "feature_area": "advanced_metrics",
+      "experimental": false
     },
     {
       "path": "src/openbench/metrics/rouge.py",
       "purpose": "RougeMetric, Rouge1Metric, and RougeLMetric for unigram and LCS overlap.",
       "type": "python_source",
       "required_for_baseline": true,
-      "feature_area": "advanced_metrics"
+      "feature_area": "advanced_metrics",
+      "experimental": false
     },
     {
       "path": "src/openbench/metrics/semantic_similarity.py",
       "purpose": "SemanticSimilarityMetric with pluggable EmbeddingProvider adapters.",
       "type": "python_source",
       "required_for_baseline": false,
-      "feature_area": "advanced_metrics"
+      "feature_area": "advanced_metrics",
+      "experimental": false
     },
     {
       "path": "src/openbench/metrics/structured_output.py",
       "purpose": "StructuredOutputMetric validating JSON parsing, required keys, field types, and JSON Schema.",
       "type": "python_source",
       "required_for_baseline": true,
-      "feature_area": "advanced_metrics"
+      "feature_area": "advanced_metrics",
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/performance.py",
+      "purpose": "PerformanceMonitor, latency percentiles (P50/P95/P99), token source accounting, and optional PricingConfig.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "performance_monitoring",
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/py.typed",
+      "purpose": "PEP 561 typing marker file.",
+      "type": "typing_marker",
+      "required_for_baseline": true,
+      "feature_area": "core_api",
+      "experimental": false
     },
     {
       "path": "src/openbench/reporting.py",
       "purpose": "JSON, Markdown, and CSV report generator with enhanced Benchmark Reproducibility Card and secret redaction.",
       "type": "python_source",
       "required_for_baseline": true,
-      "feature_area": "reporting"
+      "feature_area": "reporting",
+      "experimental": false
+    },
+    {
+      "path": "src/openbench/security.py",
+      "purpose": "Credential redaction, error message token scrubbing, privacy mode hashing, and endpoint/path validation.",
+      "type": "python_source",
+      "required_for_baseline": true,
+      "feature_area": "security_and_privacy",
+      "experimental": false
     },
     {
       "path": "tests/test_advanced_metrics.py",
       "purpose": "Unit tests for precision, recall, F1, ROUGE, BLEU, and semantic similarity.",
       "type": "python_test",
       "required_for_baseline": true,
-      "feature_area": "testing"
+      "feature_area": "testing",
+      "experimental": false
     },
     {
       "path": "tests/test_backward_compatibility.py",
       "purpose": "Dedicated backward compatibility test suite verifying v0.1.0 contracts.",
       "type": "python_test",
       "required_for_baseline": true,
-      "feature_area": "testing"
+      "feature_area": "testing",
+      "experimental": false
     },
     {
       "path": "tests/test_catalog.py",
       "purpose": "Unit tests for DatasetCatalog, filtering, inspection, and stats.",
       "type": "python_test",
       "required_for_baseline": true,
-      "feature_area": "testing"
+      "feature_area": "testing",
+      "experimental": false
     },
     {
       "path": "tests/test_cli.py",
       "purpose": "End-to-end CLI tests for v0.1.0 commands.",
       "type": "python_test",
       "required_for_baseline": true,
-      "feature_area": "testing"
+      "feature_area": "testing",
+      "experimental": false
     },
     {
       "path": "tests/test_comparison.py",
       "purpose": "Unit tests for ModelComparator.",
       "type": "python_test",
       "required_for_baseline": true,
-      "feature_area": "testing"
+      "feature_area": "testing",
+      "experimental": false
     },
     {
       "path": "tests/test_configuration.py",
       "purpose": "Unit tests for YAML configuration profiles and strict validation.",
       "type": "python_test",
       "required_for_baseline": true,
-      "feature_area": "testing"
+      "feature_area": "testing",
+      "experimental": false
     },
     {
       "path": "tests/test_dataset.py",
       "purpose": "Unit tests for JSONL dataset loading and error reporting.",
       "type": "python_test",
       "required_for_baseline": true,
-      "feature_area": "testing"
+      "feature_area": "testing",
+      "experimental": false
     },
     {
       "path": "tests/test_evaluator.py",
       "purpose": "Unit tests for ResponseLoader and Evaluator.",
       "type": "python_test",
       "required_for_baseline": true,
-      "feature_area": "testing"
+      "feature_area": "testing",
+      "experimental": false
+    },
+    {
+      "path": "tests/test_execution.py",
+      "purpose": "Unit tests for ExecutionEngine retries, backoff, timeouts, concurrency, cache isolation, and cancellation.",
+      "type": "python_test",
+      "required_for_baseline": true,
+      "feature_area": "testing",
+      "experimental": false
+    },
+    {
+      "path": "tests/test_experiments_and_integrity.py",
+      "purpose": "Unit tests for ExperimentManager, run resumption, tamper detection, and provenance verification.",
+      "type": "python_test",
+      "required_for_baseline": true,
+      "feature_area": "testing",
+      "experimental": false
     },
     {
       "path": "tests/test_history.py",
       "purpose": "Unit tests for ResultHistoryStore and historical run comparisons.",
       "type": "python_test",
       "required_for_baseline": true,
-      "feature_area": "testing"
+      "feature_area": "testing",
+      "experimental": false
     },
     {
       "path": "tests/test_integrations.py",
       "purpose": "Unit tests for LocalCallableAdapter, DeterministicLookupAdapter, HuggingFaceAdapter, and telemetry.",
       "type": "python_test",
       "required_for_baseline": true,
-      "feature_area": "testing"
+      "feature_area": "testing",
+      "experimental": false
     },
     {
       "path": "tests/test_metrics.py",
       "purpose": "Unit tests for baseline metrics and normalization.",
       "type": "python_test",
       "required_for_baseline": true,
-      "feature_area": "testing"
+      "feature_area": "testing",
+      "experimental": false
+    },
+    {
+      "path": "tests/test_performance_and_analytics.py",
+      "purpose": "Unit tests for PerformanceMonitor latency percentiles, token provenance, PricingConfig, and BenchmarkAnalytics.",
+      "type": "python_test",
+      "required_for_baseline": true,
+      "feature_area": "testing",
+      "experimental": false
+    },
+    {
+      "path": "tests/test_providers.py",
+      "purpose": "Unit tests for provider registry, MockModelProvider, OllamaAdapter (sync & streaming), and HuggingFaceAdapter.",
+      "type": "python_test",
+      "required_for_baseline": true,
+      "feature_area": "testing",
+      "experimental": false
     },
     {
       "path": "tests/test_reporting.py",
       "purpose": "Unit tests for JSON/Markdown reporting and Reproducibility Cards.",
       "type": "python_test",
       "required_for_baseline": true,
-      "feature_area": "testing"
+      "feature_area": "testing",
+      "experimental": false
+    },
+    {
+      "path": "tests/test_security_and_cache.py",
+      "purpose": "Unit tests for secret redaction, error sanitization, URL validation, privacy mode, and safe output paths.",
+      "type": "python_test",
+      "required_for_baseline": true,
+      "feature_area": "testing",
+      "experimental": false
     },
     {
       "path": "tests/test_structured_output.py",
       "purpose": "Unit tests for StructuredOutputMetric.",
       "type": "python_test",
       "required_for_baseline": true,
-      "feature_area": "testing"
+      "feature_area": "testing",
+      "experimental": false
+    },
+    {
+      "path": "tests/test_v0_3_1_maintenance.py",
+      "purpose": "Regression test suite for v0.3.1 maintenance, security, and reliability fixes.",
+      "type": "python_test",
+      "required_for_baseline": true,
+      "feature_area": "testing",
+      "experimental": false
+    },
+    {
+      "path": "tests/test_v0_3_compatibility.py",
+      "purpose": "End-to-end CLI and configuration compatibility tests for v0.3.0 commands and repeated runs.",
+      "type": "python_test",
+      "required_for_baseline": true,
+      "feature_area": "testing",
+      "experimental": false
     }
   ]
 }

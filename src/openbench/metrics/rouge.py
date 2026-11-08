@@ -15,7 +15,11 @@ _WORD_TOKEN_RE = re.compile(r"[\w]+", re.UNICODE)
 
 
 def tokenize_words(text: str, normalization: NormalizationConfig) -> list[str]:
-    """Tokenize text into normalized word tokens after applying NormalizationConfig."""
+    """Tokenize text into normalized word tokens after applying NormalizationConfig.
+
+    Falls back to whitespace-delimited tokens if `text` consists solely of symbolic
+    characters (e.g., `'$?'`).
+    """
     norm = normalize_text(text, normalization)
     tokens = _WORD_TOKEN_RE.findall(norm)
     if not tokens and norm.strip():

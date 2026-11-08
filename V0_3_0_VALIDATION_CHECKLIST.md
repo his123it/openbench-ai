@@ -1,0 +1,23 @@
+# OpenBench AI v0.3.0 — Pre-Release Validation Checklist
+
+- [x] **Backward Compatibility (`v0.1.0` & `v0.2.0`)**:
+  - [x] All `v0.1.0` and `v0.2.0` Python imports, classes, functions, metrics, and dataset schemas preserved.
+  - [x] Static response-file evaluation (`openbench evaluate`) remains completely independent of model providers.
+  - [x] All 200 dataset examples across 10 categories (including all 48 original `v0.1.0` examples) preserved.
+  - [x] Dedicated `docs/v0_3_compatibility.md`, `V0_3_0_COMPATIBILITY_REPORT.md`, and `tests/test_v0_3_compatibility.py` verified.
+- [x] **Model Execution Engine (`src/openbench/execution.py`)**:
+  - [x] Decoupled from `Evaluator`; supports configurable timeout, concurrency (`ThreadPoolExecutor`), retry policy with exponential backoff, failure classification, duplicate in-flight protection, and cooperative cancellation.
+- [x] **Model Providers (`src/openbench/adapters/`)**:
+  - [x] `OllamaAdapter` implemented with `/api/generate` (streaming & non-streaming), `/api/tags` connection checks, token extraction, URL validation, and clear offline error handling.
+  - [x] `HuggingFaceAdapter` implemented with `local_files_only=True` default, explicit revision tracking, `MemoryError` handling, and experimental disclosure.
+  - [x] `MockModelProvider` implemented with `is_mock=True` so mock runs are never misrepresented as real models.
+  - [x] Custom provider registration (`register_provider`, `create_provider`) documented and tested.
+- [x] **Experiment Management & Benchmark Integrity (`src/openbench/experiments.py`, `src/openbench/integrity.py`)**:
+  - [x] Structured `experiments/run_<id>/` layout storing `config.json`, `model_metadata.json`, `responses.json`, `evaluation.json`, `performance.json`, `reproducibility.json`, and `logs.jsonl`.
+  - [x] Interrupted/partial run recovery (`resume_run` / `openbench runs resume`) verified.
+  - [x] `RunIntegrityVerifier` verifies SHA-256 checksums for dataset, configs, and artifacts, detects file tampering, and distinguishes `provider_executed`, `external_responses_evaluated`, and `manually_imported` origins.
+- [x] **Performance Monitoring & Advanced Analytics (`src/openbench/performance.py`, `src/openbench/analytics.py`)**:
+  - [x] Captures total duration, average/median/P95/P99 latency, throughput, retries, timeouts, and token usage (`provider_reported`, `locally_estimated`, `unavailable`) plus optional user-supplied `PricingConfig`.
+  - [x] Computes repeated-run score variance (with sample size $n$ and explicit statistical disclaimers) and per-example disagreement analysis.
+- [x] **Security & Privacy (`src/openbench/security.py`)**:
+  - [x] Secret redaction in configs/reports, token scrubbing in error messages, `privacy_mode` prompt hashing, endpoint URL validation, and safe output path checks verified in `tests/test_security_and_cache.py` and `V0_3_0_SECURITY_REVIEW.md`.
