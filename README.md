@@ -40,11 +40,12 @@ python -m pip install -e .
 python -m pip install -e ".[dev]"
 
 # Optional integration groups
-python -m pip install -e ".[ollama]"       # Optional httpx client
 python -m pip install -e ".[huggingface]"  # transformers + torch for local HF models
 python -m pip install -e ".[semantic]"     # sentence-transformers for neural embeddings
 python -m pip install -e ".[all]"          # All optional dependencies
 ```
+
+The Ollama adapter needs no extra packages: it uses the Python standard library HTTP client.
 
 ---
 
