@@ -174,7 +174,7 @@ class RunIntegrityVerifier:
                     )
                 if model_meta.get("execution_origin") and model_meta.get("execution_origin") != execution_origin:
                     inconsistent_metadata.append(
-                        f"Execution origin mismatch between model_metadata.json and reproducibility.json"
+                        "Execution origin mismatch between model_metadata.json and reproducibility.json"
                     )
             if (target / "evaluation.json").exists():
                 eval_meta = json.loads((target / "evaluation.json").read_text(encoding="utf-8"))

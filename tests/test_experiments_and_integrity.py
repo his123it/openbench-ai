@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from openbench.adapters import MockModelProvider
-from openbench.dataset import Dataset, DatasetRecord
+from openbench.dataset import Dataset
 from openbench.evaluator import Evaluator, ModelResponseSet, ResponseItem
 from openbench.exceptions import ConfigurationError
 from openbench.execution import ExecutionConfig, RetryPolicy

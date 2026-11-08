@@ -30,7 +30,7 @@ from openbench.evaluator import (
     Evaluator,
     ResponseLoader,
 )
-from openbench.exceptions import ConfigurationError, OpenBenchError
+from openbench.exceptions import OpenBenchError
 from openbench.execution import ExecutionConfig, RetryPolicy
 from openbench.experiments import ExperimentManager
 from openbench.history import ResultHistoryStore

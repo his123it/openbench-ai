@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import time
-from typing import Any
 
 from openbench.adapters.base import BaseModelAdapter, GenerationConfig, ProviderHealthStatus
 from openbench.dataset import DatasetRecord

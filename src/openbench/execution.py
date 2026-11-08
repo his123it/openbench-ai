@@ -4,17 +4,23 @@ from __future__ import annotations
 
 import threading
 import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Callable
+from typing import Any
 
 from openbench.adapters.base import BaseModelAdapter
 from openbench.cache import ResponseCache
 from openbench.dataset import Dataset, DatasetRecord
 from openbench.evaluator import ModelResponseSet, ResponseItem
 from openbench.exceptions import ConfigurationError
-from openbench.performance import PerformanceMonitor, PerformanceReport, PricingConfig, RequestTelemetry
+from openbench.performance import (
+    PerformanceMonitor,
+    PerformanceReport,
+    PricingConfig,
+    RequestTelemetry,
+)
 from openbench.security import redact_prompt_if_private, sanitize_error_message
 
 
