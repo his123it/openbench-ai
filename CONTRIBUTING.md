@@ -2,9 +2,9 @@
 
 Thank you for your interest in contributing to **OpenBench AI**!
 
-## Project Context & Transparency
+## Project Context
 
-OpenBench AI was initiated as a college software engineering and AI evaluation project. The initial architecture, baseline datasets, and maintenance are carried out by the project owner. We warmly welcome genuine contributions, bug fixes, new datasets, and additional evaluation metrics from students, researchers, and open-source developers.
+OpenBench AI is maintained by its project owner, and its initial development was AI-assisted. We warmly welcome genuine contributions, bug fixes, new datasets, and additional evaluation metrics from students, researchers, and open-source developers.
 
 ---
 

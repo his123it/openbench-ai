@@ -7,12 +7,11 @@
 
 ---
 
-## Project Overview & College Project Transparency
+## Project Overview
 
 **OpenBench AI** is an open-source Python toolkit designed to help developers, students, and AI evaluation researchers test and compare language model outputs against standardized JSONL datasets using transparent, reproducible deterministic metrics.
 
-> **Educational & Maintenance Transparency Note**:
-> OpenBench AI is developed as an open-source college project. Initial architecture, implementation, and maintenance are carried out by the project owner. This repository contains no fabricated contributors, synthetic benchmark endorsements, or unverified claims. Genuine contributions, bug reports, and dataset expansions from the community are warmly welcomed!
+> **Note**: OpenBench AI is maintained by its project owner, and its initial development was AI-assisted. Contributions, bug reports, and new datasets are welcome!
 
 ---
 

@@ -30,6 +30,6 @@ Use this checklist to verify every aspect of **OpenBench AI v0.1.0** before publ
 - [x] `.github/workflows/tests.yml` and `.github/workflows/lint.yml` configured with minimal `contents: read` permissions and pinned major action versions (`@v4`, `@v5`).
 - [x] Issue templates (`bug_report.md`, `feature_request.md`) and `pull_request_template.md` included under `.github/`.
 
-## 5. Documentation & Academic Transparency
+## 5. Documentation & Transparency
 - [x] `README.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, `CHANGELOG.md`, `LICENSE`, `BUILD_INSTRUCTIONS.md`, `VALIDATION_CHECKLIST.md`, `FILE_MANIFEST.json`, and all 6 files in `docs/` are complete and consistent.
-- [x] Repository transparently states that OpenBench AI is developed as a college project maintained by the project owner, with zero fabricated claims or endorsements.
+- [x] Repository states that OpenBench AI is maintained by the project owner and that initial development was AI-assisted, with no fabricated claims or endorsements.

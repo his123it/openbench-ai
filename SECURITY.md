@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-OpenBench AI is currently in its initial baseline release (`v0.1.0`), developed and maintained as an educational open-source college project. Security fixes are applied to the latest `0.1.x` release series.
+OpenBench AI is currently in its initial baseline release (`v0.1.0`). Security fixes are applied to the latest `0.1.x` release series.
 
 | Version | Supported          |
 | ------- | ------------------ |
