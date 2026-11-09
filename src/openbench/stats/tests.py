@@ -11,6 +11,7 @@ import math
 from collections.abc import Sequence
 from fractions import Fraction
 
+from openbench.stats._validation import finite_floats, require_int
 from openbench.stats.results import AdjustedPValues, StatWarning, TestResult
 from openbench.stats.rng import derive_stream
 
@@ -44,8 +45,8 @@ def select_difference_test(
     ``"sign_flip"`` or ``None`` (unsupported; CI only)."""
     if score_kind not in SCORE_KINDS:
         raise ValueError(f"score_kind must be one of {SCORE_KINDS}")
-    if repetitions_a < 1 or repetitions_b < 1:
-        raise ValueError("repetitions must be >= 1")
+    require_int("repetitions_a", repetitions_a, minimum=1)
+    require_int("repetitions_b", repetitions_b, minimum=1)
     if score_kind == "binary":
         if repetitions_a == 1 and repetitions_b == 1:
             return "mcnemar_exact"
@@ -76,9 +77,8 @@ def mcnemar_exact(b: int, c: int) -> TestResult:
     p = min(1, 2 * P(X <= min(b, c))) with X ~ Binomial(b + c, 1/2), computed in exact
     rational arithmetic.
     """
-    for name, value in (("b", b), ("c", c)):
-        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
-            raise ValueError(f"{name} must be a non-negative integer")
+    require_int("b", b, minimum=0)
+    require_int("c", c, minimum=0)
     m = b + c
     warnings: list[StatWarning] = []
     details = {"b": b, "c": c, "discordant_pairs": m}
@@ -147,11 +147,10 @@ def sign_flip_test(
     p-value is identical for both statistics. ``details`` also carries the one-sided
     p-values (``p_greater``, ``p_less``).
     """
-    data = [float(d) for d in differences]
-    if any(not math.isfinite(d) for d in data):
-        raise ValueError("differences must be finite")
-    if permutations < 1:
-        raise ValueError("permutations must be >= 1")
+    data = finite_floats("differences", differences)
+    require_int("exact_max", exact_max, minimum=0)
+    require_int("permutations", permutations, minimum=1)
+    require_int("analysis_seed", analysis_seed)
     n = len(data)
     warnings = _sample_size_warnings(n) if n >= 2 else []
     base = {
@@ -172,6 +171,15 @@ def sign_flip_test(
     tau = 1e-12 * scale
     nonzero = [d for d in data if abs(d) > tau]
     k = len(nonzero)
+    if 0 < k < 10:
+        # Power depends on the k non-zero differences, not on n (audit finding F-004).
+        warnings.append(
+            StatWarning(
+                "few_nonzero_differences",
+                f"Only {k} of {n} paired differences are non-zero; the smallest attainable "
+                f"two-sided p-value is {2 / 2**k:.6g}.",
+            )
+        )
     t_stat = studentized_mean(data)
     mean = math.fsum(data) / n
     details: dict[str, object] = {
@@ -179,6 +187,10 @@ def sign_flip_test(
         "nonzero_differences": k,
         "zero_tolerance": tau,
     }
+    if 0 < k <= exact_max:
+        details["minimum_attainable_p_two_sided"] = 2 / 2**k
+    elif k > exact_max:
+        details["minimum_attainable_p_two_sided"] = 1 / (permutations + 1)
     if t_stat is not None and not math.isfinite(t_stat):
         details["statistic_note"] = "zero variance; studentized statistic is infinite"
     if k == 0:

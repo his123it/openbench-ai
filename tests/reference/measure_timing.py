@@ -28,12 +28,17 @@ def main() -> None:
         diffs = [round(rng.uniform(-0.5, 0.5), 3) or 0.001 for _ in range(k)]
         out["sign_flip"][k] = round(_time(lambda d=diffs, k=k: sign_flip_test(d, exact_max=k)), 3)
         print("sign_flip exact k =", k, out["sign_flip"][k], "s", flush=True)
-    for n in (50, 100, 200, 500, 1000):
+    for n in (50, 100, 200, 500):
         b, c = int(round(0.09 * n)), int(round(0.05 * n))  # a typical near-boundary table
         p_time = _time(lambda b=b, c=c, n=n: binary_exact_p_upper(b, c, n, 0.10))
         full = _time(lambda b=b, c=c, n=n: tost_paired_binary_exact(b, c, n, 0.10))
         out["binary"][n] = {"b": b, "c": c, "one_p_value_s": round(p_time, 2), "tost_with_interval_s": round(full, 2)}
         print("binary n =", n, out["binary"][n], flush=True)
+    out["binary_all_discordant"] = {}
+    for n in (200, 500):
+        t = _time(lambda n=n: tost_paired_binary_exact(n, 0, n, 0.10))
+        out["binary_all_discordant"][n] = {"b": n, "c": 0, "tost_with_interval_s": round(t, 2)}
+        print("binary all-discordant n =", n, out["binary_all_discordant"][n], flush=True)
     print(json.dumps(out, indent=1))
 
 

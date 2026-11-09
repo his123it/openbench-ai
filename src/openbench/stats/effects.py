@@ -7,6 +7,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
+from openbench.stats._validation import finite_floats
 from openbench.stats.results import finite_or_none
 
 #: Paired differences with |d| <= this tolerance count as ties.
@@ -97,8 +98,12 @@ class PairedEffects:
 
 
 def paired_effects(differences: Sequence[float]) -> PairedEffects:
-    """Mean difference, SD, d_z, probability of superiority and wins/losses/ties."""
-    data = [float(d) for d in differences]
+    """Mean difference, SD, d_z, probability of superiority and wins/losses/ties.
+
+    Non-finite differences are rejected: a NaN would otherwise fail both comparisons and
+    be counted as a tie (audit finding F-002).
+    """
+    data = finite_floats("differences", differences)
     n = len(data)
     wins = sum(1 for d in data if d > TIE_TOLERANCE)
     losses = sum(1 for d in data if d < -TIE_TOLERANCE)
@@ -134,6 +139,8 @@ def classify_practical_importance(
         raise ValueError("threshold must be a positive finite number")
     if lower is None or upper is None:
         return None
+    if not (math.isfinite(lower) and math.isfinite(upper)):
+        raise ValueError("interval bounds must be finite or None")
     if lower > upper:
         raise ValueError("lower must not exceed upper")
     if lower > threshold or upper < -threshold:

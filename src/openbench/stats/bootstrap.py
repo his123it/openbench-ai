@@ -7,6 +7,7 @@ import statistics
 from collections.abc import Sequence
 
 from openbench.performance import compute_percentile
+from openbench.stats._validation import finite_floats, require_int
 from openbench.stats.results import ConfidenceInterval, StatWarning
 from openbench.stats.rng import derive_stream
 
@@ -18,13 +19,8 @@ METHOD = "paired_percentile_bootstrap"
 def _validate(values: Sequence[float], confidence_level: float, resamples: int) -> list[float]:
     if not 0.5 <= confidence_level <= 0.999:
         raise ValueError("confidence_level must be within [0.5, 0.999]")
-    if isinstance(resamples, bool) or not isinstance(resamples, int) or resamples < 1:
-        raise ValueError("resamples must be a positive integer")
-    out = [float(v) for v in values]
-    for v in out:
-        if not math.isfinite(v):
-            raise ValueError("values must be finite numbers")
-    return out
+    require_int("resamples", resamples, minimum=1)
+    return finite_floats("values", values)
 
 
 def bootstrap_mean_ci(
@@ -46,7 +42,12 @@ def bootstrap_mean_ci(
     (purpose ``stratum:<label>``).
     """
     data = _validate(values, confidence_level, resamples)
+    require_int("analysis_seed", analysis_seed)
     n = len(data)
+    # Validate strata before any early return (audit finding F-003).
+    labels = None if strata is None else [str(label) for label in strata]
+    if labels is not None and len(labels) != n:
+        raise ValueError("strata must have one label per value")
     warnings: list[StatWarning] = []
     if resamples < MIN_RECOMMENDED_RESAMPLES:
         warnings.append(
@@ -92,18 +93,15 @@ def bootstrap_mean_ci(
         )
 
     means: list[float] = []
-    if strata is None:
+    if labels is None:
         rng = derive_stream(analysis_seed, "bootstrap", metric, arm_a, arm_b)
         randrange = rng.randrange
         for _ in range(resamples):
             means.append(math.fsum(data[randrange(n)] for _ in range(n)) / n)
     else:
-        labels = list(strata)
-        if len(labels) != n:
-            raise ValueError("strata must have one label per value")
         groups: dict[str, list[float]] = {}
         for label, value in zip(labels, data, strict=True):
-            groups.setdefault(str(label), []).append(value)
+            groups.setdefault(label, []).append(value)
         streams = {
             label: derive_stream(analysis_seed, f"stratum:{label}", metric, arm_a, arm_b)
             for label in groups

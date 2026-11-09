@@ -98,4 +98,4 @@ jobs:
       - name: Run statistical tests, reference cross-checks and exact binary calibration
         env:
           OPENBENCH_RUN_SLOW: "1"
-        run: pytest -W error::SyntaxWarning -v tests/test_stats_tests.py tests/test_stats_bootstrap_effects_rng.py tests/test_stats_equivalence.py tests/test_score_kind.py tests/reference
+        run: pytest -W error::SyntaxWarning -v tests/test_stats_tests.py tests/test_stats_bootstrap_effects_rng.py tests/test_stats_equivalence.py tests/test_stats_audit_fixes.py tests/test_score_kind.py tests/reference

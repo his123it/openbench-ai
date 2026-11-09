@@ -24,6 +24,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, replace
 from functools import lru_cache
 
+from openbench.stats._validation import finite_floats, require_int
 from openbench.stats.results import (
     EquivalenceInterval,
     EquivalenceResult,
@@ -34,8 +35,9 @@ from openbench.stats.tests import adjust_p_values
 
 EPS = sys.float_info.epsilon
 
-#: Provisional (U4) largest n for the exact binary procedure.
-BINARY_EXACT_MAX_N = 1_000
+#: Largest n for the exact binary procedure (U4, decided 2026-11-09). Above it the result
+#: is ``exact_computation_limit``; there is never an asymptotic fallback.
+BINARY_EXACT_MAX_N = 500
 #: Target gap between the certified upper bound and the best lower bound of the supremum.
 SUPREMUM_TOLERANCE = 1e-9
 #: Initial number of nuisance-parameter cells in the branch-and-bound.
@@ -46,6 +48,8 @@ TAYLOR_MAX_WIDTH = 1e-4
 MAX_REFINEMENTS = 20_000
 #: Score-statistic ties within this tolerance count as at least as extreme.
 Z_TIE_TOLERANCE = 1e-12
+#: Outward widening (absolute) of enclosure parameters to cover their rounding error.
+PARAMETER_WIDENING = 8 * EPS
 #: Bisection tolerance for the endpoints of the binary dual interval.
 INTERVAL_TOLERANCE = 1e-5
 #: Default bootstrap resamples for the continuous procedure (alpha * (B + 1) integral).
@@ -120,18 +124,43 @@ def _log_factorials(n: int) -> tuple[float, ...]:
     return tuple(math.lgamma(k + 1.0) for k in range(n + 1))
 
 
-def _fp_allowance(n: int) -> float:
-    """Absolute floating-point allowance for one evaluation of :func:`_mixture_cdf`.
+def _walk_steps(size: int, thresholds: Sequence[int]) -> int:
+    """Number of probability terms one :func:`_walk` of ``size`` evaluates (<= its cost).
 
-    Each log-pmf is formed from at most ~4 log-factorial-sized terms, so its absolute
-    rounding error is at most 32 * eps * (log(n!) + 1) (8 ulp per term, generous for
-    ``math.lgamma``); the resulting relative error of each probability term is bounded by
-    the same amount. A walk uses at most 3n + 4 terms of magnitude <= 1, each also
-    carrying a few ulp of arithmetic error.
+    size + 1 binomial weights, at most ``size`` pmf terms for the m -> m + 1 CDF updates,
+    plus one pmf term per unit change of the (clamped) threshold. Counting the actual
+    changes avoids assuming that k_m is non-decreasing in m (audit finding F-005).
+    """
+    clamped = [max(-1, min(thresholds[m], m)) for m in range(size + 1)]
+    moves = sum(abs(clamped[m + 1] - clamped[m]) for m in range(size))
+    return (size + 1) + size + moves
+
+
+def _fp_allowance(n: int, threshold_sets: Sequence[Sequence[int]] = ()) -> float:
+    """Absolute floating-point allowance for one walk evaluation (sizes n and n - 1).
+
+    Error model (stated assumptions, audit finding F-005):
+
+    * ``math.lgamma(k + 1)`` has absolute error <= 8 ulp of its result for k <= n
+      (measured: <= 3.21 ulp for k <= 1,200; checked in the test suite).
+    * A pmf exp(x) with x = lf[m] - lf[k] - lf[m-k] + k log(pi) + (m-k) log(1-pi) has
+      absolute error <= pmf * |dx| + eps * pmf, with |dx| <= 24 eps lf[n] + 5 eps * (sum of
+      the term magnitudes). Because pmf <= exp(lf[m] - |k log pi|), pmf * |k log pi| <=
+      lf[m] + 1 (and the same for the (m-k) log(1-pi) term), so every pmf or weight term
+      carries an absolute error <= 64 eps (lf[n] + 1).
+    * Each term is used in at most one addition or subtraction of magnitude <= 1, adding
+      <= 8 eps; the final weighted sum adds <= (size + 1) eps, included in the 8 eps.
+
+    The step count is taken from the actual threshold arrays (see :func:`_walk_steps`).
+    A further 16 n eps covers evaluation points whose (psi, pi) differ by rounding from
+    the exact boundary parameterisation.
     """
     lf_n = _log_factorials(n)[n] if n > 0 else 0.0
     steps = 3 * n + 4
-    return 32.0 * EPS * (lf_n + 1.0) * steps + 16.0 * EPS * steps
+    for thresholds in threshold_sets:
+        size = len(thresholds) - 1
+        steps = max(steps, _walk_steps(size, thresholds))
+    return steps * (64.0 * EPS * (lf_n + 1.0) + 8.0 * EPS) + 16.0 * n * EPS
 
 
 def _rejection_thresholds(b_obs: int, c_obs: int, n: int, delta0: float) -> list[int]:
@@ -249,8 +278,12 @@ def _cell_enclosure(
     psi1, psi2 = 2.0 * t1 + delta0, 2.0 * t2 + delta0
     pi1 = (t1 + delta0) / psi1 if psi1 > 0 else (0.0 if delta0 < 0 else 1.0)
     pi2 = (t2 + delta0) / psi2 if psi2 > 0 else (0.0 if delta0 < 0 else 1.0)
-    weight = _binomial_weight_fn(n, psi1, psi2)
-    return _walk(n, weight, min(pi1, pi2), thresholds)
+    # Widen outward by a few ulp so rounding in psi and pi cannot shrink the enclosure.
+    psi_lo = max(0.0, psi1 - PARAMETER_WIDENING)
+    psi_hi = min(1.0, psi2 + PARAMETER_WIDENING)
+    pi_min = max(0.0, min(pi1, pi2) - PARAMETER_WIDENING)
+    weight = _binomial_weight_fn(n, psi_lo, psi_hi)
+    return _walk(n, weight, pi_min, thresholds)
 
 
 def _scaled_mixture(
@@ -300,6 +333,11 @@ class SupremumBound:
         }
 
 
+def _reported_p(upper_raw: float) -> float:
+    """Round a certified upper bound up to the next float and cap it at 1."""
+    return min(1.0, math.nextafter(upper_raw, math.inf))
+
+
 def _supremum(
     n: int,
     delta0: float,
@@ -318,10 +356,11 @@ def _supremum(
     bound - (best point value) <= tolerance.
     """
     lo, hi = max(0.0, -delta0), (1.0 - delta0) / 2.0
-    allowance = _fp_allowance(n)
     thr1 = [thresholds[m + 1] - 1 for m in range(n)]
     thr2 = [thresholds[m + 1] for m in range(n)]
     thr3 = list(thresholds[:n])
+    allowance = _fp_allowance(n, (thresholds, thr1, thr2, thr3) if n else (thresholds,))
+    widen = PARAMETER_WIDENING
 
     def point(theta: float) -> float:
         q01 = theta + delta0
@@ -330,13 +369,13 @@ def _supremum(
         return _mixture_cdf(n, psi, pi, thresholds)
 
     def cell_bound(t1: float, t2: float, f_mid: float) -> float:
-        bound0 = _cell_enclosure(n, delta0, t1, t2, thresholds) * (1.0 + 4.0 * EPS * n)
-        bound0 += allowance
+        bound0 = _cell_enclosure(n, delta0, t1, t2, thresholds) + allowance
         h = t2 - t1
         if n == 0 or h > TAYLOR_MAX_WIDTH:
             return bound0
-        up_q01, up_q10, up_r = t2 + delta0, t2, 1.0 - 2.0 * t1 - delta0
-        lo_q01, lo_q10, lo_r = t1 + delta0, t1, 1.0 - 2.0 * t2 - delta0
+        # Outward-rounded enclosure of (q01, q10, R) over the cell.
+        up_q01, up_q10, up_r = t2 + delta0 + widen, t2 + widen, 1.0 - 2.0 * t1 - delta0 + widen
+        lo_q01, lo_q10, lo_r = t1 + delta0 - widen, t1 - widen, 1.0 - 2.0 * t2 - delta0 - widen
         g1h, sh = _scaled_mixture(n - 1, up_q01, up_q10, up_r, thr1)
         g2h, _ = _scaled_mixture(n - 1, up_q01, up_q10, up_r, thr2)
         g3h, _ = _scaled_mixture(n - 1, up_q01, up_q10, up_r, thr3)
@@ -346,7 +385,7 @@ def _supremum(
         upper_slope = n * (g1h + g2h) - 2.0 * n * g3l
         lower_slope = n * (g1l + g2l) - 2.0 * n * g3h
         slope = max(0.0, upper_slope, -lower_slope)
-        slope_err = 4.0 * n * max(1.0, sh) * allowance
+        slope_err = 4.0 * n * max(1.0, sh) * (allowance + 16.0 * n * EPS)
         bound1 = f_mid + allowance + 0.5 * h * (slope + slope_err)
         return min(bound0, bound1)
 
@@ -373,7 +412,9 @@ def _supremum(
     while True:
         top = -heap[0][0]
         if decision_alpha is not None:
-            if max(top, best + allowance) <= decision_alpha:
+            # Compare the value that would be reported (rounded up), so decision mode and
+            # full computation always agree (audit finding F-005).
+            if _reported_p(max(top, best + allowance)) <= decision_alpha:
                 decided = "reject"
                 break
             if best - allowance > decision_alpha:
@@ -399,7 +440,7 @@ def _supremum(
             heapq.heappush(heap, (-cell_bound(a, b, f_m), a, b))
         refinements += 1
     upper_raw = max(-heap[0][0], best + allowance)
-    reported = min(1.0, math.nextafter(upper_raw, math.inf))
+    reported = _reported_p(upper_raw)
     return SupremumBound(
         p_value=reported,
         lower_bound=max(0.0, best - allowance),
@@ -452,11 +493,9 @@ def binary_exact_p_lower(
 
 
 def _check_counts(b: int, c: int, n: int) -> None:
-    for name, value in (("b", b), ("c", c), ("n", n)):
-        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
-            raise ValueError(f"{name} must be a non-negative integer")
-    if n < 1:
-        raise ValueError("n must be at least 1")
+    require_int("b", b, minimum=0)
+    require_int("c", c, minimum=0)
+    require_int("n", n, minimum=1)
     if b + c > n:
         raise ValueError("b + c must not exceed n")
 
@@ -481,7 +520,8 @@ def _invert_side(
     if last_ok == len(grid) - 1:
         return end, non_monotone
     if last_ok < 0:
-        return start, non_monotone
+        # The estimate itself was rejected; report the degenerate side and flag it.
+        return start, True
     good, bad = grid[last_ok], grid[last_ok + 1]
     while abs(bad - good) > INTERVAL_TOLERANCE:
         mid = 0.5 * (good + bad)
@@ -498,23 +538,37 @@ def binary_exact_interval(
     """(1 - 2 alpha) interval by inverting the conservative one-sided exact tests.
 
     Reported as an open interval (L, U): every Delta0 not rejected by either test lies
-    strictly inside. L and U are certified-rejected values found by a 21-point scan plus
-    bisection to 1e-5 (the margin points are added to the scan).
+    strictly inside. L and U are certified-rejected values (or the parameter-space limits
+    -1 and +1) found by a 21-point scan plus bisection to 1e-5; the margin points are added
+    to the scan.
+
+    At the limits Delta0 = +/-1 the tests are decided exactly instead of being computed
+    (audit finding F-001):
+
+    * H: Delta >= -1 and H: Delta <= +1 are the whole parameter space: never rejected.
+    * H: Delta >= +1 means q01 = 1, so every item is (0, 1) with probability 1. It is the
+      limit of the tests at Delta0 -> 1 and is rejected exactly when b < n (the p-value
+      tends to 0 if b < n and equals 1 if b = n). Symmetrically, H: Delta <= -1 is
+      rejected exactly when c < n.
     """
+    _check_alpha(alpha)
     _check_counts(b, c, n)
     estimate = (b - c) / n
     extra = [margin, -margin] if margin else []
-    edge = 1.0 - 1e-9
 
-    def rejects_upper(x: float) -> bool:
-        if x >= edge:
-            return True
+    def rejects_upper(x: float) -> bool:  # H: Delta >= x
+        if x >= 1.0:
+            return b < n
+        if x <= -1.0:
+            return False
         r = binary_exact_p_upper(b, c, n, x, decision_alpha=alpha)
         return r.decided == "reject" or (r.decided is None and r.p_value <= alpha)
 
-    def rejects_lower(x: float) -> bool:
-        if x <= -edge:
-            return True
+    def rejects_lower(x: float) -> bool:  # H: Delta <= x
+        if x <= -1.0:
+            return c < n
+        if x >= 1.0:
+            return False
         r = binary_exact_p_lower(b, c, n, x, decision_alpha=alpha)
         return r.decided == "reject" or (r.decided is None and r.p_value <= alpha)
 
@@ -576,6 +630,7 @@ def tost_paired_binary_exact(
     _check_alpha(alpha)
     _check_margin(margin)
     _check_counts(b, c, n)
+    require_int("max_n", max_n, minimum=1)
     estimate = (b - c) / n
     warnings = _sample_warnings(n)
     if b + c < 10:
@@ -703,11 +758,9 @@ def tost_bootstrap_t(
     _check_alpha(alpha)
     if margin is not None and not margin > 0:
         raise ValueError("margin must be positive")
-    if resamples < 1:
-        raise ValueError("resamples must be >= 1")
-    data = [float(d) for d in differences]
-    if any(not math.isfinite(d) for d in data):
-        raise ValueError("differences must be finite")
+    require_int("resamples", resamples, minimum=1)
+    require_int("analysis_seed", analysis_seed)
+    data = finite_floats("differences", differences)
     n = len(data)
     warnings = _sample_warnings(n)
     warnings.append(

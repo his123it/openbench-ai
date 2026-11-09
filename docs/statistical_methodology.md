@@ -91,8 +91,8 @@ there is no rounding drift.
 
 **Permutation distribution:**
 
-- **Exact enumeration** (Gray-code order) when k ≤ 20 non-zero differences. This limit is
-  provisional and set by Stage 1 timing.
+- **Exact enumeration** (Gray-code order) when k ≤ 20 non-zero differences (limit decided
+  from the Stage 1 timing: about 0.5 s at k = 20).
 - **Monte Carlo** otherwise: P = 9,999 sign vectors from the `permutation` stream, with
   p = (1 + count)/(P + 1). The p-value is never zero, and its Monte Carlo standard error is
   reported.
@@ -104,6 +104,11 @@ never say "exact test" without that qualifier.
 
 **Edge cases:** n < 2 gives `insufficient_items`; all differences zero gives p = 1 and
 warning `all_differences_zero`.
+
+**Power depends on k, not n.** When only 0 < k < 10 differences are non-zero, the warning
+`few_nonzero_differences` is emitted, and `details.minimum_attainable_p_two_sided` reports
+2/2ᵏ (1/(P + 1) on the Monte Carlo path). For example, with k ≤ 5 a two-sided test can never
+reach α = 0.05, whatever n is.
 
 ## 6. Multiple comparisons
 
@@ -139,6 +144,11 @@ Raw and adjusted values are both reported. Equivalence tests form a separate Hol
 - n < 10: `very_small_sample`.
 - n < 30: `low_power_wide_intervals`.
 - Binary with b + c < 10: `few_discordant_pairs`.
+- Sign-flip with 0 < k < 10 non-zero differences: `few_nonzero_differences`.
+
+**Input validation.** Every primitive rejects NaN and infinite values with `ValueError`.
+Integer parameters (resamples, permutations, limits, counts, repetitions, seeds) must be
+integers, so booleans and floats raise `TypeError`.
 
 ## 8. Equivalence for binary metrics: exact unconditional score TOST
 
@@ -199,13 +209,26 @@ p-value is a **certified upper bound** on its supremum:
    10⁻⁹ (above the floating-point allowance below). The bound remains valid if the refinement
    cap is reached, and this is flagged.
 5. **Floating-point allowance and upward rounding.** Each evaluation carries an explicit
-   absolute allowance A(n) = 32·ε·(log n! + 1)·(3n + 4) + 16·ε·(3n + 4), with ε the machine
-   epsilon. This assumes at most 8 ulp error per log-factorial-sized term and at most 3n + 4
-   walk steps. The allowance is added to every bound, and the result is rounded up to the next
-   float.
+   absolute allowance A = S·(64ε(log n! + 1) + 8ε) + 16nε, with ε the machine epsilon.
+   - S is the **actual** number of probability terms in the walks for the threshold arrays
+     involved. It is counted, not assumed, so the bound does not rely on k_m being
+     monotone in m.
+   - The 64ε(log n! + 1) per term assumes `math.lgamma` is within 8 ulp; the test suite
+     checks this for k ≤ 1,001 against 60-digit `decimal` arithmetic (measured worst
+     case: 3.21 ulp).
+   - It also uses pmf·|k log π| ≤ log m! + 1, so terms with tiny π are covered.
+   - The 16nε covers evaluation points whose (ψ, π) are rounded off the exact boundary.
+   - **Outward widening:** the cell-enclosure parameters (ψ, π and the q₀₁, q₁₀, R used
+     in the derivative enclosure) are widened by 8ε, so their own rounding cannot shrink
+     an enclosure.
+   - **Rounding up:** the allowance is added to every bound, and the result is rounded up
+     to the next float. Early-exit decisions compare exactly that rounded value with α, so
+     a decision and a full computation can never disagree.
 
 The reported p-value is therefore never below the true supremum, under that floating-point
-model. The gap is reported (`numerical.*.gap`); typically it is below 10⁻⁸.
+model. The model is an engineering bound with safety factors, not a machine-checked
+interval-arithmetic proof. Against exact rational evaluation (n ≤ 30), the measured error stays
+below 1% of the allowance. The gap is reported (`numerical.*.gap`); typically it is below 2·10⁻⁸.
 
 - **Independent checks** in the test suite:
   - exact-rational polynomial bounds for small n, where p lies between a dense-grid lower
@@ -220,9 +243,19 @@ model. The gap is reported (`numerical.*.gap`); typically it is below 10⁻⁸.
   point with the certified bound. It is reported as an open interval (L, U) whose endpoints
   are certified-rejected values, so every non-rejected Δ₀ lies strictly inside. A
   non-monotone scan is flagged `interval_non_monotone`. The decision always comes from p₁ and
-  p₂. The interval agrees with it on every reference case.
-- **Computation limit.** n ≤ 1,000 (provisional, set by Stage 1 timing). Above this limit
-  the result is `not_established` with reason `exact_computation_limit`.
+  p₂. The interval agrees with it on every reference case and on every table with n ≤ 6.
+- **Boundary rule at Δ₀ = ±1.** These points are decided exactly, not computed.
+  - H: Δ ≥ −1 and H: Δ ≤ +1 are the whole parameter space, so they are never rejected.
+  - H: Δ ≥ +1 forces every item to be (A wrong, B right), so it is rejected exactly when
+    b < n. This is also the limit of the test as Δ₀ → 1.
+  - H: Δ ≤ −1 is rejected exactly when c < n.
+  - So tables where every item is discordant in one direction (b = n or c = n) have an
+    interval ending at ±1. For b = n the lower end is 2α^(1/n) − 1, which the test suite
+    checks analytically.
+- **Computation limit.** n ≤ 500 (decided from the Stage 1 timing: about 40 s per
+  comparison with its interval at n = 500). Above this limit the result is
+  `not_established` with reason `exact_computation_limit` and no p-value. It **never**
+  falls back to the asymptotic test. Callers may pass a larger `max_n` explicitly.
 
 **Assumptions:**
 - independent items forming a random sample from the item population;

@@ -12,6 +12,7 @@ pytest.importorskip("scipy")
 
 from _ref_binary import (  # noqa: E402
     asymptotic_and_exact_max_sizes,
+    log_probs,
     max_size_curve,
     outcomes,
     p_upper,
@@ -120,3 +121,26 @@ def test_production_procedure_controls_size_exactly(n, delta) -> None:
     for eta in (0.02, 0.05):
         inner = max_size_curve(n, delta + eta, rejected, np.linspace(0, (1 - delta - eta) / 2, 801))
         assert inner.max() <= sizes.max() + 1e-12
+
+
+@slow
+@pytest.mark.parametrize(("n", "delta"), [(10, 0.1), (10, 0.2), (15, 0.1)])
+def test_full_tost_decision_controls_size_at_both_boundaries(n, delta) -> None:
+    """Exact size of the *full* production TOST decision (tost_paired_binary_exact), as
+    opposed to one one-sided p-value: closes the coverage gap noted in audit F-001."""
+    from openbench.stats import tost_paired_binary_exact
+
+    b, c, lt = outcomes(n)
+    established = np.array(
+        [
+            tost_paired_binary_exact(int(bi), int(ci), n, delta, compute_interval=False)
+            .result_unadjusted
+            == "established"
+            for bi, ci in zip(b, c, strict=True)
+        ]
+    )
+    for d0 in (delta, -delta):
+        lo, hi = max(0.0, -d0), (1 - d0) / 2
+        thetas = np.linspace(lo, hi, 2001)
+        sizes = [np.exp(log_probs(lt, b, c, n, t, d0))[established].sum() for t in thetas]
+        assert max(sizes) <= 0.05
