@@ -57,6 +57,8 @@ def binary_paired_counts(
         raise ValueError("baseline and challenger must have the same length")
     counts = {(1, 1): 0, (0, 1): 0, (1, 0): 0, (0, 0): 0}
     for a, b in zip(baseline, challenger, strict=True):
+        if isinstance(a, bool) or isinstance(b, bool):
+            raise TypeError("binary scores must be numbers 0 or 1, not booleans")
         if a not in (0, 1) or b not in (0, 1):
             raise ValueError("binary scores must be 0 or 1")
         counts[(int(a), int(b))] += 1

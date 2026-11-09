@@ -93,6 +93,31 @@ class NonMonotoneRejectionRegionError(RuntimeError):
 def score_statistic(b: int, c: int, n: int, delta0: float) -> tuple[float, float, float]:
     """Return ``(z, q10_tilde, variance)`` of Tango's score statistic at ``delta0``.
 
+    Validates its inputs: integer counts with ``0 <= b + c <= n`` and ``n >= 1``, and a
+    finite ``delta0`` in the open interval (-1, 1). See :func:`_score_statistic`.
+    """
+    _check_counts(b, c, n)
+    _check_delta0(delta0)
+    return _score_statistic(b, c, n, delta0)
+
+
+def _check_delta0(delta0: float) -> None:
+    if isinstance(delta0, bool) or not isinstance(delta0, (int, float)):
+        raise TypeError("delta0 must be a real number")
+    if not -1.0 < delta0 < 1.0:
+        raise ValueError("delta0 must lie in (-1, 1)")
+
+
+def _check_tolerance(tolerance: float) -> None:
+    if isinstance(tolerance, bool) or not isinstance(tolerance, (int, float)):
+        raise TypeError("tolerance must be a real number")
+    if not (tolerance > 0 and math.isfinite(tolerance)):
+        raise ValueError("tolerance must be a positive finite number")
+
+
+def _score_statistic(b: int, c: int, n: int, delta0: float) -> tuple[float, float, float]:
+    """Unchecked core of :func:`score_statistic` (callers validate; used in tight loops).
+
     ``b`` = #(A wrong, B right), ``c`` = #(A right, B wrong), estimand
     Delta = q01 - q10. The restricted MLE of q10 is the admissible root of
     ``2n q^2 + B q + C = 0`` with ``B = -(b + c) + delta0 (2n - b + c)`` and
@@ -168,14 +193,14 @@ def _rejection_thresholds(b_obs: int, c_obs: int, n: int, delta0: float) -> list
 
     Verifies that each set is a prefix {0..k_m}; raises otherwise.
     """
-    z_obs = score_statistic(b_obs, c_obs, n, delta0)[0]
+    z_obs = _score_statistic(b_obs, c_obs, n, delta0)[0]
     limit = z_obs + Z_TIE_TOLERANCE
     thresholds: list[int] = []
     for m in range(n + 1):
         k = -1
         broken = False
         for b in range(m + 1):
-            if score_statistic(b, m - b, n, delta0)[0] <= limit:
+            if _score_statistic(b, m - b, n, delta0)[0] <= limit:
                 if broken:
                     raise NonMonotoneRejectionRegionError(
                         f"rejection region not a prefix at n={n}, m={m}, delta0={delta0}"
@@ -471,8 +496,10 @@ def binary_exact_p_upper(
     certified; the returned ``p_value`` is then only a valid upper bound, not a tight one.
     """
     _check_counts(b, c, n)
-    if not -1.0 < delta0 < 1.0:
-        raise ValueError("delta0 must lie in (-1, 1)")
+    _check_delta0(delta0)
+    _check_tolerance(tolerance)
+    if decision_alpha is not None:
+        _check_alpha(decision_alpha)
     thresholds = _rejection_thresholds(b, c, n, delta0)
     return _supremum(
         n, delta0, thresholds, tolerance=tolerance, decision_alpha=decision_alpha
@@ -555,6 +582,7 @@ def binary_exact_interval(
     """
     _check_alpha(alpha)
     _check_counts(b, c, n)
+    _check_margin(margin)
     estimate = (b - c) / n
     extra = [margin, -margin] if margin else []
 
@@ -604,11 +632,15 @@ def _sample_warnings(n: int) -> list[StatWarning]:
 
 
 def _check_alpha(alpha: float) -> None:
+    if isinstance(alpha, bool) or not isinstance(alpha, (int, float)):
+        raise TypeError("alpha must be a real number")
     if not 0.0 < alpha < 0.5:
         raise ValueError("alpha must lie in (0, 0.5)")
 
 
 def _check_margin(margin: float | None) -> None:
+    if isinstance(margin, bool) or (margin is not None and not isinstance(margin, (int, float))):
+        raise TypeError("margin must be a real number or None")
     if margin is not None and not (0.0 < margin < 1.0):
         raise ValueError("margin must lie in (0, 1)")
 
@@ -659,8 +691,8 @@ def tost_paired_binary_exact(
             p_lower=None, p_upper=None, p_tost=None, result_unadjusted=NOT_ESTABLISHED,
             interval=None, reason="exact_computation_limit", warnings=tuple(warnings), **base,
         )
-    z_lower = score_statistic(b, c, n, -margin)[0]
-    z_upper = score_statistic(b, c, n, margin)[0]
+    z_lower = _score_statistic(b, c, n, -margin)[0]
+    z_upper = _score_statistic(b, c, n, margin)[0]
     try:
         lower = binary_exact_p_lower(b, c, n, -margin, tolerance=tolerance)
         upper = binary_exact_p_upper(b, c, n, margin, tolerance=tolerance)
@@ -758,8 +790,10 @@ def tost_bootstrap_t(
     ``not_established`` (reason ``method_not_validated`` unless an earlier gate applies).
     """
     _check_alpha(alpha)
-    if margin is not None and not margin > 0:
-        raise ValueError("margin must be positive")
+    if isinstance(margin, bool) or (margin is not None and not isinstance(margin, (int, float))):
+        raise TypeError("margin must be a real number or None")
+    if margin is not None and not (margin > 0 and math.isfinite(margin)):
+        raise ValueError("margin must be a positive finite number")
     require_int("resamples", resamples, minimum=1)
     require_int("analysis_seed", analysis_seed)
     data = finite_floats("differences", differences)

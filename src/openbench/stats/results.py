@@ -190,7 +190,7 @@ class EquivalenceResult:
     def to_dict(self) -> dict[str, Any]:
         return {
             "procedure": self.procedure,
-            "margin": self.margin,
+            "margin": finite_or_none(self.margin),
             "alpha": self.alpha,
             "sample_count": self.sample_count,
             "estimate": finite_or_none(self.estimate),

@@ -116,7 +116,11 @@ def mcnemar_exact(b: int, c: int) -> TestResult:
 
 
 def studentized_mean(differences: Sequence[float]) -> float | None:
-    """t = mean / (sd / sqrt(n)); ``None`` when n < 2, +/-inf when the SD is zero."""
+    """t = mean / (sd / sqrt(n)); ``None`` when n < 2, +/-inf when the SD is zero.
+
+    Non-finite inputs raise ``ValueError``.
+    """
+    differences = finite_floats("differences", differences)
     n = len(differences)
     if n < 2:
         return None

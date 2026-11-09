@@ -146,9 +146,21 @@ Raw and adjusted values are both reported. Equivalence tests form a separate Hol
 - Binary with b + c < 10: `few_discordant_pairs`.
 - Sign-flip with 0 < k < 10 non-zero differences: `few_nonzero_differences`.
 
-**Input validation.** Every primitive rejects NaN and infinite values with `ValueError`.
-Integer parameters (resamples, permutations, limits, counts, repetitions, seeds) must be
-integers, so booleans and floats raise `TypeError`.
+**Input validation.** Every exported function in `openbench.stats`, including the
+low-level helpers `studentized_mean`, `score_statistic`, `binary_exact_p_upper`,
+`binary_exact_p_lower` and `binary_exact_interval`, validates direct calls:
+
+- NaN and infinite data values, margins, tolerances and `delta0` raise `ValueError`.
+- Integer parameters (resamples, permutations, limits, counts, repetitions, seeds) must be
+  integers, so booleans and floats raise `TypeError`. `alpha`, `margin` and
+  `decision_alpha` must be real numbers (not booleans).
+- Margins must be positive and finite (`tost_bootstrap_t`), or lie in (0, 1) for the
+  binary procedures. `delta0` must lie in (-1, 1); `tolerance` must be positive and
+  finite; `alpha` and `decision_alpha` must lie in (0, 0.5).
+- `binary_paired_counts` accepts the numbers 0 and 1 (int or float) and rejects booleans.
+
+Internal tight loops call an unchecked core (`_score_statistic`) after the public entry
+point has validated its inputs, so validation adds no per-cell cost.
 
 ## 8. Equivalence for binary metrics: exact unconditional score TOST
 
