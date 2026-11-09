@@ -386,6 +386,9 @@ class EvaluationResult:
     invalid_response_breakdown: dict[str, Any] = field(default_factory=dict)
     performance_summary: dict[str, Any] = field(default_factory=dict)
     id_filter_summary: dict[str, Any] | None = None
+    #: Optional v0.4.0 statistics block (``evaluate --confidence-intervals``). ``None`` keeps
+    #: the serialised output identical to v0.3.1.
+    statistics: dict[str, Any] | None = None
 
     @property
     def total_dataset_items(self) -> int:
@@ -440,6 +443,8 @@ class EvaluationResult:
         }
         if self.id_filter_summary is not None:
             payload["id_filter"] = dict(self.id_filter_summary)
+        if self.statistics is not None:
+            payload["statistics"] = dict(self.statistics)
         return payload
 
     @classmethod
@@ -520,6 +525,7 @@ class EvaluationResult:
             warnings=list(payload.get("warnings", [])),
             limitations=list(payload.get("limitations", [])),
             id_filter_summary=dict(payload["id_filter"]) if "id_filter" in payload and payload["id_filter"] is not None else None,
+            statistics=dict(payload["statistics"]) if isinstance(payload.get("statistics"), dict) else None,
         )
 
 

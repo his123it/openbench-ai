@@ -35,6 +35,7 @@ class OllamaAdapter(BaseModelAdapter):
     """
 
     provider_name = "ollama"
+    supports_generation_seed = True
     description = "Local Ollama HTTP API adapter (/api/generate and /api/tags)."
     is_experimental = False
     is_mock = False
@@ -159,6 +160,7 @@ class OllamaAdapter(BaseModelAdapter):
         }
         if self.generation_config.seed is not None:
             options["seed"] = self.generation_config.seed
+            self.seed_forward_count += 1
         if self.generation_config.stop_sequences:
             options["stop"] = list(self.generation_config.stop_sequences)
         options.update(self.generation_config.extra_options)

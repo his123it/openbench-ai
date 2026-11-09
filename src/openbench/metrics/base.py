@@ -92,6 +92,9 @@ class BaseMetric(ABC):
     #: "bounded_continuous" (in [0, 1]) or "unknown". Used only to select statistical
     #: procedures; it never changes scores. Custom metrics default to "unknown".
     score_kind: str = "unknown"
+    #: Direction of the score (v0.4.0). Every built-in metric is higher-is-better; paired
+    #: comparisons report Delta = challenger - baseline in this direction.
+    higher_is_better: bool = True
 
     @classmethod
     def get_metadata(cls) -> MetricMetadata:

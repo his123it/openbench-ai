@@ -1,4 +1,4 @@
-"""Statistical primitives for OpenBench AI (v0.4.0 Stage 1).
+"""Statistical primitives for OpenBench AI (v0.4.0).
 
 These functions operate on already aligned, filtered and ID-sorted per-item values. They
 are standard-library only. See ``docs/statistical_methodology.md`` for the methodology,
@@ -39,6 +39,7 @@ from openbench.stats.tests import (
     sign_flip_test,
     studentized_mean,
 )
+from openbench.stats.variability import decompose_variability
 
 __all__ = [
     "BINARY_EXACT_MAX_N",
@@ -57,6 +58,7 @@ __all__ = [
     "binary_paired_counts",
     "bootstrap_mean_ci",
     "classify_practical_importance",
+    "decompose_variability",
     "derive_seed",
     "derive_stream",
     "equivalence_family_holm",

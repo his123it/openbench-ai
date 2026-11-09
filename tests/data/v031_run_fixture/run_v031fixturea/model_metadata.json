@@ -1,0 +1,22 @@
+{
+  "run_id": "run_v031fixturea",
+  "execution_origin": "provider_executed",
+  "model_provider": "mock",
+  "model_name": "fixture-model-a",
+  "model_version": "0.3.0",
+  "is_mock_provider": true,
+  "generation_configuration": {
+    "provider": "mock",
+    "model_name": "fixture-model-a",
+    "model_version": "0.3.0",
+    "experimental": false,
+    "is_mock": true,
+    "timeout_seconds": 30.0,
+    "temperature": 0.0,
+    "max_tokens": 256,
+    "top_p": 1.0,
+    "stream": false,
+    "use_expected_answer": true,
+    "simulated_latency_ms": 1.0
+  }
+}

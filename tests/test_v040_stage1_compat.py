@@ -1,7 +1,8 @@
-"""Stage 1 compatibility guards (plan X1, F2, section 12.1 items 3-5).
+"""Compatibility guards (plan X1, F2, section 12.1 items 3-5).
 
-* The 70 public names and the 19 CLI commands (flags, defaults, choices) are unchanged
-  from v0.3.1 (inventory generated from commit 8d3295a, tests/data/v031_public_surface.json).
+* The 70 public names and the 19 CLI commands (flags, defaults, choices) of v0.3.1 are all
+  preserved (inventory generated from commit 8d3295a, tests/data/v031_public_surface.json);
+  v0.4.0 only adds names, commands and flags.
 * The 10 dataset files (200 records) match their v0.3.1 SHA-256 digests.
 * Statistical analysis never modifies a v0.3.1 run directory.
 """
@@ -34,20 +35,29 @@ DATASET_SHA256 = {
 }
 
 
-def test_public_names_unchanged() -> None:
+def test_public_names_preserved() -> None:
+    """v0.4.0 is additive: all 70 v0.3.1 names stay, in their original order, first."""
     assert len(SURFACE["public_names"]) == 70
-    assert list(openbench.__all__) == SURFACE["public_names"]
+    assert list(openbench.__all__)[:70] == SURFACE["public_names"]
     for name in SURFACE["public_names"]:
         assert hasattr(openbench, name), name
 
 
-def test_cli_surface_unchanged() -> None:
+def test_cli_surface_preserved() -> None:
+    """Every v0.3.1 command and flag (dest, options, required, nargs, default, choices) is kept."""
     current = cli_inventory(build_parser())
-    assert current == SURFACE["cli"]
-    leaves = [path for path in current if path != "<root>" and not any(
-        other.startswith(path + " ") for other in current
+    for path, actions in SURFACE["cli"].items():
+        assert path in current, path
+        if path == "<root>":
+            assert current[path] == actions
+            continue
+        by_dest = {a["dest"]: a for a in current[path]}
+        for action in actions:
+            assert by_dest.get(action["dest"]) == action, (path, action["dest"])
+    old_leaves = [p for p in SURFACE["cli"] if p != "<root>" and not any(
+        o.startswith(p + " ") for o in SURFACE["cli"]
     )]
-    assert len(leaves) == 19
+    assert len(old_leaves) == 19
 
 
 def test_dataset_files_match_v031_digests() -> None:

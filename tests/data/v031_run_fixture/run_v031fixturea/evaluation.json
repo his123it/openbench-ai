@@ -1,0 +1,1542 @@
+{
+  "evaluation_id": "eval_b1846a1c140f",
+  "project_version": "0.3.1",
+  "evaluation_timestamp": "2026-11-09T23:19:51+00:00",
+  "dataset": {
+    "name": "reasoning/sample",
+    "version": "0.2.0",
+    "source_path": "datasets/reasoning/sample.jsonl",
+    "total_records": 20,
+    "categories": {
+      "reasoning": 20
+    },
+    "difficulties": {
+      "easy": 7,
+      "medium": 8,
+      "hard": 5
+    },
+    "languages": {
+      "en": 20
+    },
+    "tags": {
+      "arithmetic": 4,
+      "multiplication": 1,
+      "division": 1,
+      "sequence": 1,
+      "pattern_recognition": 1,
+      "deduction": 2,
+      "syllogism": 2,
+      "rate_time_distance": 1,
+      "word_problem": 2,
+      "percentages": 1,
+      "spatial_ordering": 1,
+      "constraint_satisfaction": 2,
+      "algebra": 1,
+      "linear_equation": 1,
+      "number_theory": 1,
+      "least_common_multiple": 1,
+      "set_theory": 1,
+      "inclusion_exclusion": 1,
+      "fractions": 1,
+      "probability": 1,
+      "prime_numbers": 1,
+      "scheduling": 1,
+      "time_calculation": 1,
+      "combinatorics": 2,
+      "handshakes": 1,
+      "modus_tollens": 1,
+      "propositional_logic": 1,
+      "pigeonhole_principle": 1,
+      "state_tracking": 1,
+      "boolean_logic": 1,
+      "work_rate": 1,
+      "harmonic_rate": 1
+    },
+    "checksum": "c448ee83e7968d981399f743daf2c3f1ab0820c95e0267e1aaf0ba85275fafc4"
+  },
+  "model": {
+    "model_name": "fixture-model-a",
+    "model_version": "0.3.0",
+    "model_provider": "mock",
+    "inference_config": {
+      "provider": "mock",
+      "model_name": "fixture-model-a",
+      "model_version": "0.3.0",
+      "experimental": false,
+      "is_mock": true,
+      "timeout_seconds": 30.0,
+      "temperature": 0.0,
+      "max_tokens": 256,
+      "top_p": 1.0,
+      "stream": false,
+      "use_expected_answer": true,
+      "simulated_latency_ms": 1.0
+    },
+    "total_dataset_items": 20,
+    "evaluated_items": 20,
+    "missing_responses_count": 0,
+    "unknown_responses_count": 0
+  },
+  "configuration": {
+    "metric_names": [
+      "exact_match",
+      "keyword_coverage",
+      "f1"
+    ],
+    "normalization": {
+      "strip_whitespace": true,
+      "case_sensitive": false,
+      "collapse_whitespace": true,
+      "strip_punctuation": false
+    },
+    "strict_unknown_ids": false
+  },
+  "metrics_used": [
+    {
+      "name": "exact_match",
+      "version": "0.1.0",
+      "description": "Checks whether the normalized model response is identical to the normalized expected answer.",
+      "normalization": {
+        "strip_whitespace": true,
+        "case_sensitive": false,
+        "collapse_whitespace": true,
+        "strip_punctuation": false
+      }
+    },
+    {
+      "name": "keyword_coverage",
+      "version": "0.1.0",
+      "description": "Calculates the percentage of expected keywords present in the model response. Accepts custom keyword lists via record.metadata['keywords'] or falls back to the expected answer.",
+      "pass_threshold": 1.0,
+      "normalization": {
+        "strip_whitespace": true,
+        "case_sensitive": false,
+        "collapse_whitespace": true,
+        "strip_punctuation": false
+      }
+    },
+    {
+      "name": "f1",
+      "version": "0.2.0",
+      "description": "Computes the harmonic mean of precision and recall for binary decisions and element-set predictions.",
+      "pass_threshold": 1.0,
+      "normalization": {
+        "strip_whitespace": true,
+        "case_sensitive": false,
+        "collapse_whitespace": true,
+        "strip_punctuation": false
+      }
+    }
+  ],
+  "aggregate_results": {
+    "exact_match": {
+      "metric_name": "exact_match",
+      "metric_version": "0.1.0",
+      "score": 1.0,
+      "total_items": 20,
+      "evaluated_items": 20,
+      "passed_items": 20,
+      "details": {
+        "evaluated_only_score": 1.0,
+        "missing_items": 0,
+        "limitation": "Exact match is strict: any extra conversational framing (e.g., 'The answer is 42') will score 0.0 unless the expected answer includes that exact phrasing."
+      }
+    },
+    "keyword_coverage": {
+      "metric_name": "keyword_coverage",
+      "metric_version": "0.1.0",
+      "score": 0.95,
+      "total_items": 20,
+      "evaluated_items": 20,
+      "passed_items": 18,
+      "details": {
+        "evaluated_only_score": 0.95,
+        "missing_items": 0,
+        "limitation": "Keyword coverage is NOT equivalent to semantic correctness. A response may include all expected keywords while negating them or using them in an incorrect context.",
+        "coverage_percentage": 95.0,
+        "pass_threshold": 1.0
+      }
+    },
+    "f1": {
+      "metric_name": "f1",
+      "metric_version": "0.2.0",
+      "score": 1.0,
+      "total_items": 20,
+      "evaluated_items": 20,
+      "passed_items": 20,
+      "details": {
+        "evaluated_only_score": 1.0,
+        "missing_items": 0,
+        "limitation": "F1 balances precision and recall over discrete elements or binary labels; it does not evaluate word order or syntactic structure.",
+        "total_tp": 18,
+        "total_fp": 0,
+        "total_fn": 0,
+        "micro_f1": 1.0,
+        "macro_f1": 1.0
+      }
+    }
+  },
+  "category_breakdown": {
+    "reasoning": {
+      "total_items": 20,
+      "evaluated_items": 20,
+      "missing_items": 0,
+      "metrics": {
+        "exact_match": 1.0,
+        "keyword_coverage": 0.95,
+        "f1": 1.0
+      }
+    }
+  },
+  "difficulty_breakdown": {
+    "easy": {
+      "total_items": 7,
+      "evaluated_items": 7,
+      "missing_items": 0,
+      "metrics": {
+        "exact_match": 1.0,
+        "keyword_coverage": 0.928571,
+        "f1": 1.0
+      }
+    },
+    "hard": {
+      "total_items": 5,
+      "evaluated_items": 5,
+      "missing_items": 0,
+      "metrics": {
+        "exact_match": 1.0,
+        "keyword_coverage": 0.9,
+        "f1": 1.0
+      }
+    },
+    "medium": {
+      "total_items": 8,
+      "evaluated_items": 8,
+      "missing_items": 0,
+      "metrics": {
+        "exact_match": 1.0,
+        "keyword_coverage": 1.0,
+        "f1": 1.0
+      }
+    }
+  },
+  "missing_breakdown": {
+    "total_missing": 0,
+    "missing_ids": [],
+    "by_category": {},
+    "by_difficulty": {}
+  },
+  "invalid_response_breakdown": {
+    "total_invalid": 0,
+    "invalid_ids": [],
+    "reasons": {}
+  },
+  "performance_summary": {
+    "latency_supplied": true,
+    "token_usage_supplied": true,
+    "latency_ms": {
+      "count": 20,
+      "min": 1.0,
+      "max": 1.0,
+      "mean": 1.0,
+      "median": 1.0
+    },
+    "token_usage": {
+      "count": 20,
+      "total_prompt_tokens": 506,
+      "total_completion_tokens": 20,
+      "total_tokens": 526,
+      "mean_total_tokens": 26.3
+    }
+  },
+  "individual_results": [
+    {
+      "id": "reasoning_001",
+      "category": "reasoning",
+      "difficulty": "easy",
+      "prompt": "What is 15 multiplied by 12?",
+      "expected_answer": "180",
+      "model_response": "180",
+      "status": "evaluated",
+      "metrics": {
+        "exact_match": {
+          "metric_name": "exact_match",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "normalized_expected": "180",
+            "normalized_response": "180"
+          }
+        },
+        "keyword_coverage": {
+          "metric_name": "keyword_coverage",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "matched_keywords": [
+              "180"
+            ],
+            "missing_keywords": [],
+            "total_keywords": 1,
+            "coverage_percentage": 100.0,
+            "limitation": "Keyword coverage is NOT equivalent to semantic correctness. A response may include all expected keywords while negating them or using them in an incorrect context."
+          }
+        },
+        "f1": {
+          "metric_name": "f1",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "decision_mode": "element_set",
+            "precision": 1.0,
+            "recall": 1.0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "tn": 0,
+            "true_positive_elements": [
+              "180"
+            ],
+            "false_positive_elements": [],
+            "false_negative_elements": []
+          }
+        }
+      },
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 6,
+        "completion_tokens": 1,
+        "total_tokens": 7
+      }
+    },
+    {
+      "id": "reasoning_002",
+      "category": "reasoning",
+      "difficulty": "easy",
+      "prompt": "A baker packs 84 cupcakes equally into 7 boxes. How many cupcakes are in each box?",
+      "expected_answer": "12",
+      "model_response": "12",
+      "status": "evaluated",
+      "metrics": {
+        "exact_match": {
+          "metric_name": "exact_match",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "normalized_expected": "12",
+            "normalized_response": "12"
+          }
+        },
+        "keyword_coverage": {
+          "metric_name": "keyword_coverage",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "matched_keywords": [
+              "12"
+            ],
+            "missing_keywords": [],
+            "total_keywords": 1,
+            "coverage_percentage": 100.0,
+            "limitation": "Keyword coverage is NOT equivalent to semantic correctness. A response may include all expected keywords while negating them or using them in an incorrect context."
+          }
+        },
+        "f1": {
+          "metric_name": "f1",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "decision_mode": "element_set",
+            "precision": 1.0,
+            "recall": 1.0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "tn": 0,
+            "true_positive_elements": [
+              "12"
+            ],
+            "false_positive_elements": [],
+            "false_negative_elements": []
+          }
+        }
+      },
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 16,
+        "completion_tokens": 1,
+        "total_tokens": 17
+      }
+    },
+    {
+      "id": "reasoning_003",
+      "category": "reasoning",
+      "difficulty": "easy",
+      "prompt": "Find the next number in the arithmetic sequence: 7, 13, 19, 25, 31, ?",
+      "expected_answer": "37",
+      "model_response": "37",
+      "status": "evaluated",
+      "metrics": {
+        "exact_match": {
+          "metric_name": "exact_match",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "normalized_expected": "37",
+            "normalized_response": "37"
+          }
+        },
+        "keyword_coverage": {
+          "metric_name": "keyword_coverage",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "matched_keywords": [
+              "37"
+            ],
+            "missing_keywords": [],
+            "total_keywords": 1,
+            "coverage_percentage": 100.0,
+            "limitation": "Keyword coverage is NOT equivalent to semantic correctness. A response may include all expected keywords while negating them or using them in an incorrect context."
+          }
+        },
+        "f1": {
+          "metric_name": "f1",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "decision_mode": "element_set",
+            "precision": 1.0,
+            "recall": 1.0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "tn": 0,
+            "true_positive_elements": [
+              "37"
+            ],
+            "false_positive_elements": [],
+            "false_negative_elements": []
+          }
+        }
+      },
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 14,
+        "completion_tokens": 1,
+        "total_tokens": 15
+      }
+    },
+    {
+      "id": "reasoning_004",
+      "category": "reasoning",
+      "difficulty": "easy",
+      "prompt": "All cobalt-doped sensors are thermally calibrated. Device X-9 is a cobalt-doped sensor. Is Device X-9 thermally calibrated? Answer with 'Yes' or 'No'.",
+      "expected_answer": "Yes",
+      "model_response": "Yes",
+      "status": "evaluated",
+      "metrics": {
+        "exact_match": {
+          "metric_name": "exact_match",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "normalized_expected": "yes",
+            "normalized_response": "yes"
+          }
+        },
+        "keyword_coverage": {
+          "metric_name": "keyword_coverage",
+          "score": 0.5,
+          "passed": false,
+          "details": {
+            "matched_keywords": [
+              "Yes"
+            ],
+            "missing_keywords": [
+              "thermally calibrated"
+            ],
+            "total_keywords": 2,
+            "coverage_percentage": 50.0,
+            "limitation": "Keyword coverage is NOT equivalent to semantic correctness. A response may include all expected keywords while negating them or using them in an incorrect context."
+          }
+        },
+        "f1": {
+          "metric_name": "f1",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "decision_mode": "binary_classification",
+            "precision": 1.0,
+            "recall": 1.0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "tn": 0,
+            "expected_class": "positive",
+            "predicted_class": "positive"
+          }
+        }
+      },
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 22,
+        "completion_tokens": 1,
+        "total_tokens": 23
+      }
+    },
+    {
+      "id": "reasoning_005",
+      "category": "reasoning",
+      "difficulty": "medium",
+      "prompt": "A cargo train travels at a constant speed of 65 km/h for 4 hours. What total distance in kilometers does it cover?",
+      "expected_answer": "260",
+      "model_response": "260",
+      "status": "evaluated",
+      "metrics": {
+        "exact_match": {
+          "metric_name": "exact_match",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "normalized_expected": "260",
+            "normalized_response": "260"
+          }
+        },
+        "keyword_coverage": {
+          "metric_name": "keyword_coverage",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "matched_keywords": [
+              "260"
+            ],
+            "missing_keywords": [],
+            "total_keywords": 1,
+            "coverage_percentage": 100.0,
+            "limitation": "Keyword coverage is NOT equivalent to semantic correctness. A response may include all expected keywords while negating them or using them in an incorrect context."
+          }
+        },
+        "f1": {
+          "metric_name": "f1",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "decision_mode": "element_set",
+            "precision": 1.0,
+            "recall": 1.0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "tn": 0,
+            "true_positive_elements": [
+              "260"
+            ],
+            "false_positive_elements": [],
+            "false_negative_elements": []
+          }
+        }
+      },
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 22,
+        "completion_tokens": 1,
+        "total_tokens": 23
+      }
+    },
+    {
+      "id": "reasoning_006",
+      "category": "reasoning",
+      "difficulty": "medium",
+      "prompt": "A jacket originally priced at $160 is discounted by 25%. What is the sale price in dollars (number only)?",
+      "expected_answer": "120",
+      "model_response": "120",
+      "status": "evaluated",
+      "metrics": {
+        "exact_match": {
+          "metric_name": "exact_match",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "normalized_expected": "120",
+            "normalized_response": "120"
+          }
+        },
+        "keyword_coverage": {
+          "metric_name": "keyword_coverage",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "matched_keywords": [
+              "120"
+            ],
+            "missing_keywords": [],
+            "total_keywords": 1,
+            "coverage_percentage": 100.0,
+            "limitation": "Keyword coverage is NOT equivalent to semantic correctness. A response may include all expected keywords while negating them or using them in an incorrect context."
+          }
+        },
+        "f1": {
+          "metric_name": "f1",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "decision_mode": "element_set",
+            "precision": 1.0,
+            "recall": 1.0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "tn": 0,
+            "true_positive_elements": [
+              "120"
+            ],
+            "false_positive_elements": [],
+            "false_negative_elements": []
+          }
+        }
+      },
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 19,
+        "completion_tokens": 1,
+        "total_tokens": 20
+      }
+    },
+    {
+      "id": "reasoning_007",
+      "category": "reasoning",
+      "difficulty": "medium",
+      "prompt": "In a row of four server racks (R1, R2, R3, R4), R2 is immediately to the left of R4, R1 is to the left of R2, and R3 is at the far right end. Which rack is second from the left?",
+      "expected_answer": "R2",
+      "model_response": "R2",
+      "status": "evaluated",
+      "metrics": {
+        "exact_match": {
+          "metric_name": "exact_match",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "normalized_expected": "r2",
+            "normalized_response": "r2"
+          }
+        },
+        "keyword_coverage": {
+          "metric_name": "keyword_coverage",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "matched_keywords": [
+              "R2"
+            ],
+            "missing_keywords": [],
+            "total_keywords": 1,
+            "coverage_percentage": 100.0,
+            "limitation": "Keyword coverage is NOT equivalent to semantic correctness. A response may include all expected keywords while negating them or using them in an incorrect context."
+          }
+        },
+        "f1": {
+          "metric_name": "f1",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "decision_mode": "element_set",
+            "precision": 1.0,
+            "recall": 1.0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "tn": 0,
+            "true_positive_elements": [
+              "r2"
+            ],
+            "false_positive_elements": [],
+            "false_negative_elements": []
+          }
+        }
+      },
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 41,
+        "completion_tokens": 1,
+        "total_tokens": 42
+      }
+    },
+    {
+      "id": "reasoning_008",
+      "category": "reasoning",
+      "difficulty": "easy",
+      "prompt": "If 3x + 9 = 30, what is the numerical value of x?",
+      "expected_answer": "7",
+      "model_response": "7",
+      "status": "evaluated",
+      "metrics": {
+        "exact_match": {
+          "metric_name": "exact_match",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "normalized_expected": "7",
+            "normalized_response": "7"
+          }
+        },
+        "keyword_coverage": {
+          "metric_name": "keyword_coverage",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "matched_keywords": [
+              "7"
+            ],
+            "missing_keywords": [],
+            "total_keywords": 1,
+            "coverage_percentage": 100.0,
+            "limitation": "Keyword coverage is NOT equivalent to semantic correctness. A response may include all expected keywords while negating them or using them in an incorrect context."
+          }
+        },
+        "f1": {
+          "metric_name": "f1",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "decision_mode": "element_set",
+            "precision": 1.0,
+            "recall": 1.0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "tn": 0,
+            "true_positive_elements": [
+              "7"
+            ],
+            "false_positive_elements": [],
+            "false_negative_elements": []
+          }
+        }
+      },
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 13,
+        "completion_tokens": 1,
+        "total_tokens": 14
+      }
+    },
+    {
+      "id": "reasoning_009",
+      "category": "reasoning",
+      "difficulty": "hard",
+      "prompt": "Three Automated Guided Vehicles (AGVs) complete a warehouse loop in 4, 6, and 10 minutes respectively. If they all depart the charging bay simultaneously, after how many minutes will all three first meet at the charging bay again?",
+      "expected_answer": "60",
+      "model_response": "60",
+      "status": "evaluated",
+      "metrics": {
+        "exact_match": {
+          "metric_name": "exact_match",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "normalized_expected": "60",
+            "normalized_response": "60"
+          }
+        },
+        "keyword_coverage": {
+          "metric_name": "keyword_coverage",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "matched_keywords": [
+              "60"
+            ],
+            "missing_keywords": [],
+            "total_keywords": 1,
+            "coverage_percentage": 100.0,
+            "limitation": "Keyword coverage is NOT equivalent to semantic correctness. A response may include all expected keywords while negating them or using them in an incorrect context."
+          }
+        },
+        "f1": {
+          "metric_name": "f1",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "decision_mode": "element_set",
+            "precision": 1.0,
+            "recall": 1.0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "tn": 0,
+            "true_positive_elements": [
+              "60"
+            ],
+            "false_positive_elements": [],
+            "false_negative_elements": []
+          }
+        }
+      },
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 38,
+        "completion_tokens": 1,
+        "total_tokens": 39
+      }
+    },
+    {
+      "id": "reasoning_010",
+      "category": "reasoning",
+      "difficulty": "hard",
+      "prompt": "Among 50 software engineers, 32 use Python, 24 use Rust, and 10 use both Python and Rust. How many engineers in this group use neither Python nor Rust?",
+      "expected_answer": "4",
+      "model_response": "4",
+      "status": "evaluated",
+      "metrics": {
+        "exact_match": {
+          "metric_name": "exact_match",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "normalized_expected": "4",
+            "normalized_response": "4"
+          }
+        },
+        "keyword_coverage": {
+          "metric_name": "keyword_coverage",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "matched_keywords": [
+              "4"
+            ],
+            "missing_keywords": [],
+            "total_keywords": 1,
+            "coverage_percentage": 100.0,
+            "limitation": "Keyword coverage is NOT equivalent to semantic correctness. A response may include all expected keywords while negating them or using them in an incorrect context."
+          }
+        },
+        "f1": {
+          "metric_name": "f1",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "decision_mode": "element_set",
+            "precision": 1.0,
+            "recall": 1.0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "tn": 0,
+            "true_positive_elements": [
+              "4"
+            ],
+            "false_positive_elements": [],
+            "false_negative_elements": []
+          }
+        }
+      },
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 28,
+        "completion_tokens": 1,
+        "total_tokens": 29
+      }
+    },
+    {
+      "id": "reasoning_011",
+      "category": "reasoning",
+      "difficulty": "medium",
+      "prompt": "A water tank is 1/3 full. After adding 28 liters of water, the tank becomes 2/3 full. What is the total capacity of the tank in liters?",
+      "expected_answer": "84",
+      "model_response": "84",
+      "status": "evaluated",
+      "metrics": {
+        "exact_match": {
+          "metric_name": "exact_match",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "normalized_expected": "84",
+            "normalized_response": "84"
+          }
+        },
+        "keyword_coverage": {
+          "metric_name": "keyword_coverage",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "matched_keywords": [
+              "84"
+            ],
+            "missing_keywords": [],
+            "total_keywords": 1,
+            "coverage_percentage": 100.0,
+            "limitation": "Keyword coverage is NOT equivalent to semantic correctness. A response may include all expected keywords while negating them or using them in an incorrect context."
+          }
+        },
+        "f1": {
+          "metric_name": "f1",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "decision_mode": "element_set",
+            "precision": 1.0,
+            "recall": 1.0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "tn": 0,
+            "true_positive_elements": [
+              "84"
+            ],
+            "false_positive_elements": [],
+            "false_negative_elements": []
+          }
+        }
+      },
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 27,
+        "completion_tokens": 1,
+        "total_tokens": 28
+      }
+    },
+    {
+      "id": "reasoning_012",
+      "category": "reasoning",
+      "difficulty": "hard",
+      "prompt": "A standard fair six-sided die (numbered 1 to 6) is rolled once. What is the probability of rolling a prime number, expressed as a simplified fraction?",
+      "expected_answer": "1/2",
+      "model_response": "1/2",
+      "status": "evaluated",
+      "metrics": {
+        "exact_match": {
+          "metric_name": "exact_match",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "normalized_expected": "1/2",
+            "normalized_response": "1/2"
+          }
+        },
+        "keyword_coverage": {
+          "metric_name": "keyword_coverage",
+          "score": 0.5,
+          "passed": false,
+          "details": {
+            "matched_keywords": [
+              "1/2",
+              "2"
+            ],
+            "missing_keywords": [
+              "3",
+              "5"
+            ],
+            "total_keywords": 4,
+            "coverage_percentage": 50.0,
+            "limitation": "Keyword coverage is NOT equivalent to semantic correctness. A response may include all expected keywords while negating them or using them in an incorrect context."
+          }
+        },
+        "f1": {
+          "metric_name": "f1",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "decision_mode": "element_set",
+            "precision": 1.0,
+            "recall": 1.0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "tn": 0,
+            "true_positive_elements": [
+              "1/2"
+            ],
+            "false_positive_elements": [],
+            "false_negative_elements": []
+          }
+        }
+      },
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 1,
+        "total_tokens": 27
+      }
+    },
+    {
+      "id": "reasoning_013",
+      "category": "reasoning",
+      "difficulty": "easy",
+      "prompt": "If all Titanium nodes are encrypted, and no encrypted node is publicly routable, can a Titanium node be publicly routable? Answer 'Yes' or 'No'.",
+      "expected_answer": "No",
+      "model_response": "No",
+      "status": "evaluated",
+      "metrics": {
+        "exact_match": {
+          "metric_name": "exact_match",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "normalized_expected": "no",
+            "normalized_response": "no"
+          }
+        },
+        "keyword_coverage": {
+          "metric_name": "keyword_coverage",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "matched_keywords": [
+              "No"
+            ],
+            "missing_keywords": [],
+            "total_keywords": 1,
+            "coverage_percentage": 100.0,
+            "limitation": "Keyword coverage is NOT equivalent to semantic correctness. A response may include all expected keywords while negating them or using them in an incorrect context."
+          }
+        },
+        "f1": {
+          "metric_name": "f1",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "decision_mode": "binary_classification",
+            "precision": 1.0,
+            "recall": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0,
+            "tn": 1,
+            "expected_class": "negative",
+            "predicted_class": "negative"
+          }
+        }
+      },
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 24,
+        "completion_tokens": 1,
+        "total_tokens": 25
+      }
+    },
+    {
+      "id": "reasoning_014",
+      "category": "reasoning",
+      "difficulty": "medium",
+      "prompt": "Five tasks (T1, T2, T3, T4, T5) must be scheduled one after another. T3 must run immediately before T1. T5 must run first. T2 must run last. T4 runs immediately after T5. Which task runs third?",
+      "expected_answer": "T3",
+      "model_response": "T3",
+      "status": "evaluated",
+      "metrics": {
+        "exact_match": {
+          "metric_name": "exact_match",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "normalized_expected": "t3",
+            "normalized_response": "t3"
+          }
+        },
+        "keyword_coverage": {
+          "metric_name": "keyword_coverage",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "matched_keywords": [
+              "T3"
+            ],
+            "missing_keywords": [],
+            "total_keywords": 1,
+            "coverage_percentage": 100.0,
+            "limitation": "Keyword coverage is NOT equivalent to semantic correctness. A response may include all expected keywords while negating them or using them in an incorrect context."
+          }
+        },
+        "f1": {
+          "metric_name": "f1",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "decision_mode": "element_set",
+            "precision": 1.0,
+            "recall": 1.0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "tn": 0,
+            "true_positive_elements": [
+              "t3"
+            ],
+            "false_positive_elements": [],
+            "false_negative_elements": []
+          }
+        }
+      },
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 36,
+        "completion_tokens": 1,
+        "total_tokens": 37
+      }
+    },
+    {
+      "id": "reasoning_015",
+      "category": "reasoning",
+      "difficulty": "easy",
+      "prompt": "A digital clock displays 24-hour time (HH:MM). How many minutes elapse between 09:45 and 13:20 on the same day?",
+      "expected_answer": "215",
+      "model_response": "215",
+      "status": "evaluated",
+      "metrics": {
+        "exact_match": {
+          "metric_name": "exact_match",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "normalized_expected": "215",
+            "normalized_response": "215"
+          }
+        },
+        "keyword_coverage": {
+          "metric_name": "keyword_coverage",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "matched_keywords": [
+              "215"
+            ],
+            "missing_keywords": [],
+            "total_keywords": 1,
+            "coverage_percentage": 100.0,
+            "limitation": "Keyword coverage is NOT equivalent to semantic correctness. A response may include all expected keywords while negating them or using them in an incorrect context."
+          }
+        },
+        "f1": {
+          "metric_name": "f1",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "decision_mode": "element_set",
+            "precision": 1.0,
+            "recall": 1.0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "tn": 0,
+            "true_positive_elements": [
+              "215"
+            ],
+            "false_positive_elements": [],
+            "false_negative_elements": []
+          }
+        }
+      },
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 19,
+        "completion_tokens": 1,
+        "total_tokens": 20
+      }
+    },
+    {
+      "id": "reasoning_016",
+      "category": "reasoning",
+      "difficulty": "medium",
+      "prompt": "In a tournament, every team plays every other team exactly once. If there are 8 teams, how many total matches are played?",
+      "expected_answer": "28",
+      "model_response": "28",
+      "status": "evaluated",
+      "metrics": {
+        "exact_match": {
+          "metric_name": "exact_match",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "normalized_expected": "28",
+            "normalized_response": "28"
+          }
+        },
+        "keyword_coverage": {
+          "metric_name": "keyword_coverage",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "matched_keywords": [
+              "28"
+            ],
+            "missing_keywords": [],
+            "total_keywords": 1,
+            "coverage_percentage": 100.0,
+            "limitation": "Keyword coverage is NOT equivalent to semantic correctness. A response may include all expected keywords while negating them or using them in an incorrect context."
+          }
+        },
+        "f1": {
+          "metric_name": "f1",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "decision_mode": "element_set",
+            "precision": 1.0,
+            "recall": 1.0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "tn": 0,
+            "true_positive_elements": [
+              "28"
+            ],
+            "false_positive_elements": [],
+            "false_negative_elements": []
+          }
+        }
+      },
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 22,
+        "completion_tokens": 1,
+        "total_tokens": 23
+      }
+    },
+    {
+      "id": "reasoning_017",
+      "category": "reasoning",
+      "difficulty": "medium",
+      "prompt": "Statement: 'If the build passes unit tests, the deployment pipeline triggers.' Given that the deployment pipeline did NOT trigger, did the build pass unit tests? Answer 'Yes' or 'No'.",
+      "expected_answer": "No",
+      "model_response": "No",
+      "status": "evaluated",
+      "metrics": {
+        "exact_match": {
+          "metric_name": "exact_match",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "normalized_expected": "no",
+            "normalized_response": "no"
+          }
+        },
+        "keyword_coverage": {
+          "metric_name": "keyword_coverage",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "matched_keywords": [
+              "No"
+            ],
+            "missing_keywords": [],
+            "total_keywords": 1,
+            "coverage_percentage": 100.0,
+            "limitation": "Keyword coverage is NOT equivalent to semantic correctness. A response may include all expected keywords while negating them or using them in an incorrect context."
+          }
+        },
+        "f1": {
+          "metric_name": "f1",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "decision_mode": "binary_classification",
+            "precision": 1.0,
+            "recall": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0,
+            "tn": 1,
+            "expected_class": "negative",
+            "predicted_class": "negative"
+          }
+        }
+      },
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 29,
+        "completion_tokens": 1,
+        "total_tokens": 30
+      }
+    },
+    {
+      "id": "reasoning_018",
+      "category": "reasoning",
+      "difficulty": "hard",
+      "prompt": "A crate contains red, blue, and green cables. By the Pigeonhole Principle, what is the minimum number of cables you must draw blindfolded to guarantee having at least 4 cables of the same color?",
+      "expected_answer": "10",
+      "model_response": "10",
+      "status": "evaluated",
+      "metrics": {
+        "exact_match": {
+          "metric_name": "exact_match",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "normalized_expected": "10",
+            "normalized_response": "10"
+          }
+        },
+        "keyword_coverage": {
+          "metric_name": "keyword_coverage",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "matched_keywords": [
+              "10"
+            ],
+            "missing_keywords": [],
+            "total_keywords": 1,
+            "coverage_percentage": 100.0,
+            "limitation": "Keyword coverage is NOT equivalent to semantic correctness. A response may include all expected keywords while negating them or using them in an incorrect context."
+          }
+        },
+        "f1": {
+          "metric_name": "f1",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "decision_mode": "element_set",
+            "precision": 1.0,
+            "recall": 1.0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "tn": 0,
+            "true_positive_elements": [
+              "10"
+            ],
+            "false_positive_elements": [],
+            "false_negative_elements": []
+          }
+        }
+      },
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 34,
+        "completion_tokens": 1,
+        "total_tokens": 35
+      }
+    },
+    {
+      "id": "reasoning_019",
+      "category": "reasoning",
+      "difficulty": "medium",
+      "prompt": "Four switches (S1, S2, S3, S4) are all initially OFF. You toggle every switch, then toggle every even-numbered switch (S2, S4), and finally toggle S3. How many switches are ON at the end?",
+      "expected_answer": "1",
+      "model_response": "1",
+      "status": "evaluated",
+      "metrics": {
+        "exact_match": {
+          "metric_name": "exact_match",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "normalized_expected": "1",
+            "normalized_response": "1"
+          }
+        },
+        "keyword_coverage": {
+          "metric_name": "keyword_coverage",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "matched_keywords": [
+              "1"
+            ],
+            "missing_keywords": [],
+            "total_keywords": 1,
+            "coverage_percentage": 100.0,
+            "limitation": "Keyword coverage is NOT equivalent to semantic correctness. A response may include all expected keywords while negating them or using them in an incorrect context."
+          }
+        },
+        "f1": {
+          "metric_name": "f1",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "decision_mode": "binary_classification",
+            "precision": 1.0,
+            "recall": 1.0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "tn": 0,
+            "expected_class": "positive",
+            "predicted_class": "positive"
+          }
+        }
+      },
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 33,
+        "completion_tokens": 1,
+        "total_tokens": 34
+      }
+    },
+    {
+      "id": "reasoning_020",
+      "category": "reasoning",
+      "difficulty": "hard",
+      "prompt": "Pump A can fill a reservoir in 6 hours, and Pump B can fill the same reservoir in 3 hours. Working together at their constant rates, how many hours does it take to fill the empty reservoir?",
+      "expected_answer": "2",
+      "model_response": "2",
+      "status": "evaluated",
+      "metrics": {
+        "exact_match": {
+          "metric_name": "exact_match",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "normalized_expected": "2",
+            "normalized_response": "2"
+          }
+        },
+        "keyword_coverage": {
+          "metric_name": "keyword_coverage",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "matched_keywords": [
+              "2"
+            ],
+            "missing_keywords": [],
+            "total_keywords": 1,
+            "coverage_percentage": 100.0,
+            "limitation": "Keyword coverage is NOT equivalent to semantic correctness. A response may include all expected keywords while negating them or using them in an incorrect context."
+          }
+        },
+        "f1": {
+          "metric_name": "f1",
+          "score": 1.0,
+          "passed": true,
+          "details": {
+            "decision_mode": "element_set",
+            "precision": 1.0,
+            "recall": 1.0,
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "tn": 0,
+            "true_positive_elements": [
+              "2"
+            ],
+            "false_positive_elements": [],
+            "false_negative_elements": []
+          }
+        }
+      },
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 37,
+        "completion_tokens": 1,
+        "total_tokens": 38
+      }
+    }
+  ],
+  "missing_responses": [],
+  "unknown_response_ids": [],
+  "warnings": [],
+  "limitations": [
+    "OpenBench AI uses deterministic and reference-based metrics and does not measure general LLM intelligence or open-ended reasoning quality.",
+    "Keyword coverage checks lexical presence only and is not equivalent to semantic correctness."
+  ],
+  "reproducibility_card": {
+    "evaluation_id": "eval_b1846a1c140f",
+    "model_name": "fixture-model-a",
+    "model_version": "0.3.0",
+    "model_provider": "mock",
+    "dataset_name": "reasoning/sample",
+    "dataset_identifier": "reasoning/sample",
+    "dataset_version": "0.2.0",
+    "dataset_source": "datasets/reasoning/sample.jsonl",
+    "dataset_checksum": "c448ee83e7968d981399f743daf2c3f1ab0820c95e0267e1aaf0ba85275fafc4",
+    "metrics": [
+      {
+        "name": "exact_match",
+        "version": "0.1.0"
+      },
+      {
+        "name": "keyword_coverage",
+        "version": "0.1.0"
+      },
+      {
+        "name": "f1",
+        "version": "0.2.0"
+      }
+    ],
+    "metric_configurations": [
+      {
+        "name": "exact_match",
+        "version": "0.1.0",
+        "description": "Checks whether the normalized model response is identical to the normalized expected answer.",
+        "normalization": {
+          "strip_whitespace": true,
+          "case_sensitive": false,
+          "collapse_whitespace": true,
+          "strip_punctuation": false
+        }
+      },
+      {
+        "name": "keyword_coverage",
+        "version": "0.1.0",
+        "description": "Calculates the percentage of expected keywords present in the model response. Accepts custom keyword lists via record.metadata['keywords'] or falls back to the expected answer.",
+        "pass_threshold": 1.0,
+        "normalization": {
+          "strip_whitespace": true,
+          "case_sensitive": false,
+          "collapse_whitespace": true,
+          "strip_punctuation": false
+        }
+      },
+      {
+        "name": "f1",
+        "version": "0.2.0",
+        "description": "Computes the harmonic mean of precision and recall for binary decisions and element-set predictions.",
+        "pass_threshold": 1.0,
+        "normalization": {
+          "strip_whitespace": true,
+          "case_sensitive": false,
+          "collapse_whitespace": true,
+          "strip_punctuation": false
+        }
+      }
+    ],
+    "evaluation_timestamp": "2026-11-09T23:19:51+00:00",
+    "python_version": "3.13.18",
+    "openbench_version": "0.3.1",
+    "operating_system": "Linux 6.18.44-fc-v338",
+    "evaluation_configuration": {
+      "metric_names": [
+        "exact_match",
+        "keyword_coverage",
+        "f1"
+      ],
+      "normalization": {
+        "strip_whitespace": true,
+        "case_sensitive": false,
+        "collapse_whitespace": true,
+        "strip_punctuation": false
+      },
+      "strict_unknown_ids": false
+    },
+    "inference_configuration": {
+      "provider": "mock",
+      "model_name": "fixture-model-a",
+      "model_version": "0.3.0",
+      "experimental": false,
+      "is_mock": true,
+      "timeout_seconds": 30.0,
+      "temperature": 0.0,
+      "max_tokens": 256,
+      "top_p": 1.0,
+      "stream": false,
+      "use_expected_answer": true,
+      "simulated_latency_ms": 1.0
+    },
+    "number_of_test_cases": 20,
+    "evaluated_test_cases": 20,
+    "missing_responses": 0,
+    "warnings": [],
+    "results": {
+      "exact_match": 1.0,
+      "keyword_coverage": 0.95,
+      "f1": 1.0
+    },
+    "known_limitations": [
+      "OpenBench AI uses deterministic and reference-based metrics and does not measure general LLM intelligence or open-ended reasoning quality.",
+      "Keyword coverage checks lexical presence only and is not equivalent to semantic correctness."
+    ]
+  }
+}

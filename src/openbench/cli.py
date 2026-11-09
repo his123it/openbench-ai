@@ -1,4 +1,4 @@
-"""Command-Line Interface for OpenBench AI (v0.3.0)."""
+"""Command-Line Interface for OpenBench AI (v0.3.0 commands preserved; v0.4.0 additions)."""
 
 from __future__ import annotations
 
@@ -129,6 +129,21 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         type=str,
         help="Output directory or file path (.json, .md, or .csv) for evaluation reports.",
+    )
+    eval_parser.add_argument(
+        "--confidence-intervals",
+        action="store_true",
+        help="v0.4.0: add a 'statistics' block with percentile bootstrap CIs over items "
+        "(output is unchanged without this flag).",
+    )
+    eval_parser.add_argument(
+        "--confidence-level", type=float, default=0.95, help="CI level for --confidence-intervals (default 0.95)."
+    )
+    eval_parser.add_argument(
+        "--resamples", type=int, default=10_000, help="Bootstrap resamples for --confidence-intervals (default 10000)."
+    )
+    eval_parser.add_argument(
+        "--seed", type=int, default=0, help="Statistical analysis seed for --confidence-intervals (default 0)."
     )
 
     # 3. compare (v0.1.0 preserved)
@@ -299,6 +314,31 @@ def build_parser() -> argparse.ArgumentParser:
         type=str,
         help="Optional output directory to also write top-level .json/.md/.csv reports.",
     )
+    run_parser.add_argument(
+        "--repetitions",
+        type=int,
+        default=None,
+        help="v0.4.0: number of independent repetitions (>= 2 creates a repeat group; overrides "
+        "options.repeat_count).",
+    )
+    run_parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="v0.4.0: generation base seed (repetition i uses seed + i); overrides generation.seed.",
+    )
+    run_parser.add_argument(
+        "--experiment-id",
+        type=str,
+        default=None,
+        help="v0.4.0: optional experiment ID recorded in run lineage.",
+    )
+    run_parser.add_argument(
+        "--parent-experiment-id",
+        type=str,
+        default=None,
+        help="v0.4.0: optional parent experiment ID recorded in run lineage.",
+    )
 
     # 10. runs (v0.3.0 new: list, show, verify, resume, compare)
     runs_parser = subparsers.add_parser(
@@ -312,6 +352,9 @@ def build_parser() -> argparse.ArgumentParser:
     runs_list_p.add_argument("--status", type=str, default=None)
     runs_list_p.add_argument("--provider", type=str, default=None)
     runs_list_p.add_argument("--format", choices=["text", "json"], default="text")
+    runs_list_p.add_argument(
+        "--group", type=str, default=None, help="v0.4.0: list only the runs of this repeat group."
+    )
 
     runs_show_p = runs_subparsers.add_parser("show", help="Inspect a specific experiment run.")
     runs_show_p.add_argument("run_id", type=str)
@@ -371,6 +414,35 @@ def build_parser() -> argparse.ArgumentParser:
 
     cache_stats_p = cache_subparsers.add_parser("stats", help="Show cache entry count and location.")
     cache_stats_p.add_argument("--cache-dir", type=str, default=None)
+
+    # 13. analyze (v0.4.0 new: paired comparison / repeated-run variability of stored results)
+    ana_parser = subparsers.add_parser(
+        "analyze",
+        help="v0.4.0: statistically compare stored runs, repeat groups or evaluation files "
+        "(no provider calls), or analyse one repeat group's variability.",
+    )
+    ana_src = ana_parser.add_mutually_exclusive_group(required=True)
+    ana_src.add_argument("--runs", nargs="+", default=None, help="Run IDs (run_...) or repeat group IDs (grp_...).")
+    ana_src.add_argument("--results", nargs="+", default=None, help="Evaluation result JSON files.")
+    ana_parser.add_argument("--experiments-dir", type=str, default=None)
+    ana_parser.add_argument("--metrics", nargs="+", default=None)
+    ana_parser.add_argument("--baseline", type=str, default=None, help="Arm ID or model name of the baseline.")
+    ana_parser.add_argument("--ids-file", type=str, default=None, help="Restrict the analysis to these record IDs.")
+    ana_parser.add_argument("--confidence-level", type=float, default=0.95)
+    ana_parser.add_argument("--resamples", type=int, default=10_000)
+    ana_parser.add_argument("--permutations", type=int, default=9_999)
+    ana_parser.add_argument("--seed", type=int, default=0, help="Statistical analysis seed (default 0).")
+    ana_parser.add_argument("--missing-policy", choices=["complete_case", "missing_as_failure"], default="complete_case")
+    ana_parser.add_argument("--correction", choices=["holm", "bh", "none"], default="holm")
+    ana_parser.add_argument("--min-practical-difference", type=float, default=None)
+    ana_parser.add_argument("--equivalence-margin", type=float, default=None, help="Pre-specified TOST margin (metric units).")
+    ana_parser.add_argument("--alpha", type=float, default=0.05)
+    ana_parser.add_argument("--stratified-bootstrap", action="store_true")
+    ana_parser.add_argument("--stratum-tests", action="store_true")
+    ana_parser.add_argument("--exploratory", action="store_true", help="Descriptive-only comparison of incompatible inputs.")
+    ana_parser.add_argument("--exploratory-reason", type=str, default=None)
+    ana_parser.add_argument("--output", type=str, default=None)
+    ana_parser.add_argument("--format", choices=["json", "markdown", "csv"], default="json")
 
     return parser
 
@@ -475,6 +547,17 @@ def _handle_evaluate(args: argparse.Namespace) -> int:
     response_sets = ResponseLoader.load_all(args.responses)
     evaluator = Evaluator(config=config)
     results = evaluator.evaluate_multiple(dataset, response_sets)
+
+    if getattr(args, "confidence_intervals", False):
+        from openbench.evalstats import compute_evaluation_statistics
+
+        for res in results:
+            res.statistics = compute_evaluation_statistics(
+                res,
+                confidence_level=args.confidence_level,
+                resamples=args.resamples,
+                analysis_seed=args.seed,
+            )
 
     for res in results:
         for warning_msg in res.warnings:
@@ -861,23 +944,46 @@ def _handle_run(args: argparse.Namespace) -> int:
     manager = ExperimentManager(experiments_root=exp_dir)
 
     repeat_count = profile.repeat_count if profile else 1
-    run_records = []
-    eval_results = []
+    if getattr(args, "repetitions", None) is not None:
+        if args.repetitions < 1:
+            print("Error: --repetitions must be >= 1.", file=sys.stderr)
+            return 2
+        repeat_count = args.repetitions
+    base_seed = args.seed if getattr(args, "seed", None) is not None else gen_cfg.seed
 
-    for _ in range(repeat_count):
-        rec, eval_res, perf_rep = manager.execute_and_record(
-            dataset=dataset,
-            provider=provider,
-            evaluation_config=eval_cfg,
-            execution_config=exec_cfg,
-            cache=cache,
+    def _report(rec) -> None:
+        group_note = (
+            f" [group {rec.repeat_group_id} repetition {rec.repetition_index + 1}/{repeat_count}]"
+            if rec.repeat_group_id
+            else ""
         )
-        run_records.append(rec)
-        eval_results.append(eval_res)
         print(
-            f"Run '{rec.run_id}' [{rec.status}]: {rec.completed_items}/{rec.total_items} completed "
+            f"Run '{rec.run_id}' [{rec.status}]{group_note}: {rec.completed_items}/{rec.total_items} completed "
             f"(provider={rec.model_provider}, model={rec.model_name}, scores={rec.aggregate_scores}) -> {rec.run_dir}"
         )
+
+    group = manager.execute_repeated(
+        dataset=dataset,
+        provider=provider,
+        repetitions=repeat_count,
+        generation_base_seed=base_seed,
+        evaluation_config=eval_cfg,
+        execution_config=exec_cfg,
+        cache=cache,
+        experiment_id=getattr(args, "experiment_id", None),
+        parent_experiment_id=getattr(args, "parent_experiment_id", None),
+        on_repetition=_report,
+    )
+    run_records = group.records
+    eval_results = group.evaluations
+    if group.repeat_group_id:
+        print(
+            f"Repeat group '{group.repeat_group_id}': {group.completed_repetitions}/{group.planned_repetitions} "
+            f"repetitions completed; index: {group.index_path}"
+        )
+    seed_status = run_records[0].lineage.get("seed_status")
+    if seed_status and seed_status != "not_supplied":
+        print(f"Generation seed status: {seed_status} (a seed does not guarantee deterministic output)")
 
     if repeat_count > 1:
         variance_summary = BenchmarkAnalytics.analyze_repeated_runs(eval_results)
@@ -904,8 +1010,16 @@ def _handle_runs(args: argparse.Namespace) -> int:
 
     manager = ExperimentManager(experiments_root=getattr(args, "experiments_dir", None))
 
+    from openbench.lineage import is_repeat_group_id
+
+    run_id_arg = getattr(args, "run_id", None)
+    if run_id_arg and is_repeat_group_id(run_id_arg) and args.runs_action in {"show", "verify", "resume"}:
+        return _handle_group_action(args, manager)
+
     if args.runs_action == "list":
-        runs = manager.list_runs(status=args.status, provider=args.provider)
+        runs = manager.list_runs(
+            status=args.status, provider=args.provider, repeat_group_id=getattr(args, "group", None)
+        )
         if args.format == "json":
             print(json.dumps([r.to_dict() for r in runs], indent=2))
             return 0
@@ -915,10 +1029,13 @@ def _handle_runs(args: argparse.Namespace) -> int:
         print(f"Experiment Runs ({len(runs)}):")
         for r in runs:
             mock_tag = " [MOCK]" if r.is_mock_provider else ""
+            group_tag = (
+                f" | group={r.repeat_group_id}#{r.repetition_index}" if r.repeat_group_id else ""
+            )
             print(
                 f"  - {r.run_id} | {r.status} | origin={r.execution_origin} | "
                 f"{r.model_provider}:{r.model_name}{mock_tag} | dataset={r.dataset_identifier} "
-                f"({r.completed_items}/{r.total_items}) | scores={r.aggregate_scores}"
+                f"({r.completed_items}/{r.total_items}) | scores={r.aggregate_scores}{group_tag}"
             )
         return 0
 
@@ -975,20 +1092,8 @@ def _handle_runs(args: argparse.Namespace) -> int:
             print(f"Error: {exc}", file=sys.stderr)
             return 1
 
-        gen_cfg = GenerationConfig(
-            temperature=float(info["generation_configuration"].get("temperature", 0.0)),
-            max_tokens=int(info["generation_configuration"].get("max_tokens", 256)),
-        )
-        provider = _instantiate_provider_from_args_or_profile(
-            provider_name=info["model_provider"],
-            model_name=info["model_name"],
-            model_version=info["model_version"],
-            endpoint=info["generation_configuration"].get("endpoint"),
-            gen_cfg=gen_cfg,
-            timeout_seconds=float(info["execution_configuration"].get("timeout_seconds", 30.0)),
-            extra_prov_cfg=info["generation_configuration"],
-        )
-        cache = ResponseCache(cache_dir=args.cache_dir, enabled=True)
+        provider = _provider_from_stored_run(info)
+        cache = ResponseCache(cache_dir=args.cache_dir, enabled=_stored_use_cache(info))
         rec, _, _ = manager.resume_run(args.run_id, provider=provider, cache=cache)
         print(
             f"Resumed run '{rec.run_id}' -> status={rec.status} "
@@ -1024,6 +1129,210 @@ def _handle_runs(args: argparse.Namespace) -> int:
         return 0
 
     return 2
+
+
+def _generation_config_from_stored(gen: dict[str, Any]) -> GenerationConfig:
+    """Rebuild a GenerationConfig from a stored (redacted) generation configuration."""
+    stops = gen.get("stop_sequences")
+    seed = gen.get("seed")
+    return GenerationConfig(
+        temperature=float(gen.get("temperature", 0.0)),
+        max_tokens=int(gen.get("max_tokens", 256)),
+        top_p=float(gen.get("top_p", 1.0)),
+        seed=int(seed) if isinstance(seed, int) and not isinstance(seed, bool) else None,
+        stop_sequences=[str(x) for x in stops] if isinstance(stops, list) else [],
+        stream=bool(gen.get("stream", False)),
+    )
+
+
+def _provider_from_stored_run(info: dict[str, Any]):
+    gen = info.get("generation_configuration") or {}
+    return _instantiate_provider_from_args_or_profile(
+        provider_name=info["model_provider"],
+        model_name=info["model_name"],
+        model_version=info["model_version"],
+        endpoint=gen.get("endpoint"),
+        gen_cfg=_generation_config_from_stored(gen),
+        timeout_seconds=float((info.get("execution_configuration") or {}).get("timeout_seconds", 30.0)),
+        extra_prov_cfg=gen,
+    )
+
+
+def _stored_use_cache(info: dict[str, Any]) -> bool:
+    """v0.4.0 runs honour their recorded cache setting on resume; v0.3.x runs keep using the cache."""
+    lineage = info.get("lineage") or {}
+    if lineage and not lineage.get("legacy_run"):
+        return bool((info.get("execution_configuration") or {}).get("use_cache", True))
+    return True
+
+
+def _handle_group_action(args: argparse.Namespace, manager: ExperimentManager) -> int:
+    """`runs show|verify|resume grp_...` (v0.4.0 repeat groups)."""
+    group_id = args.run_id
+    if args.runs_action == "show":
+        try:
+            group = manager.load_group(group_id)
+        except KeyError as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            return 1
+        payload = {
+            "index": group["index"],
+            "members": [m.to_dict() for m in group["members"]],
+        }
+        if args.format == "json":
+            print(json.dumps(payload, indent=2))
+            return 0
+        idx = group["index"]
+        print(f"Repeat Group: {group_id} ({idx['status']})")
+        print(f"  Repetitions   : {idx['completed_repetitions']} completed / {idx['planned_repetitions']} planned")
+        print(f"  Experiment ID : {idx.get('experiment_id')}")
+        print(f"  Base seed     : {idx.get('generation_base_seed')}")
+        for m in group["members"]:
+            print(
+                f"  - #{m.repetition_index} {m.run_id} [{m.status}] seed={m.lineage.get('repetition_seed')} "
+                f"seed_status={m.lineage.get('seed_status')} scores={m.aggregate_scores}"
+            )
+        if idx.get("missing_repetition_indices"):
+            print(f"  Missing repetitions: {idx['missing_repetition_indices']}")
+        for w in idx.get("rebuild_warnings", []):
+            print(f"  Warning: {w}")
+        return 0
+    if args.runs_action == "verify":
+        result = manager.verify_group(group_id)
+        if args.format == "json":
+            print(json.dumps(result, indent=2))
+            return 0 if result["valid"] else 1
+        print(
+            f"Repeat Group Verification [{group_id}]: {'VALID' if result['valid'] else 'INVALID'} "
+            f"({result['member_count']} member(s), {result['planned_repetitions']} planned)"
+        )
+        for problem in result["problems"]:
+            print(f"  Problem: {problem}")
+        for w in result["warnings"]:
+            print(f"  Note: {w}")
+        return 0 if result["valid"] else 1
+    # resume
+    try:
+        group = manager.load_group(group_id)
+    except KeyError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+    if not group["members"]:
+        print(f"Error: repeat group '{group_id}' has no member runs to resume from.", file=sys.stderr)
+        return 1
+    info = group["members"][0].to_dict()
+    provider = _provider_from_stored_run(info)
+    cache = ResponseCache(cache_dir=args.cache_dir, enabled=_stored_use_cache(info))
+    result = manager.resume_group(group_id, provider=provider, cache=cache)
+    for rec in result.records:
+        print(f"  - #{rec.repetition_index} {rec.run_id} [{rec.status}] scores={rec.aggregate_scores}")
+    print(
+        f"Resumed repeat group '{group_id}': {result.completed_repetitions}/{result.planned_repetitions} "
+        "repetitions completed"
+    )
+    return 0 if result.is_complete else 1
+
+
+def _handle_analyze(args: argparse.Namespace) -> int:
+    """`openbench analyze` (v0.4.0): paired comparison or repeated-run variability; no provider calls."""
+    from openbench.dataset import load_ids_file
+    from openbench.paired import ComparisonArm, ComparisonPolicy, PairedComparisonEngine
+    from openbench.reporting_v040 import render_analysis
+    from openbench.security import redact_sensitive_data, validate_safe_output_path
+    from openbench.stats import decompose_variability
+
+    if args.exploratory_reason and not args.exploratory:
+        print("Error: --exploratory-reason requires --exploratory.", file=sys.stderr)
+        return 2
+    if args.exploratory and not (args.exploratory_reason and args.exploratory_reason.strip()):
+        print("Error: --exploratory requires a non-empty --exploratory-reason.", file=sys.stderr)
+        return 2
+
+    arms = []
+    if args.runs:
+        manager = ExperimentManager(experiments_root=args.experiments_dir)
+        for identifier in args.runs:
+            try:
+                arms.append(ComparisonArm.from_experiments(manager, identifier))
+            except KeyError as exc:
+                print(f"Error: {exc}", file=sys.stderr)
+                return 1
+    else:
+        for path in args.results:
+            arms.append(ComparisonArm.from_evaluation_file(path))
+        labels = [a.arm_id for a in arms]
+        if len(set(labels)) != len(labels):
+            for i, arm in enumerate(arms):
+                arm.arm_id = f"{arm.arm_id}#{i + 1}"
+
+    selected = None
+    if args.ids_file:
+        selected = tuple(load_ids_file(args.ids_file).selected_ids)
+
+    if len(arms) == 1:
+        arm = arms[0]
+        if arm.repetitions < 2:
+            print(
+                "Error: analyze needs at least two arms to compare, or one repeat group "
+                "(grp_...) for a variability analysis.",
+                file=sys.stderr,
+            )
+            return 2
+        payload = decompose_variability(
+            arm.evaluations,
+            args.metrics,
+            analysis_seed=args.seed,
+            confidence_level=args.confidence_level,
+            resamples=args.resamples,
+            arm_label=arm.arm_id,
+        )
+        payload["arm"] = arm.summary()
+        payload["provider_calls"] = 0
+    else:
+        policy = ComparisonPolicy(
+            missing_policy=args.missing_policy,
+            correction=args.correction,
+            confidence_level=args.confidence_level,
+            resamples=args.resamples,
+            permutations=args.permutations,
+            analysis_seed=args.seed,
+            alpha=args.alpha,
+            min_practical_difference=args.min_practical_difference,
+            equivalence_margin=args.equivalence_margin,
+            stratified_bootstrap=args.stratified_bootstrap,
+            stratum_tests=args.stratum_tests,
+            exploratory=args.exploratory,
+            exploratory_reason=args.exploratory_reason,
+            baseline=args.baseline,
+            selected_ids=selected,
+        )
+        result = PairedComparisonEngine().compare(arms, args.metrics, policy)
+        payload = result.to_dict()
+        payload["variability"] = {
+            arm.arm_id: decompose_variability(
+                arm.evaluations,
+                args.metrics,
+                analysis_seed=args.seed,
+                confidence_level=args.confidence_level,
+                resamples=args.resamples,
+                arm_label=arm.arm_id,
+            )
+            for arm in arms
+            if arm.repetitions >= 2
+        }
+
+    payload = redact_sensitive_data(payload)
+    text = render_analysis(payload, args.format)
+    if args.output:
+        out = validate_safe_output_path(args.output)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(text, encoding="utf-8")
+        print(f"Analysis ({payload.get('analysis')}, {args.format}) written to: {out}")
+        if payload.get("analysis_mode") == "exploratory":
+            print(f"Warning: {payload.get('banner')}", file=sys.stderr)
+    else:
+        print(text)
+    return 0
 
 
 def _handle_providers(args: argparse.Namespace) -> int:
@@ -1125,6 +1434,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             return _handle_providers(args)
         if args.command == "cache":
             return _handle_cache(args)
+        if args.command == "analyze":
+            return _handle_analyze(args)
     except FileNotFoundError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1

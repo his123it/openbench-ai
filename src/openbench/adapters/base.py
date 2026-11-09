@@ -74,6 +74,9 @@ class BaseModelAdapter(ABC):
     is_experimental: bool = False
     is_mock: bool = False
     optional_dependencies: tuple[str, ...] = ()
+    #: True only for adapters that place ``GenerationConfig.seed`` in the provider request
+    #: (v0.4.0). A provider may still ignore the seed or be non-deterministic.
+    supports_generation_seed: bool = False
 
     def __init__(
         self,
@@ -95,6 +98,29 @@ class BaseModelAdapter(ABC):
         if inference_config:
             base_inf.update(redact_sensitive_data(dict(inference_config)))
         self.inference_config = base_inf
+        #: Number of provider requests into which this adapter placed a generation seed.
+        self.seed_forward_count = 0
+
+    def with_generation_seed(self, seed: int | None) -> BaseModelAdapter:
+        """Return a shallow copy of this adapter whose generation seed is ``seed`` (v0.4.0).
+
+        Used for per-repetition seeds. The copy shares any client or transport objects with
+        the original; only ``generation_config``, ``inference_config`` and the seed counter
+        are replaced.
+        """
+        import copy
+        from dataclasses import replace
+
+        clone = copy.copy(self)
+        clone.generation_config = replace(self.generation_config, seed=seed)
+        inference = dict(self.inference_config)
+        if seed is None:
+            inference.pop("seed", None)
+        else:
+            inference["seed"] = seed
+        clone.inference_config = inference
+        clone.seed_forward_count = 0
+        return clone
 
     @abstractmethod
     def generate_one(self, record: DatasetRecord) -> ResponseItem:

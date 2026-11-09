@@ -132,9 +132,13 @@ class ExecutionEngine:
         provider: BaseModelAdapter,
         config: ExecutionConfig | None = None,
         cache: ResponseCache | None = None,
+        repetition_context: tuple[str, int] | None = None,
     ) -> None:
         self.provider = provider
         self.config = config or ExecutionConfig()
+        #: ``(repeat_group_id, repetition_index)`` for repeat-group runs (v0.4.0); forwarded
+        #: to the cache so repetitions never share cached responses.
+        self.repetition_context = repetition_context
         self.cache = cache if cache is not None else ResponseCache(enabled=self.config.use_cache)
         if not self.config.use_cache:
             self.cache.enabled = False
@@ -210,6 +214,7 @@ class ExecutionEngine:
                     record_id=record.id,
                     prompt=record.prompt,
                     generation_config=self.provider.inference_config,
+                    repetition_context=self.repetition_context,
                 )
                 if cached_rec is not None:
                     item = ResponseItem(
@@ -306,6 +311,7 @@ class ExecutionEngine:
                             prompt=record.prompt,
                             response_item=final_item,
                             generation_config=self.provider.inference_config,
+                            repetition_context=self.repetition_context,
                         )
 
                         telem = RequestTelemetry(
