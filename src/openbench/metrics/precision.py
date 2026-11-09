@@ -158,6 +158,7 @@ class PrecisionMetric(BaseMetric):
 
     name = "precision"
     version = "0.2.0"
+    score_kind = "bounded_continuous"
     description = (
         "Computes precision (TP / (TP + FP)) for binary classification decisions "
         "and structured element/token set predictions."

@@ -206,6 +206,7 @@ class SemanticSimilarityMetric(BaseMetric):
 
     name = "semantic_similarity"
     version = "0.3.1"
+    score_kind = "bounded_continuous"
     description = (
         "Computes vector cosine similarity between the normalized expected answer and model response. "
         "Uses lexical n-gram hashing by default (labeled as 'lexical_similarity') unless an embedding "

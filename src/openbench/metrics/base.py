@@ -88,6 +88,10 @@ class BaseMetric(ABC):
     limitation_note: str = ""
     is_optional: bool = False
     optional_dependencies: tuple[str, ...] = ()
+    #: Statistical kind of the per-item score: "binary" (always 0.0 or 1.0),
+    #: "bounded_continuous" (in [0, 1]) or "unknown". Used only to select statistical
+    #: procedures; it never changes scores. Custom metrics default to "unknown".
+    score_kind: str = "unknown"
 
     @classmethod
     def get_metadata(cls) -> MetricMetadata:

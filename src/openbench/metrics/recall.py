@@ -21,6 +21,7 @@ class RecallMetric(BaseMetric):
 
     name = "recall"
     version = "0.2.0"
+    score_kind = "bounded_continuous"
     description = (
         "Computes recall (TP / (TP + FN)) for binary classification decisions "
         "and structured element/token set predictions."

@@ -14,6 +14,7 @@ class ExactMatchMetric(BaseMetric):
 
     name = "exact_match"
     version = "0.1.0"
+    score_kind = "binary"
     description = (
         "Checks whether the normalized model response is identical to the "
         "normalized expected answer."

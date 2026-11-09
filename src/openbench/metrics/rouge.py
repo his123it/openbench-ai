@@ -63,6 +63,7 @@ class RougeMetric(BaseMetric):
 
     name = "rouge"
     version = "0.2.0"
+    score_kind = "bounded_continuous"
     description = (
         "Computes ROUGE-1 (unigram overlap) and ROUGE-L (Longest Common Subsequence) "
         "precision, recall, and F1 scores."
