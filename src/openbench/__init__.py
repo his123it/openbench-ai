@@ -87,6 +87,7 @@ from openbench.preferences import (
     PreferenceAnnotation,
     PreferenceTaskBuilder,
 )
+from openbench.quality import AuditFinding, AuditReport, DatasetAuditor, ExperimentAuditor
 from openbench.reporting import ReportGenerator, escape_markdown_cell
 from openbench.security import (
     redact_prompt_if_private,
@@ -183,4 +184,8 @@ __all__ = [
     "PreferenceAnalyzer",
     "PreferenceAnnotation",
     "PreferenceTaskBuilder",
+    "AuditFinding",
+    "AuditReport",
+    "DatasetAuditor",
+    "ExperimentAuditor",
 ]

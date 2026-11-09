@@ -23,3 +23,9 @@ def render_preferences(payload: dict[str, Any], fmt: str) -> str:
     if fmt == "json":
         return to_json(payload)
     raise ConfigurationError(f"Unsupported preference report format '{fmt}'")
+
+
+def render_audit(payload: dict[str, Any], fmt: str) -> str:
+    if fmt == "json":
+        return to_json(payload)
+    raise ConfigurationError(f"Unsupported audit report format '{fmt}'")

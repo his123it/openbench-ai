@@ -69,7 +69,7 @@ openbench = "openbench.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-openbench = ["py.typed"]
+openbench = ["py.typed", "quality_notes.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

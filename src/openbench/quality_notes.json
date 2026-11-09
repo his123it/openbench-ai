@@ -1,0 +1,87 @@
+{
+  "schema_version": "0.4.0",
+  "description": "Reviewed notes for built-in records (design plan section 7.3). Notes never suppress findings: they only attach a classification to a matching DQ007 finding or add a DQ010/DQ011 finding. Each note applies only when the audited record's content SHA-256 matches.",
+  "content_hash": "sha256 of canonical JSON of {id, category, prompt, expected_answer, metadata} (sorted keys, ensure_ascii=False)",
+  "resolved_defects_not_noted": [
+    "summarization_004 (reference now includes '3x')",
+    "summarization_017 (reference now says 'transceivers')"
+  ],
+  "notes": [
+    {
+      "record_id": "coding_003",
+      "check_id": "DQ007",
+      "classification": "documented_historical_exception",
+      "explanation": "Unchanged since v0.1.0. 'constant' is an explanation; the prompt asks for Big-O notation, so the reference 'O(1)' does not contain it.",
+      "content_sha256": "4b85d4627bb772d474efe36e31673ffd33b4e9d47bb56f28332df3da490b66af"
+    },
+    {
+      "record_id": "coding_007",
+      "check_id": "DQ007",
+      "classification": "documented_historical_exception",
+      "explanation": "Unchanged since v0.1.0. Same pattern as coding_003: 'logarithmic' is explanatory; the reference is 'O(log n)'.",
+      "content_sha256": "eaa6425402abeb5977c190a5b3d970ce94f47cfc54c8dad71498a403e2f431e2"
+    },
+    {
+      "record_id": "coding_010",
+      "check_id": "DQ007",
+      "classification": "documented_historical_exception",
+      "explanation": "Unchanged since v0.1.0. 'functools' already appears in the prompt, so the keyword rewards echoing it.",
+      "content_sha256": "e0cf3e42105fc078f454c18f055fd07be886792e06906d4a1a09cdd1c257630e"
+    },
+    {
+      "record_id": "reasoning_004",
+      "check_id": "DQ007",
+      "classification": "documented_historical_exception",
+      "explanation": "Unchanged since v0.1.0. The keyword 'thermally calibrated' conflicts with the prompt's instruction to answer only 'Yes' or 'No', so a fully compliant answer scores 0.5 on keyword_coverage.",
+      "content_sha256": "eabc167eb14e68d796bd4fc9e6161634dc1b248fdb922cdc9d45c261cc694c95"
+    },
+    {
+      "record_id": "reasoning_012",
+      "check_id": "DQ007",
+      "classification": "documented_historical_exception",
+      "explanation": "Unchanged since v0.1.0. '3' and '5' are explanatory; '2' matches as a substring of '1/2', so it is a weak keyword.",
+      "content_sha256": "249b84889db2ecdf53b7e0a1cebeaa10c4b110cd14aa3480494f982aff67db64"
+    },
+    {
+      "record_id": "coding_019",
+      "check_id": "DQ010",
+      "classification": "legitimate_accepted_variant",
+      "message": "'BFS' is a legitimate answer variant that keyword lists cannot represent; a 'BFS'-only answer gets no keyword credit.",
+      "explanation": "The v0.2.0 draft required both 'Breadth-First Search' and 'BFS', so a correct answer scored 0.5; it was corrected before release (commit 4d7c9c2, PR #1). Keyword lists have no any-of grouping (deferred, U6).",
+      "content_sha256": "06bd110276887529ded0f083585f3e7bda3210039ec22738dfbdfb507076c95e"
+    },
+    {
+      "record_id": "factual_005",
+      "check_id": "DQ010",
+      "classification": "legitimate_accepted_variant",
+      "message": "The plural 'mitochondria' is a legitimate answer variant that keyword lists cannot represent.",
+      "explanation": "Draft keyword corrected before the v0.2.0 release (commit 4d7c9c2).",
+      "content_sha256": "88a831b2e06f91270191ee645612967114bb565fca06b028b119747328c1c7e2"
+    },
+    {
+      "record_id": "factual_007",
+      "check_id": "DQ010",
+      "classification": "legitimate_accepted_variant",
+      "message": "The expansion 'User Datagram Protocol' is a legitimate answer variant that keyword lists cannot represent.",
+      "explanation": "Draft keyword corrected before the v0.2.0 release (commit 4d7c9c2).",
+      "content_sha256": "256c294925b8272f7d11fd98a1581edd0225b258aee472ffef69a1ca852540e9"
+    },
+    {
+      "record_id": "factual_018",
+      "check_id": "DQ010",
+      "classification": "legitimate_accepted_variant",
+      "message": "The transliteration 'Godel' is a legitimate answer variant that keyword lists cannot represent.",
+      "explanation": "Draft keyword corrected before the v0.2.0 release (commit 4d7c9c2).",
+      "content_sha256": "21e9bee39e240f54b0009f7cf39149d9d27a56c9f9291f09f4f9deca10b07848"
+    },
+    {
+      "record_id": "multilingual_006",
+      "check_id": "DQ011",
+      "classification": "ambiguous_item",
+      "message": "Ambiguous item: both 'warm' and 'heiss' (heiß) are commonly given as the opposite of 'kalt'; a 'heiß' answer is valid but scores 0 on every metric.",
+      "explanation": "The prompt asks for one word, so this is an item-level ambiguity, not only a keyword issue. Draft keyword 'heiß' was removed before the v0.2.0 release.",
+      "remediation": "Interpret this item's scores with care; an any-of answer schema is deferred (U6).",
+      "content_sha256": "082c5f706d076f92f667bcef60a328a2461235aaa132355cf306f96e29d80637"
+    }
+  ]
+}

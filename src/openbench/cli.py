@@ -68,6 +68,15 @@ def build_parser() -> argparse.ArgumentParser:
         type=str,
         help="Path to a JSONL dataset file or directory.",
     )
+    val_parser.add_argument(
+        "--quality-checks",
+        action="store_true",
+        help="v0.4.0: also run the read-only dataset quality audit (exit 1 only for error findings).",
+    )
+    val_parser.add_argument("--output", type=str, default=None, help="v0.4.0: write the audit report to this file.")
+    val_parser.add_argument("--format", choices=["json", "markdown"], default="json", help="v0.4.0: audit report format.")
+    val_parser.add_argument("--near-duplicate-threshold", type=float, default=0.85, help="v0.4.0: DQ003 Jaccard threshold.")
+    val_parser.add_argument("--metrics", nargs="+", default=None, help="v0.4.0: metric names to check (DQ008).")
 
     # 2. evaluate (v0.1.0 & v0.2.0 preserved)
     eval_parser = subparsers.add_parser(
@@ -368,6 +377,10 @@ def build_parser() -> argparse.ArgumentParser:
     runs_verify_p.add_argument("run_id", type=str)
     runs_verify_p.add_argument("--experiments-dir", type=str, default=None)
     runs_verify_p.add_argument("--format", choices=["text", "json"], default="text")
+    runs_verify_p.add_argument(
+        "--quality-checks", action="store_true", help="v0.4.0: also run the experiment quality audit (EQ checks)."
+    )
+    runs_verify_p.add_argument("--audit-output", type=str, default=None, help="v0.4.0: write the audit report (JSON) here.")
 
     runs_resume_p = runs_subparsers.add_parser(
         "resume",
@@ -542,6 +555,38 @@ def _handle_validate_dataset(dataset_path: str) -> int:
         f"Dataset valid: '{dataset.name}' ({len(dataset)} records; categories: {categories_str})"
     )
     return 0
+
+
+def _print_audit_summary(report_dict: dict[str, Any], label: str) -> None:
+    summary = report_dict["summary"]
+    print(f"Quality audit [{label}]: {summary['errors']} error(s), {summary['warnings']} warning(s), {summary['info']} info")
+    for f in report_dict["findings"]:
+        ids = ", ".join(f["record_ids"][:5] or f["run_ids"][:5])
+        more = "" if len(f["record_ids"]) <= 5 else f" (+{len(f['record_ids']) - 5} more)"
+        cls = f" [{f['classification']}]" if f.get("classification") else ""
+        print(f"  {f['severity'].upper():7} {f['check_id']:6} {f['message']}{cls} {('(' + ids + more + ')') if ids else ''}".rstrip())
+
+
+def _handle_dataset_audit(args: argparse.Namespace) -> int:
+    """`validate-dataset PATH --quality-checks` (v0.4.0). Read-only."""
+    from openbench.quality import DatasetAuditor
+    from openbench.reporting_v040 import render_audit
+    from openbench.security import validate_safe_output_path
+
+    report = DatasetAuditor(near_duplicate_threshold=args.near_duplicate_threshold, metrics=args.metrics).audit(args.dataset_path)
+    payload = report.to_dict()
+    try:
+        dataset = DatasetLoader.load(args.dataset_path)
+        print(f"Dataset loads: '{dataset.name}' ({len(dataset)} records)")
+    except OpenBenchError as exc:
+        print(f"Dataset does not load: {exc}", file=sys.stderr)
+    _print_audit_summary(payload, args.dataset_path)
+    if args.output:
+        out = validate_safe_output_path(args.output)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(render_audit(payload, args.format), encoding="utf-8")
+        print(f"Audit report written to: {out}")
+    return report.exit_code
 
 
 def _handle_evaluate(args: argparse.Namespace) -> int:
@@ -1101,6 +1146,8 @@ def _handle_runs(args: argparse.Namespace) -> int:
         except KeyError as exc:
             print(f"Error: {exc}", file=sys.stderr)
             return 1
+        if getattr(args, "quality_checks", False):
+            return _verify_with_audit(args, manager, check.to_dict(), check.valid)
         if args.format == "json":
             print(json.dumps(check.to_dict(), indent=2))
             return 0 if check.valid else 1
@@ -1233,6 +1280,8 @@ def _handle_group_action(args: argparse.Namespace, manager: ExperimentManager) -
         return 0
     if args.runs_action == "verify":
         result = manager.verify_group(group_id)
+        if getattr(args, "quality_checks", False):
+            return _verify_with_audit(args, manager, result, result["valid"], group=True)
         if args.format == "json":
             print(json.dumps(result, indent=2))
             return 0 if result["valid"] else 1
@@ -1265,6 +1314,27 @@ def _handle_group_action(args: argparse.Namespace, manager: ExperimentManager) -
         "repetitions completed"
     )
     return 0 if result.is_complete else 1
+
+
+def _verify_with_audit(args: argparse.Namespace, manager: ExperimentManager, check: dict[str, Any], valid: bool, group: bool = False) -> int:
+    """`runs verify ... --quality-checks` (v0.4.0): integrity plus EQ audit; read-only."""
+    from openbench.quality import ExperimentAuditor
+    from openbench.reporting_v040 import render_audit
+    from openbench.security import validate_safe_output_path
+
+    auditor = ExperimentAuditor(manager)
+    report = auditor.audit_group(args.run_id) if group else auditor.audit_run(args.run_id)
+    payload = report.to_dict()
+    if args.format == "json":
+        print(json.dumps({"integrity": check, "quality_audit": payload}, indent=2))
+    else:
+        print(f"Integrity [{args.run_id}]: {'VALID' if valid else 'INVALID'}")
+        _print_audit_summary(payload, args.run_id)
+    if args.audit_output:
+        out = validate_safe_output_path(args.audit_output)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(render_audit(payload, "json"), encoding="utf-8")
+    return 0 if valid and report.exit_code == 0 else 1
 
 
 def _handle_analyze(args: argparse.Namespace) -> int:
@@ -1528,6 +1598,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         if args.command == "validate-dataset":
+            if getattr(args, "quality_checks", False):
+                return _handle_dataset_audit(args)
             return _handle_validate_dataset(args.dataset_path)
         if args.command == "evaluate":
             return _handle_evaluate(args)
