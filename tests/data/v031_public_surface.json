@@ -1,0 +1,894 @@
+{
+ "cli": {
+  "<root>": [
+   {
+    "choices": null,
+    "default": "'==SUPPRESS=='",
+    "dest": "version",
+    "nargs": "0",
+    "option_strings": [
+     "--version"
+    ],
+    "required": false
+   }
+  ],
+  "cache": [],
+  "cache clear": [
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "cache_dir",
+    "nargs": null,
+    "option_strings": [
+     "--cache-dir"
+    ],
+    "required": false
+   }
+  ],
+  "cache stats": [
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "cache_dir",
+    "nargs": null,
+    "option_strings": [
+     "--cache-dir"
+    ],
+    "required": false
+   }
+  ],
+  "compare": [
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "output",
+    "nargs": null,
+    "option_strings": [
+     "--output"
+    ],
+    "required": true
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "results",
+    "nargs": "+",
+    "option_strings": [
+     "--results"
+    ],
+    "required": true
+   }
+  ],
+  "dataset-stats": [
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "dataset_path",
+    "nargs": null,
+    "option_strings": [],
+    "required": true
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "category",
+    "nargs": null,
+    "option_strings": [
+     "--category"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "difficulty",
+    "nargs": null,
+    "option_strings": [
+     "--difficulty"
+    ],
+    "required": false
+   },
+   {
+    "choices": [
+     "json",
+     "text"
+    ],
+    "default": "'text'",
+    "dest": "format",
+    "nargs": null,
+    "option_strings": [
+     "--format"
+    ],
+    "required": false
+   }
+  ],
+  "evaluate": [
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "category",
+    "nargs": "+",
+    "option_strings": [
+     "--category"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "config",
+    "nargs": null,
+    "option_strings": [
+     "--config"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "dataset",
+    "nargs": null,
+    "option_strings": [
+     "--dataset"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "difficulty",
+    "nargs": "+",
+    "option_strings": [
+     "--difficulty"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "history_file",
+    "nargs": null,
+    "option_strings": [
+     "--history-file"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "ids_file",
+    "nargs": null,
+    "option_strings": [
+     "--ids-file"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "metrics",
+    "nargs": "+",
+    "option_strings": [
+     "--metrics"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "output",
+    "nargs": null,
+    "option_strings": [
+     "--output"
+    ],
+    "required": true
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "responses",
+    "nargs": null,
+    "option_strings": [
+     "--responses"
+    ],
+    "required": true
+   }
+  ],
+  "export": [
+   {
+    "choices": [
+     "csv",
+     "json",
+     "markdown"
+    ],
+    "default": "None",
+    "dest": "format",
+    "nargs": null,
+    "option_strings": [
+     "--format"
+    ],
+    "required": true
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "input",
+    "nargs": null,
+    "option_strings": [
+     "--input"
+    ],
+    "required": true
+   },
+   {
+    "choices": [
+     "aggregate",
+     "individual"
+    ],
+    "default": "'individual'",
+    "dest": "mode",
+    "nargs": null,
+    "option_strings": [
+     "--mode"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "output",
+    "nargs": null,
+    "option_strings": [
+     "--output"
+    ],
+    "required": true
+   }
+  ],
+  "history": [],
+  "history list": [
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "dataset",
+    "nargs": null,
+    "option_strings": [
+     "--dataset"
+    ],
+    "required": false
+   },
+   {
+    "choices": [
+     "json",
+     "text"
+    ],
+    "default": "'text'",
+    "dest": "format",
+    "nargs": null,
+    "option_strings": [
+     "--format"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "model",
+    "nargs": null,
+    "option_strings": [
+     "--model"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "store",
+    "nargs": null,
+    "option_strings": [
+     "--store"
+    ],
+    "required": false
+   }
+  ],
+  "history show": [
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "evaluation_id",
+    "nargs": null,
+    "option_strings": [],
+    "required": true
+   },
+   {
+    "choices": [
+     "json",
+     "text"
+    ],
+    "default": "'text'",
+    "dest": "format",
+    "nargs": null,
+    "option_strings": [
+     "--format"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "store",
+    "nargs": null,
+    "option_strings": [
+     "--store"
+    ],
+    "required": false
+   }
+  ],
+  "inspect-dataset": [
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "dataset_path",
+    "nargs": null,
+    "option_strings": [],
+    "required": true
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "category",
+    "nargs": null,
+    "option_strings": [
+     "--category"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "difficulty",
+    "nargs": null,
+    "option_strings": [
+     "--difficulty"
+    ],
+    "required": false
+   },
+   {
+    "choices": [
+     "json",
+     "text"
+    ],
+    "default": "'text'",
+    "dest": "format",
+    "nargs": null,
+    "option_strings": [
+     "--format"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "2",
+    "dest": "samples",
+    "nargs": null,
+    "option_strings": [
+     "--samples"
+    ],
+    "required": false
+   }
+  ],
+  "list-datasets": [
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "category",
+    "nargs": null,
+    "option_strings": [
+     "--category"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "difficulty",
+    "nargs": null,
+    "option_strings": [
+     "--difficulty"
+    ],
+    "required": false
+   },
+   {
+    "choices": [
+     "json",
+     "text"
+    ],
+    "default": "'text'",
+    "dest": "format",
+    "nargs": null,
+    "option_strings": [
+     "--format"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "path",
+    "nargs": null,
+    "option_strings": [
+     "--path"
+    ],
+    "required": false
+   }
+  ],
+  "providers": [],
+  "providers check": [
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "provider_name",
+    "nargs": null,
+    "option_strings": [],
+    "required": true
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "endpoint",
+    "nargs": null,
+    "option_strings": [
+     "--endpoint"
+    ],
+    "required": false
+   },
+   {
+    "choices": [
+     "json",
+     "text"
+    ],
+    "default": "'text'",
+    "dest": "format",
+    "nargs": null,
+    "option_strings": [
+     "--format"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "model",
+    "nargs": null,
+    "option_strings": [
+     "--model"
+    ],
+    "required": false
+   }
+  ],
+  "providers list": [
+   {
+    "choices": [
+     "json",
+     "text"
+    ],
+    "default": "'text'",
+    "dest": "format",
+    "nargs": null,
+    "option_strings": [
+     "--format"
+    ],
+    "required": false
+   }
+  ],
+  "run": [
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "cache_dir",
+    "nargs": null,
+    "option_strings": [
+     "--cache-dir"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "concurrency",
+    "nargs": null,
+    "option_strings": [
+     "--concurrency"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "config",
+    "nargs": null,
+    "option_strings": [
+     "--config"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "dataset",
+    "nargs": null,
+    "option_strings": [
+     "--dataset"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "endpoint",
+    "nargs": null,
+    "option_strings": [
+     "--endpoint"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "experiments_dir",
+    "nargs": null,
+    "option_strings": [
+     "--experiments-dir"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "max_attempts",
+    "nargs": null,
+    "option_strings": [
+     "--max-attempts"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "metrics",
+    "nargs": "+",
+    "option_strings": [
+     "--metrics"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "model",
+    "nargs": null,
+    "option_strings": [
+     "--model"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "model_version",
+    "nargs": null,
+    "option_strings": [
+     "--model-version"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "False",
+    "dest": "no_cache",
+    "nargs": "0",
+    "option_strings": [
+     "--no-cache"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "output",
+    "nargs": null,
+    "option_strings": [
+     "--output"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "provider",
+    "nargs": null,
+    "option_strings": [
+     "--provider"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "timeout",
+    "nargs": null,
+    "option_strings": [
+     "--timeout"
+    ],
+    "required": false
+   }
+  ],
+  "runs": [],
+  "runs compare": [
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "run_ids",
+    "nargs": "+",
+    "option_strings": [],
+    "required": true
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "experiments_dir",
+    "nargs": null,
+    "option_strings": [
+     "--experiments-dir"
+    ],
+    "required": false
+   },
+   {
+    "choices": [
+     "json",
+     "markdown",
+     "text"
+    ],
+    "default": "'text'",
+    "dest": "format",
+    "nargs": null,
+    "option_strings": [
+     "--format"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "output",
+    "nargs": null,
+    "option_strings": [
+     "--output"
+    ],
+    "required": false
+   }
+  ],
+  "runs list": [
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "experiments_dir",
+    "nargs": null,
+    "option_strings": [
+     "--experiments-dir"
+    ],
+    "required": false
+   },
+   {
+    "choices": [
+     "json",
+     "text"
+    ],
+    "default": "'text'",
+    "dest": "format",
+    "nargs": null,
+    "option_strings": [
+     "--format"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "provider",
+    "nargs": null,
+    "option_strings": [
+     "--provider"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "status",
+    "nargs": null,
+    "option_strings": [
+     "--status"
+    ],
+    "required": false
+   }
+  ],
+  "runs resume": [
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "run_id",
+    "nargs": null,
+    "option_strings": [],
+    "required": true
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "cache_dir",
+    "nargs": null,
+    "option_strings": [
+     "--cache-dir"
+    ],
+    "required": false
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "experiments_dir",
+    "nargs": null,
+    "option_strings": [
+     "--experiments-dir"
+    ],
+    "required": false
+   }
+  ],
+  "runs show": [
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "run_id",
+    "nargs": null,
+    "option_strings": [],
+    "required": true
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "experiments_dir",
+    "nargs": null,
+    "option_strings": [
+     "--experiments-dir"
+    ],
+    "required": false
+   },
+   {
+    "choices": [
+     "json",
+     "text"
+    ],
+    "default": "'text'",
+    "dest": "format",
+    "nargs": null,
+    "option_strings": [
+     "--format"
+    ],
+    "required": false
+   }
+  ],
+  "runs verify": [
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "run_id",
+    "nargs": null,
+    "option_strings": [],
+    "required": true
+   },
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "experiments_dir",
+    "nargs": null,
+    "option_strings": [
+     "--experiments-dir"
+    ],
+    "required": false
+   },
+   {
+    "choices": [
+     "json",
+     "text"
+    ],
+    "default": "'text'",
+    "dest": "format",
+    "nargs": null,
+    "option_strings": [
+     "--format"
+    ],
+    "required": false
+   }
+  ],
+  "validate-dataset": [
+   {
+    "choices": null,
+    "default": "None",
+    "dest": "dataset_path",
+    "nargs": null,
+    "option_strings": [],
+    "required": true
+   }
+  ]
+ },
+ "generated_from_commit": "8d3295abbabeff4a0c20052a1bbb70fed48c424e",
+ "public_names": [
+  "__version__",
+  "BaseModelAdapter",
+  "BenchmarkAnalytics",
+  "CacheRecord",
+  "ComparisonResult",
+  "ConfigurationError",
+  "Dataset",
+  "DatasetCatalog",
+  "DatasetCatalogEntry",
+  "DatasetLoader",
+  "DatasetRecord",
+  "DatasetValidationError",
+  "DeterministicLookupAdapter",
+  "EmptyDatasetError",
+  "EvaluationConfig",
+  "EvaluationProfile",
+  "EvaluationResult",
+  "Evaluator",
+  "ExecutionConfig",
+  "ExecutionEngine",
+  "ExecutionOutcome",
+  "ExperimentManager",
+  "ExperimentRecord",
+  "GenerationConfig",
+  "HistoryEntry",
+  "HuggingFaceAdapter",
+  "IdFilterSpec",
+  "IntegrityCheckResult",
+  "ItemEvaluationResult",
+  "LexicalSimilarityMetric",
+  "LocalCallableAdapter",
+  "MetricError",
+  "MetricLeader",
+  "MockModelProvider",
+  "ModelComparator",
+  "ModelComparisonEntry",
+  "ModelResponseSet",
+  "OllamaAdapter",
+  "OllamaConnectionError",
+  "OpenBenchError",
+  "PROVIDER_REGISTRY",
+  "PerformanceMonitor",
+  "PerformanceReport",
+  "PricingConfig",
+  "ProfileLoader",
+  "ProviderHealthStatus",
+  "ReportGenerator",
+  "RequestTelemetry",
+  "ResponseCache",
+  "ResponseItem",
+  "ResponseLoader",
+  "ResponseValidationError",
+  "ResultHistoryStore",
+  "RetryPolicy",
+  "RunIntegrityVerifier",
+  "classify_execution_error",
+  "compute_dict_sha256",
+  "compute_file_sha256",
+  "compute_percentile",
+  "create_provider",
+  "escape_markdown_cell",
+  "list_registered_providers",
+  "load_ids_file",
+  "redact_prompt_if_private",
+  "redact_sensitive_data",
+  "register_provider",
+  "resolve_env_credential",
+  "sanitize_error_message",
+  "validate_endpoint_url",
+  "validate_safe_output_path"
+ ]
+}
