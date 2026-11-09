@@ -26,7 +26,7 @@ def main() -> None:
     rng = random.Random(0)
     for k in (16, 18, 20, 22):
         diffs = [round(rng.uniform(-0.5, 0.5), 3) or 0.001 for _ in range(k)]
-        out["sign_flip"][k] = round(_time(lambda d=diffs: sign_flip_test(d, exact_max=k)), 3)
+        out["sign_flip"][k] = round(_time(lambda d=diffs, k=k: sign_flip_test(d, exact_max=k)), 3)
         print("sign_flip exact k =", k, out["sign_flip"][k], "s", flush=True)
     for n in (50, 100, 200, 500, 1000):
         b, c = int(round(0.09 * n)), int(round(0.05 * n))  # a typical near-boundary table

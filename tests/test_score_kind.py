@@ -30,7 +30,11 @@ EXPECTED_KINDS = {
 
 
 def test_registry_kinds() -> None:
-    assert {name: cls.score_kind for name, cls in METRIC_REGISTRY.items()} == EXPECTED_KINDS
+    # Other tests may register custom metrics, so check the built-ins and validity of all.
+    for name, kind in EXPECTED_KINDS.items():
+        assert METRIC_REGISTRY[name].score_kind == kind, name
+    for name, cls in METRIC_REGISTRY.items():
+        assert cls.score_kind in {"binary", "bounded_continuous", "unknown"}, name
 
 
 def test_custom_metric_defaults_to_unknown() -> None:
