@@ -444,6 +444,40 @@ def build_parser() -> argparse.ArgumentParser:
     ana_parser.add_argument("--output", type=str, default=None)
     ana_parser.add_argument("--format", choices=["json", "markdown", "csv"], default="json")
 
+    # 14. preferences (v0.4.0 new: create, validate, analyze)
+    pref_parser = subparsers.add_parser(
+        "preferences",
+        help="v0.4.0: local blinded pairwise human preference evaluation.",
+    )
+    pref_sub = pref_parser.add_subparsers(dest="preferences_action")
+    pc = pref_sub.add_parser("create", help="Create blind A/B tasks (tasks.jsonl) and a separate key file.")
+    pc_src = pc.add_mutually_exclusive_group(required=True)
+    pc_src.add_argument("--runs", nargs=2, default=None, metavar=("RUN_A", "RUN_B"))
+    pc_src.add_argument("--results", nargs=2, default=None, metavar=("EVAL_A", "EVAL_B"))
+    pc.add_argument("--experiments-dir", type=str, default=None)
+    pc.add_argument("--seed", type=int, default=0, help="Preference-order seed (default 0).")
+    pc.add_argument("--output", required=True, type=str, help="Output directory for tasks.jsonl.")
+    pc.add_argument("--key-output", type=str, default=None, help="Key file path (default OUTPUT/tasks.key.json).")
+    pc.add_argument("--rubric", type=str, default=None, help="JSON rubric file.")
+    pc.add_argument("--show-reference", action="store_true", help="Include reference answers in tasks.")
+    pc.add_argument("--csv", action="store_true", help="Also write tasks.csv.")
+    pc.add_argument("--overwrite", action="store_true", help="Allow overwriting existing task files.")
+    pv = pref_sub.add_parser("validate", help="Validate completed annotation files against a task key.")
+    pv.add_argument("--key", required=True, type=str)
+    pv.add_argument("--annotations", required=True, nargs="+")
+    pv.add_argument("--annotators", type=str, default=None, help="Optional roster file (one annotator ID per line).")
+    pv.add_argument("--format", choices=["text", "json"], default="text")
+    pa = pref_sub.add_parser("analyze", help="Analyse validated annotations (win rates, agreement, optional Elo).")
+    pa.add_argument("--key", required=True, nargs="+")
+    pa.add_argument("--annotations", required=True, nargs="+")
+    pa.add_argument("--annotators", type=str, default=None)
+    pa.add_argument("--seed", type=int, default=0)
+    pa.add_argument("--confidence-level", type=float, default=0.95)
+    pa.add_argument("--resamples", type=int, default=10_000)
+    pa.add_argument("--elo", action="store_true", help="Also report Elo ratings (relative; see limitations).")
+    pa.add_argument("--output", type=str, default=None)
+    pa.add_argument("--format", choices=["json", "markdown", "csv"], default="json")
+
     return parser
 
 
@@ -1335,6 +1369,92 @@ def _handle_analyze(args: argparse.Namespace) -> int:
     return 0
 
 
+def _read_roster(path: str | None) -> list[str] | None:
+    if not path:
+        return None
+    lines = Path(path).read_text(encoding="utf-8").splitlines()
+    return [ln.strip() for ln in lines if ln.strip() and not ln.strip().startswith("#")]
+
+
+def _handle_preferences(args: argparse.Namespace) -> int:
+    """`openbench preferences create|validate|analyze` (v0.4.0)."""
+    from openbench import preferences as prefs
+    from openbench.reporting_v040 import render_preferences
+    from openbench.security import validate_safe_output_path
+
+    action = getattr(args, "preferences_action", None)
+    if not action:
+        print("Error: Specify a preferences subcommand (create, validate, analyze).", file=sys.stderr)
+        return 2
+    if action == "create":
+        sources = []
+        if args.runs:
+            manager = ExperimentManager(experiments_root=args.experiments_dir)
+            for rid in args.runs:
+                try:
+                    rec = manager.load_run_record(rid)
+                    ev = manager.load_evaluation(rid)
+                except KeyError as exc:
+                    print(f"Error: {exc}", file=sys.stderr)
+                    return 1
+                sources.append(prefs.PreferenceSource.from_evaluation(rec.run_id, ev))
+        else:
+            from openbench.paired import ComparisonArm
+
+            for path in args.results:
+                ev = ComparisonArm.from_evaluation_file(path).evaluations[0]
+                sources.append(prefs.PreferenceSource.from_evaluation(Path(path).stem, ev))
+            if sources[0].source_id == sources[1].source_id:
+                sources[0].source_id += "#1"
+                sources[1].source_id += "#2"
+        rubric, instructions = ([], None)
+        if args.rubric:
+            rubric, instructions = prefs.load_rubric(args.rubric)
+        builder = prefs.PreferenceTaskBuilder(args.seed, rubric, instructions, args.show_reference)
+        task_set = builder.build(sources[0], sources[1])
+        written = prefs.write_task_set(task_set, args.output, args.key_output, write_csv=args.csv, overwrite=args.overwrite)
+        print(f"Created {len(task_set.tasks)} blind task(s): {written['tasks']}")
+        print(f"Unblinded key (keep away from annotators): {written['key']}")
+        for w in task_set.leakage_warnings:
+            print(f"Warning: possible identity leak in task text ({len(w['task_ids'])} task(s)): {', '.join(w['task_ids'][:10])}", file=sys.stderr)
+        return 0
+
+    roster = _read_roster(getattr(args, "annotators", None))
+    if action == "validate":
+        key = prefs.load_key(args.key)
+        report = prefs.AnnotationImporter(key, annotator_roster=roster).load(args.annotations)
+        if args.format == "json":
+            print(json.dumps(report.to_dict(), indent=2))
+        else:
+            print(f"Annotation validation: {'VALID' if report.valid else 'INVALID'} ({report.records_read} record(s) read)")
+            for e in report.errors:
+                print(f"  Error [{e['code']}] {e.get('file', '')}:{e.get('line')}: {e['message']}")
+            for w in report.warnings:
+                print(f"  Warning [{w['code']}] line {w.get('line')}: {w['message']}")
+        return 0 if report.valid else 1
+
+    keys = [prefs.load_key(k) for k in args.key]
+    merged = {"tasks": [t for k in keys for t in k["tasks"]], "creation_parameters": keys[0].get("creation_parameters", {})}
+    report = prefs.AnnotationImporter(merged, annotator_roster=roster).load(args.annotations)
+    if not report.valid:
+        print(f"Error: {len(report.errors)} annotation error(s); run 'preferences validate' for details.", file=sys.stderr)
+        for e in report.errors[:20]:
+            print(f"  [{e['code']}] {e.get('file', '')}:{e.get('line')}: {e['message']}", file=sys.stderr)
+        return 1
+    analysis = prefs.PreferenceAnalyzer(keys, analysis_seed=args.seed, confidence_level=args.confidence_level,
+                                        resamples=args.resamples).analyze(report.annotations, elo=args.elo)
+    analysis["validation_warnings"] = report.warnings
+    text = render_preferences(analysis, args.format)
+    if args.output:
+        out = validate_safe_output_path(args.output)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(text, encoding="utf-8")
+        print(f"Preference analysis ({args.format}) written to: {out}")
+    else:
+        print(text)
+    return 0
+
+
 def _handle_providers(args: argparse.Namespace) -> int:
     """Execute `openbench providers list|check`."""
     if not args.providers_action:
@@ -1436,6 +1556,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             return _handle_cache(args)
         if args.command == "analyze":
             return _handle_analyze(args)
+        if args.command == "preferences":
+            return _handle_preferences(args)
     except FileNotFoundError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1

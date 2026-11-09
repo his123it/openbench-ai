@@ -17,3 +17,9 @@ def render_analysis(payload: dict[str, Any], fmt: str) -> str:
     if fmt == "json":
         return to_json(payload)
     raise ConfigurationError(f"Unsupported analysis format '{fmt}'")
+
+
+def render_preferences(payload: dict[str, Any], fmt: str) -> str:
+    if fmt == "json":
+        return to_json(payload)
+    raise ConfigurationError(f"Unsupported preference report format '{fmt}'")

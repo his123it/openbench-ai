@@ -81,6 +81,12 @@ from openbench.performance import (
     RequestTelemetry,
     compute_percentile,
 )
+from openbench.preferences import (
+    AnnotationImporter,
+    PreferenceAnalyzer,
+    PreferenceAnnotation,
+    PreferenceTaskBuilder,
+)
 from openbench.reporting import ReportGenerator, escape_markdown_cell
 from openbench.security import (
     redact_prompt_if_private,
@@ -173,4 +179,8 @@ __all__ = [
     "PairedComparisonResult",
     "RepeatGroupResult",
     "RunLineage",
+    "AnnotationImporter",
+    "PreferenceAnalyzer",
+    "PreferenceAnnotation",
+    "PreferenceTaskBuilder",
 ]
