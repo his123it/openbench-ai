@@ -60,7 +60,6 @@ MAX_METADATA_VALUE_CHARS = 1_000
 REQUIRED_FIELDS = ("annotation_id", "task_id", "annotator_id", "outcome")
 OPTIONAL_FIELDS = ("rubric_scores", "rationale", "confidence", "timestamp", "metadata", "schema_version")
 ALLOWED_FIELDS = set(REQUIRED_FIELDS) | set(OPTIONAL_FIELDS)
-CSV_INJECTION_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
 
 DEFAULT_INSTRUCTIONS = (
     "Read the prompt and both responses. Choose 'response_1' or 'response_2' if one is better, "
@@ -79,11 +78,10 @@ BLINDING_NOTE = (
 
 
 def csv_safe(value: Any) -> str:
-    """Neutralise spreadsheet formula injection: prefix risky leading characters with '."""
-    text = "" if value is None else str(value)
-    if text.startswith(CSV_INJECTION_PREFIXES):
-        return "'" + text
-    return text
+    """CSV cell protection (see :func:`openbench.security.csv_safe`); ``None`` becomes ''."""
+    from openbench.security import csv_safe as _safe
+
+    return "" if value is None else str(_safe(value) if isinstance(value, str) else value)
 
 
 def _seed_int(text: str) -> int:
@@ -932,4 +930,11 @@ class PreferenceAnalyzer:
             "warnings": warnings,
         }
         result["elo"] = self._elo(rows) if elo else None
+        from openbench.provenance import provenance_block
+
+        result["provenance"] = provenance_block(
+            parameters={"confidence_level": self.confidence_level, "resamples": self.resamples, "elo": elo},
+            inputs=[{"key_tasks_jsonl_sha256": k.get("tasks_jsonl_sha256"), "preference_order_seed": k.get("preference_order_seed")} for k in self.keys],
+            analysis_seed=self.seed,
+        )
         return result

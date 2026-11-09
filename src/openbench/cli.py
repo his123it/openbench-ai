@@ -74,7 +74,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="v0.4.0: also run the read-only dataset quality audit (exit 1 only for error findings).",
     )
     val_parser.add_argument("--output", type=str, default=None, help="v0.4.0: write the audit report to this file.")
-    val_parser.add_argument("--format", choices=["json", "markdown"], default="json", help="v0.4.0: audit report format.")
+    val_parser.add_argument("--format", choices=["json", "markdown", "csv"], default="json", help="v0.4.0: audit report format.")
     val_parser.add_argument("--near-duplicate-threshold", type=float, default=0.85, help="v0.4.0: DQ003 Jaccard threshold.")
     val_parser.add_argument("--metrics", nargs="+", default=None, help="v0.4.0: metric names to check (DQ008).")
 
@@ -1429,6 +1429,10 @@ def _handle_analyze(args: argparse.Namespace) -> int:
     text = render_analysis(payload, args.format)
     if args.output:
         out = validate_safe_output_path(args.output)
+        for parent in out.resolve().parents:
+            if parent.name.startswith("run_") and (parent / "reproducibility.json").exists():
+                print("Error: analyses are never written into run directories; choose another --output.", file=sys.stderr)
+                return 2
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(text, encoding="utf-8")
         print(f"Analysis ({payload.get('analysis')}, {args.format}) written to: {out}")
@@ -1514,6 +1518,11 @@ def _handle_preferences(args: argparse.Namespace) -> int:
     analysis = prefs.PreferenceAnalyzer(keys, analysis_seed=args.seed, confidence_level=args.confidence_level,
                                         resamples=args.resamples).analyze(report.annotations, elo=args.elo)
     analysis["validation_warnings"] = report.warnings
+    from openbench.integrity import compute_file_sha256
+
+    analysis["provenance"]["inputs"] += [
+        {"annotation_file": str(a), "sha256": compute_file_sha256(a)} for a in args.annotations
+    ] + [{"key_file": str(k), "sha256": compute_file_sha256(k)} for k in args.key]
     text = render_preferences(analysis, args.format)
     if args.output:
         out = validate_safe_output_path(args.output)

@@ -36,6 +36,7 @@ from openbench.itemscores import (
     metric_score_kind,
     metric_version_of,
 )
+from openbench.provenance import arm_inputs, provenance_block
 from openbench.security import redact_sensitive_data
 from openbench.stats import (
     EquivalenceResult,
@@ -593,6 +594,9 @@ class PairedComparisonEngine:
             "provider_calls": 0,
             "limitations": list(LIMITATIONS),
             "input_digest_sha256": input_digest,
+            "provenance": provenance_block(
+                parameters=policy.to_dict(), inputs=arm_inputs(arms), analysis_seed=policy.analysis_seed
+            ),
         }
         if exploratory:
             payload["exploratory_reason"] = policy.exploratory_reason

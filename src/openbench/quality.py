@@ -176,7 +176,14 @@ class AuditReport:
                 **self.extra_summary,
             },
             "non_mutation": "Audits are read-only; no dataset, run or score was modified.",
+            "provenance": _provenance(self.parameters),
         }
+
+
+def _provenance(parameters: dict[str, Any]) -> dict[str, Any]:
+    from openbench.provenance import provenance_block
+
+    return provenance_block(parameters=parameters)
 
 
 def _sort_findings(findings: list[AuditFinding]) -> list[AuditFinding]:

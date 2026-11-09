@@ -235,3 +235,24 @@ def resolve_env_credential(env_var_name: str | None) -> str | None:
             f"Invalid environment variable identifier '{env_var_name}'"
         )
     return os.environ.get(clean_name)
+
+
+_CSV_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
+
+
+def csv_safe(value: Any) -> Any:
+    """Neutralise spreadsheet formula injection in one CSV cell (v0.4.0).
+
+    Text that starts with ``=``, ``+``, ``-``, ``@``, a tab or a carriage return is prefixed
+    with ``'`` so spreadsheet applications treat it as text. Numbers (including text that is
+    a plain finite number such as ``-273.15``) and non-string values are returned unchanged.
+    """
+    if not isinstance(value, str) or not value or not value.startswith(_CSV_FORMULA_PREFIXES):
+        return value
+    try:
+        number = float(value)
+    except ValueError:
+        return "'" + value
+    if number == number and number not in (float("inf"), float("-inf")) and value.strip() == value:
+        return value
+    return "'" + value

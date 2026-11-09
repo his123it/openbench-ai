@@ -288,6 +288,9 @@ def decompose_variability(
             "per_item": entries,
         }
     assert shared_obs is not None
+    from openbench.provenance import provenance_block
+
+    parameters = {"confidence_level": confidence_level, "resamples": resamples, "metrics": metric_names}
     return {
         "schema_version": SCHEMA_VERSION,
         "analysis": "repeated_run_variability",
@@ -312,4 +315,9 @@ def decompose_variability(
             "entries per repetition).",
             "A seed passed to a provider does not guarantee deterministic output.",
         ],
+        "provenance": provenance_block(
+            parameters=parameters,
+            inputs=[{"evaluation_id": ev.evaluation_id, "dataset_checksum": ev.dataset_summary.get("checksum")} for ev in evals],
+            analysis_seed=analysis_seed,
+        ),
     }

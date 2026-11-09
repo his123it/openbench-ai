@@ -92,6 +92,8 @@ def test_breakdowns_and_continuous_metric(tmp_path):
 
 def test_deterministic_and_requires_input(tmp_path):
     evals = _evals(tmp_path, MATRIX)
-    assert decompose_variability(evals, resamples=300) == decompose_variability(evals, resamples=300)
+    from _v040_helpers import strip_volatile
+
+    assert strip_volatile(decompose_variability(evals, resamples=300)) == strip_volatile(decompose_variability(evals, resamples=300))
     with pytest.raises(ValueError):
         decompose_variability([])

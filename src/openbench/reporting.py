@@ -11,7 +11,7 @@ from typing import Any
 
 from openbench.comparison import ComparisonResult
 from openbench.evaluator import EvaluationResult
-from openbench.security import redact_sensitive_data
+from openbench.security import csv_safe, redact_sensitive_data
 
 
 def escape_markdown_cell(value: Any) -> str:
@@ -19,6 +19,16 @@ def escape_markdown_cell(value: Any) -> str:
     text = str(value) if value is not None else ""
     text = text.replace("\r\n", " ").replace("\n", " ").replace("\r", " ")
     return text.replace("|", r"\|")
+
+
+class _SafeCsvWriter:
+    """csv.writer wrapper that neutralises formula-like text cells (v0.4.0 security fix)."""
+
+    def __init__(self, writer: Any) -> None:
+        self._writer = writer
+
+    def writerow(self, row: list[Any]) -> Any:
+        return self._writer.writerow([csv_safe(cell) for cell in row])
 
 
 class ReportGenerator:
@@ -47,7 +57,7 @@ class ReportGenerator:
     ) -> str:
         """Serialize an EvaluationResult or ComparisonResult to CSV format."""
         buf = io.StringIO()
-        writer = csv.writer(buf)
+        writer = _SafeCsvWriter(csv.writer(buf))
 
         if isinstance(result, ComparisonResult):
             headers = [
@@ -367,12 +377,42 @@ class ReportGenerator:
             for warn in result.warnings:
                 lines.append(f"- **Warning**: {redact_sensitive_data(warn)}")
 
+        if result.statistics:
+            lines.extend(ReportGenerator._statistics_markdown(result.statistics))
+
         lines.extend(["", "## Limitations", ""])
         for lim in result.limitations:
             lines.append(f"- {lim}")
 
         lines.extend(["", ReportGenerator.format_reproducibility_card_markdown(result), ""])
         return "\n".join(lines)
+
+    @staticmethod
+    def _statistics_markdown(stats: dict[str, Any]) -> list[str]:
+        """v0.4.0 optional statistics section (only when `--confidence-intervals` was used)."""
+        level = f"{round(float(stats.get('confidence_level', 0.95)) * 100, 3):g}%"
+        lines = [
+            "",
+            "## Confidence Intervals (v0.4.0, opt-in)",
+            "",
+            f"Percentile bootstrap over items; {stats.get('resamples')} resamples; analysis seed "
+            f"{stats.get('analysis_seed')}. Intervals are not adjusted for multiple comparisons.",
+            "",
+            f"| Metric | Headline (missing = 0) | {level} CI | n | Evaluated only | {level} CI | n |",
+            "| :--- | ---: | :---: | ---: | ---: | :---: | ---: |",
+        ]
+
+        def _f(v: Any) -> str:
+            return "n/a" if v is None else f"{float(v):.4f}"
+
+        for name, block in stats.get("metrics", {}).items():
+            h, e = block.get("headline", {}), block.get("evaluated_only", {})
+            lines.append(
+                f"| `{escape_markdown_cell(name)}` | {_f(h.get('estimate'))} | [{_f(h.get('lower'))}, {_f(h.get('upper'))}] | "
+                f"{h.get('sample_count')} | {_f(e.get('estimate'))} | [{_f(e.get('lower'))}, {_f(e.get('upper'))}] | {e.get('sample_count')} |"
+            )
+        lines.extend(["", f"_{stats.get('interpretation', '')}_"])
+        return lines
 
     @staticmethod
     def comparison_to_markdown(comparison: ComparisonResult) -> str:

@@ -167,9 +167,9 @@ def test_audit_never_modifies_files_and_is_deterministic(tmp_path):
     one = _audit(path)
     two = _audit(path)
     assert snapshot(tmp_path) == before
-    for r in (one, two):
-        r.pop("audited_at")
-    assert one == two
+    from _v040_helpers import strip_volatile
+
+    assert strip_volatile(one) == strip_volatile(two)
 
 
 def test_review_notes_only_apply_to_matching_content(tmp_path):

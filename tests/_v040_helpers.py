@@ -89,7 +89,7 @@ def save_report(result, path: Path) -> Path:
 
 def strip_volatile(payload: Any) -> Any:
     """Remove fields that legitimately differ between equivalent analyses."""
-    volatile = {"created_at", "source_paths", "input_sha256", "evaluation_ids", "input_digest_sha256", "analysis_id"}
+    volatile = {"created_at", "source_paths", "input_sha256", "evaluation_ids", "input_digest_sha256", "analysis_id", "provenance", "audited_at"}
     if isinstance(payload, dict):
         return {k: strip_volatile(v) for k, v in payload.items() if k not in volatile}
     if isinstance(payload, list):
