@@ -35,6 +35,7 @@ from openbench.execution import ExecutionConfig, RetryPolicy
 from openbench.experiments import ExperimentManager
 from openbench.history import ResultHistoryStore
 from openbench.reporting import ReportGenerator
+from openbench.security import sanitize_error_message
 
 
 def _slugify(value: str) -> str:
@@ -1640,13 +1641,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.command == "preferences":
             return _handle_preferences(args)
     except FileNotFoundError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
+        print(f"Error: {sanitize_error_message(str(exc))}", file=sys.stderr)
         return 1
     except OpenBenchError as exc:
-        print(f"Validation/Evaluation Error: {exc}", file=sys.stderr)
+        print(f"Validation/Evaluation Error: {sanitize_error_message(str(exc))}", file=sys.stderr)
         return 1
     except Exception as exc:  # pragma: no cover
-        print(f"Unexpected Error: {exc}", file=sys.stderr)
+        # v0.4.0: messages are scrubbed of embedded credentials before printing.
+        print(f"Unexpected Error: {sanitize_error_message(str(exc))}", file=sys.stderr)
         return 1
 
     return 0

@@ -37,6 +37,7 @@ from openbench.itemscores import (
     metric_version_of,
 )
 from openbench.provenance import arm_inputs, provenance_block
+from openbench.reporting_v040 import fmt
 from openbench.security import redact_sensitive_data
 from openbench.stats import (
     EquivalenceResult,
@@ -87,10 +88,6 @@ LIMITATIONS = (
     "Continuous-metric equivalence testing is disabled in v0.4.0 (descriptive values only).",
     "Category and difficulty breakdowns are descriptive unless stratum tests are requested.",
 )
-
-
-def _fmt(value: float | None, digits: int = 4) -> str:
-    return "n/a" if value is None else f"{value:.{digits}f}"
 
 
 def _sha256_text(text: str) -> str:
@@ -171,7 +168,7 @@ class ComparisonArm:
             raise OpenBenchError(f"Evaluation file {target} must contain a JSON object")
         try:
             ev = EvaluationResult.from_dict(payload)
-        except (KeyError, TypeError, ValueError) as exc:
+        except (KeyError, TypeError, ValueError, AttributeError) as exc:
             raise OpenBenchError(f"Invalid evaluation file {target}: {exc}") from exc
         return cls(
             arm_id=arm_id or target.stem,
@@ -1015,15 +1012,15 @@ class PairedComparisonEngine:
         if adj is None:
             return (
                 f"No test of no difference is available ({comp['unavailable'].get('p_value', 'n/a')}). "
-                f"{level} CI [{_fmt(ci.get('lower'))}, {_fmt(ci.get('upper'))}]."
+                f"{level} CI [{fmt(ci.get('lower'))}, {fmt(ci.get('upper'))}]."
             )
         if adj <= policy.alpha:
             return (
-                f"Statistically significant difference (adjusted p = {_fmt(adj)}; "
-                f"{policy.correction} correction). {level} CI [{_fmt(ci.get('lower'))}, {_fmt(ci.get('upper'))}]."
+                f"Statistically significant difference (adjusted p = {fmt(adj)}; "
+                f"{policy.correction} correction). {level} CI [{fmt(ci.get('lower'))}, {fmt(ci.get('upper'))}]."
             )
         return NOT_SIGNIFICANT_TEMPLATE.format(
-            p=_fmt(adj), level=level, lo=_fmt(ci.get("lower")), hi=_fmt(ci.get("upper"))
+            p=fmt(adj), level=level, lo=fmt(ci.get("lower")), hi=fmt(ci.get("upper"))
         )
 
 

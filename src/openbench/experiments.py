@@ -728,7 +728,10 @@ class ExperimentManager:
             raise OpenBenchError(f"Malformed evaluation.json in {run_dir}: {exc.msg}") from exc
         if not isinstance(payload, dict):
             raise OpenBenchError(f"Malformed evaluation.json in {run_dir}: expected an object")
-        return EvaluationResult.from_dict(payload)
+        try:
+            return EvaluationResult.from_dict(payload)
+        except (KeyError, TypeError, ValueError, AttributeError) as exc:
+            raise OpenBenchError(f"Malformed evaluation.json in {run_dir}: {type(exc).__name__}: {exc}") from exc
 
     # ------------------------------------------------------------------
     # Repeat groups (v0.4.0)

@@ -17,6 +17,7 @@ It is **not** semantic duplicate detection, and a high score is not proof of dup
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import unicodedata
@@ -279,7 +280,7 @@ class DatasetAuditor:
                 findings.append(AuditFinding("DQ012", "error", f"{path.name} exceeds the {MAX_FILE_BYTES}-byte audit limit and was not parsed.", details={"file": str(path)}, remediation="Split the file."))
                 continue
             raw_bytes = path.read_bytes()
-            file_info.append({"path": str(path), "sha256": __import__("hashlib").sha256(raw_bytes).hexdigest()})
+            file_info.append({"path": str(path), "sha256": hashlib.sha256(raw_bytes).hexdigest()})
             try:
                 text = raw_bytes.decode("utf-8")
             except UnicodeDecodeError as exc:

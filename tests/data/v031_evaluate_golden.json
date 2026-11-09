@@ -1,0 +1,38 @@
+{
+  "command": [
+    "evaluate",
+    "--dataset",
+    "datasets/reasoning/sample.jsonl",
+    "--responses",
+    "examples/sample_responses.json",
+    "--metrics",
+    "accuracy",
+    "bleu",
+    "exact_match",
+    "f1",
+    "keyword_coverage",
+    "lexical_similarity",
+    "precision",
+    "recall",
+    "rouge_1",
+    "rouge_l",
+    "structured_output"
+  ],
+  "generated_with": "OpenBench AI v0.3.1, commit 8d3295abbabeff4a0c20052a1bbb70fed48c424e",
+  "masked_fields": "JSON: every evaluation_id, evaluation_timestamp and project_version key (recursively); Markdown: Evaluation ID, Evaluation Timestamp and OpenBench AI Version lines",
+  "json_sha256": "873b506830c0311c74891fc86b643287a8192ac8e9756cbe8ba6786477a397be",
+  "markdown_sha256": "d3f3af10536e19b844aea7ee3450a715240b9489f1b2da53d35a6002f0674aa3",
+  "aggregate_scores": {
+    "accuracy": 1.0,
+    "bleu": 0.958333,
+    "exact_match": 0.95,
+    "f1": 0.964286,
+    "keyword_coverage": 0.95,
+    "lexical_similarity": 0.967928,
+    "precision": 0.958333,
+    "recall": 1.0,
+    "rouge_1": 0.964286,
+    "rouge_l": 0.964286,
+    "structured_output": 0.65
+  }
+}

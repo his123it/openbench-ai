@@ -150,11 +150,12 @@ class ResponseCache:
     def _ensure_loaded(self) -> dict[str, CacheRecord]:
         if self._memory_map is not None:
             return self._memory_map
-        self._memory_map = {}
         if not self._index_path.exists():
+            self._memory_map = {}
             return self._memory_map
+        loaded: dict[str, CacheRecord] = {}
 
-        for line in self._index_path.read_text(encoding="utf-8").splitlines():
+        for line_no, line in enumerate(self._index_path.read_text(encoding="utf-8").splitlines(), start=1):
             stripped = line.strip()
             if not stripped:
                 continue
@@ -162,7 +163,24 @@ class ResponseCache:
                 data = json.loads(stripped)
             except json.JSONDecodeError as exc:
                 raise OpenBenchError(f"Corrupted cache file {self._index_path}: {exc.msg}") from exc
-            rec = CacheRecord(
+            try:
+                rec = self._record_from_dict(data)
+            except (KeyError, TypeError, ValueError, AttributeError) as exc:
+                raise OpenBenchError(
+                    f"Corrupted cache file {self._index_path}: line {line_no} is not a valid cache "
+                    f"entry ({type(exc).__name__}: {exc}). Clear the cache with 'openbench cache clear'."
+                ) from exc
+            loaded[rec.cache_key] = rec
+        # Assigned only after a complete, valid load, so a corrupted file never leaves a
+        # silently truncated in-memory cache behind (v0.4.0).
+        self._memory_map = loaded
+        return self._memory_map
+
+    @staticmethod
+    def _record_from_dict(data: dict[str, Any]) -> CacheRecord:
+        if not isinstance(data, dict):
+            raise TypeError("entry is not a JSON object")
+        return CacheRecord(
                 cache_key=str(data["cache_key"]),
                 provider_name=str(data["provider_name"]),
                 model_name=str(data["model_name"]),
@@ -179,8 +197,6 @@ class ResponseCache:
                 repeat_group_id=data.get("repeat_group_id"),
                 repetition_index=data.get("repetition_index"),
             )
-            self._memory_map[rec.cache_key] = rec
-        return self._memory_map
 
     def get(
         self,
@@ -273,9 +289,15 @@ class ResponseCache:
         return rec
 
     def clear(self) -> int:
-        """Delete all cached entries on disk and in memory, returning the number of cleared entries."""
-        store = self._ensure_loaded()
-        count = len(store)
+        """Delete all cached entries on disk and in memory, returning the number of cleared entries.
+
+        A corrupted cache file can still be cleared (v0.4.0); the count is then the number of
+        non-empty lines.
+        """
+        try:
+            count = len(self._ensure_loaded())
+        except OpenBenchError:
+            count = sum(1 for line in self._index_path.read_text(encoding="utf-8", errors="replace").splitlines() if line.strip())
         self._memory_map = {}
         if self._index_path.exists():
             self._index_path.unlink()
