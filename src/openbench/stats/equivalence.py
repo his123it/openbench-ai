@@ -369,7 +369,9 @@ def _supremum(
         return _mixture_cdf(n, psi, pi, thresholds)
 
     def cell_bound(t1: float, t2: float, f_mid: float) -> float:
-        bound0 = _cell_enclosure(n, delta0, t1, t2, thresholds) + allowance
+        # f is a probability, so 1 is always an exact upper bound; capping lets the search
+        # stop when the supremum is 1 instead of refining to the cap.
+        bound0 = min(1.0, _cell_enclosure(n, delta0, t1, t2, thresholds) + allowance)
         h = t2 - t1
         if n == 0 or h > TAYLOR_MAX_WIDTH:
             return bound0

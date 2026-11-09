@@ -245,3 +245,12 @@ def test_u4_sign_flip_exact_limit_is_20() -> None:
         sign_flip_test(twenty + [0.123], permutations=99).permutation_distribution
         == "monte_carlo"
     )
+
+
+def test_supremum_of_one_terminates_without_refinement_limit() -> None:
+    """When every outcome is as extreme as the observed one the supremum is exactly 1;
+    cell bounds are capped at 1 (a valid bound for a probability), so the search stops."""
+    result = binary_exact_p_upper(60, 0, 60, 0.1)
+    assert result.p_value == 1.0
+    assert not result.refinement_limit_reached
+    assert result.refinements < 100
