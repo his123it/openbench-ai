@@ -60,3 +60,29 @@ openbench evaluate   --config configs/reasoning.yaml   --responses examples/samp
 ```
 
 Built-in profiles are provided in `configs/reasoning.yaml`, `configs/coding.yaml`, and `configs/instruction_following.yaml`.
+
+## Repetitions and seeds in profiles (v0.4.0)
+
+- `options.repeat_count: N` with N ≥ 2 creates a **repeat group** of N runs. `openbench run --repetitions` overrides it. N = 1 is a single run.
+- `generation.seed` is the **generation base seed**: repetition *i* uses `seed + i` (`openbench run --seed` overrides it). v0.3.1 used the same seed for every repetition.
+- Each repetition has its own cache context, so repetitions never share cached responses. `execution.use_cache: false` and `--no-cache` disable the cache as before.
+- Only adapters that place the seed in the provider request (currently Ollama) report `seed_status: passed_to_provider`. A seed does not guarantee deterministic output.
+
+Example (`configs/repeated_seeded_mock.yaml`):
+
+```yaml
+name: repeated-seeded-mock
+dataset:
+  path: datasets/reasoning/sample.jsonl
+provider:
+  name: mock
+  model: mock-repeated-seeded
+generation:
+  temperature: 0.7
+  seed: 100
+metrics: [exact_match, keyword_coverage]
+options:
+  repeat_count: 3
+```
+
+See [repeated_runs.md](repeated_runs.md).

@@ -13,7 +13,7 @@ ALLOWED_EXECUTION_ORIGINS = {
     "external_responses_evaluated",
     "manually_imported",
 }
-SUPPORTED_PROVENANCE_SCHEMA_VERSIONS = {"0.3.0"}
+SUPPORTED_PROVENANCE_SCHEMA_VERSIONS = {"0.3.0", "0.4.0"}
 
 
 def compute_file_sha256(file_path: str | Path) -> str:
@@ -83,6 +83,44 @@ class RunIntegrityVerifier:
         "reproducibility.json",
         "logs.jsonl",
     )
+
+    @staticmethod
+    def _check_lineage(target: Path, repro_data: dict[str, Any]) -> list[str]:
+        """v0.4.0 runs: cross-check the lineage block between config.json and reproducibility.json."""
+        from openbench.lineage import LINEAGE_CROSS_CHECK_FIELDS
+
+        problems: list[str] = []
+        repro_lineage = repro_data.get("lineage")
+        if not isinstance(repro_lineage, dict):
+            return ["reproducibility.json (schema 0.4.0) has no lineage block"]
+        cfg_path = target / "config.json"
+        if not cfg_path.exists():
+            return problems
+        cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+        cfg_lineage = cfg.get("lineage") if isinstance(cfg, dict) else None
+        if not isinstance(cfg_lineage, dict):
+            return ["config.json has no lineage block although reproducibility.json is schema 0.4.0"]
+        for key in LINEAGE_CROSS_CHECK_FIELDS:
+            if cfg_lineage.get(key) != repro_lineage.get(key):
+                problems.append(
+                    f"Lineage field '{key}' differs between config.json and reproducibility.json"
+                )
+        ids = cfg_lineage.get("selected_record_ids")
+        hashes = cfg_lineage.get("record_content_sha256")
+        if isinstance(ids, list) and isinstance(hashes, dict) and sorted(hashes) != sorted(ids):
+            problems.append("Lineage record_content_sha256 keys differ from selected_record_ids")
+        model_meta_path = target / "model_metadata.json"
+        if model_meta_path.exists():
+            meta = json.loads(model_meta_path.read_text(encoding="utf-8"))
+            if isinstance(meta, dict) and "repeat_group_id" in meta:
+                if meta.get("repeat_group_id") != repro_lineage.get("repeat_group_id") or meta.get(
+                    "repetition_index"
+                ) != repro_lineage.get("repetition_index"):
+                    problems.append(
+                        "Repeat-group identity differs between model_metadata.json and "
+                        "reproducibility.json"
+                    )
+        return problems
 
     @staticmethod
     def verify_run_directory(run_dir: str | Path) -> IntegrityCheckResult:
@@ -185,6 +223,10 @@ class RunIntegrityVerifier:
                         f"Dataset checksum mismatch between evaluation.json ('{eval_ds_checksum}') "
                         f"and reproducibility.json ('{repro_ds_checksum}')"
                     )
+            if schema_version == "0.4.0":
+                inconsistent_metadata.extend(
+                    RunIntegrityVerifier._check_lineage(target, repro_data)
+                )
         except json.JSONDecodeError as exc:
             inconsistent_metadata.append(f"Malformed JSON in run artifact: {exc.msg}")
 

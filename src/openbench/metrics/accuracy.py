@@ -30,6 +30,7 @@ class AccuracyMetric(BaseMetric):
 
     name = "accuracy"
     version = "0.1.0"
+    score_kind = "binary"
     description = (
         "Calculates the proportion of evaluation items answered correctly according "
         "to a deterministic correctness rule (default: exact match or bounded answer containment)."

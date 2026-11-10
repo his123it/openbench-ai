@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import random
 import time
 
 from openbench.adapters.base import BaseModelAdapter, GenerationConfig, ProviderHealthStatus
@@ -39,18 +41,30 @@ class MockModelProvider(BaseModelAdapter):
         report_tokens: bool = True,
         generation_config: GenerationConfig | None = None,
         timeout_seconds: float = 30.0,
+        stochastic_error_rate: float = 0.0,
+        stochastic_seed: int = 0,
     ) -> None:
+        if not 0.0 <= float(stochastic_error_rate) <= 1.0:
+            raise ValueError("stochastic_error_rate must lie in [0, 1]")
+        inference: dict[str, object] = {
+            "is_mock": True,
+            "use_expected_answer": use_expected_answer,
+            "simulated_latency_ms": simulated_latency_ms,
+        }
+        if stochastic_error_rate > 0.0:
+            # Only recorded when the stochastic mode is used, so v0.3.1 mock configurations
+            # (and their cache keys) are unchanged.
+            inference["stochastic_error_rate"] = float(stochastic_error_rate)
+            inference["stochastic_seed"] = int(stochastic_seed)
         super().__init__(
             model_name=model_name,
             model_version=model_version,
             generation_config=generation_config,
             timeout_seconds=timeout_seconds,
-            inference_config={
-                "is_mock": True,
-                "use_expected_answer": use_expected_answer,
-                "simulated_latency_ms": simulated_latency_ms,
-            },
+            inference_config=inference,
         )
+        self.stochastic_error_rate = float(stochastic_error_rate)
+        self.stochastic_seed = int(stochastic_seed)
         self.response_map = dict(response_map or {})
         self.use_expected_answer = use_expected_answer
         self.simulated_latency_ms = float(simulated_latency_ms)
@@ -83,6 +97,15 @@ class MockModelProvider(BaseModelAdapter):
             text = record.expected_answer
         else:
             text = f"mock_response_for_{record.id}"
+
+        if self.stochastic_error_rate > 0.0:
+            # Seeded stochastic mode (v0.4.0): each call is an independent, reproducible draw
+            # keyed by (stochastic_seed, record ID, call number), so repeated generations of the
+            # same record can differ. Simulates generation variability; not a real model.
+            key = f"{self.stochastic_seed}|{record.id}|{self.call_counts[record.id]}"
+            draw = random.Random(int.from_bytes(hashlib.sha256(key.encode()).digest()[:8], "big"))
+            if draw.random() < self.stochastic_error_rate:
+                text = f"mock_stochastic_error_{record.id}_{self.call_counts[record.id]}"
 
         token_usage: dict[str, int] | None = None
         if self.report_tokens:

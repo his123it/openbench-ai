@@ -73,6 +73,7 @@ class StructuredOutputMetric(BaseMetric):
 
     name = "structured_output"
     version = "0.3.1"
+    score_kind = "bounded_continuous"
     description = (
         "Validates JSON parsing, expected/required keys, field types, and optional "
         "JSON Schema compliance while reporting structural validity separately from value correctness."

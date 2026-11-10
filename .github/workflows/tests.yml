@@ -10,6 +10,24 @@ permissions:
   contents: read
 
 jobs:
+  lint:
+    name: Lint & syntax warnings (Python 3.12)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install ruff
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "ruff>=0.4.0,<1.0.0"
+      - name: Ruff
+        run: ruff check src tests examples scripts
+      - name: Compile with SyntaxWarning as error
+        run: python -W error::SyntaxWarning -m compileall -f -q src tests examples scripts
+
   test-core-only:
     name: Core-Only Install & Smoke (Python 3.11)
     runs-on: ubuntu-latest
@@ -27,6 +45,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e .
+          python -c "import importlib.util as u; assert u.find_spec('numpy') is None and u.find_spec('yaml') is None"
 
       - name: Verify core CLI, dataset validation, evaluation, and JSON reporting
         run: |
@@ -34,7 +53,15 @@ jobs:
           openbench --help
           openbench validate-dataset datasets/reasoning/sample.jsonl
           openbench evaluate             --dataset datasets/reasoning/sample.jsonl             --responses examples/sample_responses.json             --metrics exact_match accuracy keyword_coverage             --output results/core_only/
-          python -c "import json, pathlib; p = pathlib.Path('results/core_only/alphabaseline-7b.json'); data = json.loads(p.read_text()); assert data['project_version'] == '0.3.1'"
+          python -c "import json, pathlib; p = pathlib.Path('results/core_only/alphabaseline-7b.json'); data = json.loads(p.read_text()); assert data['project_version'] == '0.4.0'"
+
+      - name: Verify v0.4.0 features without optional dependencies
+        run: |
+          openbench validate-dataset datasets/ --quality-checks --output results/core_only/audit.json
+          openbench run --dataset datasets/reasoning/sample.jsonl --provider mock --model core-a --repetitions 2 --seed 1 --experiments-dir results/core_exp --no-cache
+          openbench run --dataset datasets/reasoning/sample.jsonl --provider mock --model core-b --experiments-dir results/core_exp --no-cache
+          openbench runs list --experiments-dir results/core_exp
+          python examples/v040_workflow.py results/core_only/workflow
 
   test-matrix:
     name: Pytest & CLI Smoke (Python ${{ matrix.python-version }})
@@ -72,6 +99,82 @@ jobs:
           openbench providers list
           openbench providers check mock
           openbench run --config configs/mock_experiment.yaml --experiments-dir results/ci_experiments --cache-dir results/ci_cache
+          openbench run --config configs/repeated_seeded_mock.yaml --experiments-dir results/ci_experiments --cache-dir results/ci_cache
           openbench runs list --experiments-dir results/ci_experiments
+          openbench validate-dataset datasets/ --quality-checks --format markdown --output results/ci_audit.md
           openbench cache stats --cache-dir results/ci_cache
           openbench cache clear --cache-dir results/ci_cache
+
+  test-twice:
+    name: Full suite twice on a clean checkout (Python 3.12)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev,config,metrics]"
+      - name: First run
+        run: pytest -W error::SyntaxWarning -q -p no:cacheprovider
+      - name: Second run
+        run: pytest -W error::SyntaxWarning -q -p no:cacheprovider
+
+  stats-ref:
+    name: Statistical reference & calibration checks (Python 3.12)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install package plus reference-only libraries (not runtime dependencies)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev,config,metrics,stats-ref]"
+
+      - name: Run statistical tests, reference cross-checks and exact binary calibration
+        env:
+          OPENBENCH_RUN_SLOW: "1"
+        run: pytest -W error::SyntaxWarning -v tests/test_stats_tests.py tests/test_stats_bootstrap_effects_rng.py tests/test_stats_equivalence.py tests/test_stats_audit_fixes.py tests/test_stats_postfix_fixes.py tests/test_stats_numeric.py tests/test_score_kind.py tests/test_variability.py tests/test_paired_engine.py tests/test_preferences.py tests/reference
+
+  build:
+    name: Build sdist & wheel, install from the wheel (Python 3.12)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build --outdir dist .
+      - name: Check wheel contents and metadata
+        run: |
+          python - <<'PY'
+          import glob, zipfile
+          wheel = glob.glob("dist/*.whl")[0]
+          names = zipfile.ZipFile(wheel).namelist()
+          for required in ("openbench/quality_notes.json", "openbench/py.typed", "openbench/stats/variability.py", "openbench/paired.py", "openbench/preferences.py", "openbench/quality.py"):
+              assert required in names, required
+          meta = zipfile.ZipFile(wheel).read([n for n in names if n.endswith("METADATA")][0]).decode()
+          assert "Version: 0.4.0" in meta
+          assert all("extra ==" in line for line in meta.splitlines() if line.startswith("Requires-Dist"))
+          print(wheel, "ok")
+          PY
+      - name: Install the wheel in a fresh environment and smoke-test
+        run: |
+          python -m venv /tmp/wheelenv
+          /tmp/wheelenv/bin/python -m pip install dist/*.whl
+          /tmp/wheelenv/bin/openbench --version
+          /tmp/wheelenv/bin/openbench validate-dataset datasets/ --quality-checks
+          /tmp/wheelenv/bin/python -c "import openbench.quality as q; print(len(q.load_review_notes()))"

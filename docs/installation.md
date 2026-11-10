@@ -1,6 +1,6 @@
 # Installation Guide
 
-OpenBench AI requires **Python 3.10 or newer** (tested across Python 3.10, 3.11, 3.12, and 3.13) and requires zero third-party runtime dependencies for its core library and CLI.
+OpenBench AI requires **Python 3.10 or newer** (the test suite is run on Python 3.10, 3.11, 3.12 and 3.13 on Linux) and requires zero third-party runtime dependencies for its core library and CLI.
 
 ## 1. Local Editable Installation (Recommended for Development)
 
@@ -27,13 +27,27 @@ python -m pip install -e .
 
 ```bash
 openbench --version
-# Expected output: openbench 0.3.1
+# Expected output: openbench 0.4.0
 
 python -c "import openbench; print(openbench.__version__)"
-# Expected output: 0.3.1
+# Expected output: 0.4.0
 ```
 
-## 4. Offline / Air-Gapped Environment Installation
+## 4. Optional Extras
+
+| Extra | Installs | Used for |
+| --- | --- | --- |
+| `dev` | pytest, ruff, PyYAML, jsonschema | Tests, linting, YAML profiles, JSON Schema checks |
+| `config` | PyYAML | YAML profiles |
+| `metrics` | jsonschema | `structured_output` JSON Schema validation |
+| `semantic` | sentence-transformers | Neural `semantic_similarity` |
+| `huggingface` | transformers, torch | The experimental Hugging Face adapter |
+| `stats-ref` | numpy, scipy, statsmodels | **Tests only**: the statistical reference cross-checks in `tests/reference`. The library never imports them. |
+| `all` | All runtime integrations above | |
+
+All v0.4.0 features (statistics, repeated runs, paired comparison, preferences, audits, reports) need no extra.
+
+## 5. Offline / Air-Gapped Environment Installation
 
 ```bash
 python -m pip install --no-build-isolation --no-deps -e .

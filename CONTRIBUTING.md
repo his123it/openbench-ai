@@ -47,7 +47,19 @@ ruff check src tests examples scripts
 
 # 3. Validate all JSONL datasets and reference-answer self-consistency
 python scripts/validate_datasets.py
+
+# 4. Optional: statistical reference cross-checks (NumPy/SciPy/statsmodels, tests only)
+python -m pip install -e ".[dev,stats-ref]"
+OPENBENCH_RUN_SLOW=1 pytest tests/reference tests/test_stats_*.py
+
+# 5. Regenerate the CLI and API reference after changing commands or public names
+python scripts/generate_reference_docs.py
 ```
+
+Statistical changes must keep the documented assumptions and exact or approximate labels in
+`docs/statistical_methodology.md` accurate. Never describe a non-significant difference as
+equivalence. Dataset records must not be changed silently: the quality audit and the
+dataset digest tests will fail, and any correction needs its own documented review.
 
 ---
 

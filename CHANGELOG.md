@@ -4,6 +4,68 @@ All notable changes to **OpenBench AI** are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-11-10
+
+### Added
+- **Statistical primitives** (`openbench.stats`; standard library only):
+  - percentile bootstrap CIs (paired and stratified);
+  - the exact McNemar test;
+  - a paired sign-flip permutation test (exact enumeration up to 20 non-zero differences, Monte Carlo above that, with validity labels);
+  - Holm and Benjamini-Hochberg corrections;
+  - effect sizes and practical-importance classification;
+  - TOST equivalence: an exact unconditional score test for binary metrics, with a conservative floating-point allowance and computation up to n = 500; the continuous bootstrap-t is descriptive only in v0.4.0;
+  - per-procedure seeded random streams;
+  - `score_kind` declarations on metrics.
+- **Repeated-run benchmarking**:
+  - `run --repetitions/--seed/--experiment-id/--parent-experiment-id`;
+  - repeat groups (`grp_<id>`) with per-run lineage (`schema_version` 0.4.0) and a rebuildable group index;
+  - generation-seed status;
+  - group resume and verification (`runs show/verify/resume grp_...`, `runs list --group`);
+  - `stats.decompose_variability`, which reports generation variability, item variation and failures separately.
+- **Paired model comparison** (`openbench analyze`, `openbench.paired`):
+  - stable record-ID alignment and explicit missing-data policies;
+  - CIs, McNemar or sign-flip tests, multiplicity families and effect sizes;
+  - wins, losses, ties and disagreements;
+  - category and difficulty breakdowns, coverage, failure-rate comparisons and equivalence families;
+  - compatibility checks with an exploratory mode;
+  - no provider calls.
+- **Human preference evaluation** (`openbench preferences create|validate|analyze`, `openbench.preferences`):
+  - blind task files with a separate identity key, seed-reproducible order and a leakage audit;
+  - validated JSONL/CSV import;
+  - task-weighted win rates with task-clustered CIs, tie and neither rates, and position bias;
+  - Cohen's and Fleiss' kappa in display and model space;
+  - optional Elo with stated limitations.
+- **Quality audits** (`validate-dataset --quality-checks`, `runs verify --quality-checks`, `openbench.quality`): read-only dataset checks DQ001–DQ014, including a lexical near-duplicate heuristic and content-hash-keyed review notes, and experiment checks EQ001–EQ012. The built-in datasets give 0 errors, 6 warnings and 8 info.
+- **Reports**: JSON, Markdown and CSV renderers for every new analysis, with provenance blocks; `evaluate --confidence-intervals` adds an optional statistics block.
+- `MockModelProvider(stochastic_error_rate, stochastic_seed)` for simulating generation variability.
+- **Documentation**: guides for repeated runs, model comparison, human preferences, quality audits and reproducibility; generated CLI and API references; the migration guide; examples.
+- **CI**: a lint job, a twice-run job, a build and install job, and an extended reference job.
+
+### Fixed
+- **Repeated runs reused cached responses across repetitions, understating variability.** Repetitions now never share cache entries, and resumed repetitions reuse only their own entries. Single-run cache keys are unchanged.
+- **`runs resume` / `ExperimentManager.resume_run` dropped settings.** It discarded ID filters, normalization, metric options and the generation seed, so a resumed `--ids-file` run could widen its item set. These are now restored.
+- **Cache file errors.** A malformed cache entry raised a raw `KeyError`, a failed cache load left a partially loaded cache in memory, and a corrupted cache could not be cleared with `cache clear`.
+- **Malformed evaluation files.** Type errors are reported as clear errors instead of unexpected exceptions.
+- **Stage 1 audit follow-ups.** Exported statistical helpers validate direct calls, an infinite equivalence margin is rejected, and `binary_paired_counts` rejects booleans.
+- **Results differed in the last bit between Python versions.** `statistics.stdev` is correctly rounded only from Python 3.12, and built-in `sum()` of floats changed in 3.12. Bootstrap standard errors, variability standard deviations and preference statistics now use correctly rounded arithmetic (`math.fsum` and an exact standard deviation), so v0.4.0 analysis output is identical on Python 3.10–3.13. On Python 3.10 and 3.11 a bootstrap standard error can change by one unit in the last place compared with the unreleased Stage 1 code.
+- **CLI output piped into a reader that closes early** (`openbench runs list | head`) printed "Unexpected Error: [Errno 32] Broken pipe". The CLI now exits quietly.
+
+### Security
+- CSV exports neutralise spreadsheet formula injection in text cells. This includes the existing evaluation and comparison CSV; numbers are unchanged.
+- CLI error messages are scrubbed of embedded credentials before printing.
+- Run and group IDs are validated, so they cannot resolve outside the experiments directory.
+- Imported annotations are treated as untrusted input: unknown fields, size limits, and no evaluation of imported text.
+
+### Changed
+- New runs write `reproducibility.json` `schema_version` "0.4.0"; the integrity verifier accepts "0.3.0" and "0.4.0".
+- Repetition *i* of a group uses generation seed `base + i` (v0.3.1 used the same seed for every repetition).
+- Version 0.4.0.
+
+### Compatibility
+- **Unchanged from v0.3.1:** all 19 commands with their flags, defaults and choices; all 70 public names (signatures only extended); the 200 dataset records; metric versions and scores; `evaluate` output without the new flags.
+- **v0.3.x run directories** are readable without modification.
+- **Migration:** see `V0_4_0_MIGRATION_GUIDE.md`.
+
 ## [0.3.1] - 2026-11-08
 
 ### Added

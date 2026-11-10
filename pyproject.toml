@@ -4,15 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openbench-ai"
-version = "0.3.1"
-description = "A modular, open-source LLM experiment execution, evaluation, and benchmarking platform."
+version = "0.4.0"
+description = "A modular, open-source LLM experiment execution, evaluation, statistical comparison, and benchmarking platform."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [
     { name = "Lakshay Chhaba" }
 ]
-keywords = ["llm", "evaluation", "benchmarking", "ai", "metrics", "reproducibility", "experiments"]
+keywords = ["llm", "evaluation", "benchmarking", "ai", "metrics", "reproducibility", "experiments", "statistics", "human-preference"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -52,6 +52,13 @@ metrics = [
 semantic = [
     "sentence-transformers>=2.2.0,<4.0.0",
 ]
+# Reference libraries for the statistical cross-check tests only (tests/reference).
+# OpenBench library code never imports them; they are not runtime dependencies.
+stats-ref = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "statsmodels>=0.14",
+]
 all = [
     "pytest>=7.4.0,<9.0.0",
     "ruff>=0.4.0,<1.0.0",
@@ -69,7 +76,7 @@ openbench = "openbench.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-openbench = ["py.typed"]
+openbench = ["py.typed", "quality_notes.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -45,6 +45,7 @@ from openbench.exceptions import (
     ConfigurationError,
     DatasetValidationError,
     EmptyDatasetError,
+    IncompatibleComparisonError,
     MetricError,
     OpenBenchError,
     ResponseValidationError,
@@ -56,7 +57,7 @@ from openbench.execution import (
     RetryPolicy,
     classify_execution_error,
 )
-from openbench.experiments import ExperimentManager, ExperimentRecord
+from openbench.experiments import ExperimentManager, ExperimentRecord, RepeatGroupResult
 from openbench.history import HistoryEntry, ResultHistoryStore
 from openbench.integrity import (
     IntegrityCheckResult,
@@ -64,7 +65,15 @@ from openbench.integrity import (
     compute_dict_sha256,
     compute_file_sha256,
 )
+from openbench.lineage import RunLineage
 from openbench.metrics import LexicalSimilarityMetric
+from openbench.paired import (
+    ComparisonArm,
+    ComparisonPolicy,
+    CompatibilityReport,
+    PairedComparisonEngine,
+    PairedComparisonResult,
+)
 from openbench.performance import (
     PerformanceMonitor,
     PerformanceReport,
@@ -72,6 +81,13 @@ from openbench.performance import (
     RequestTelemetry,
     compute_percentile,
 )
+from openbench.preferences import (
+    AnnotationImporter,
+    PreferenceAnalyzer,
+    PreferenceAnnotation,
+    PreferenceTaskBuilder,
+)
+from openbench.quality import AuditFinding, AuditReport, DatasetAuditor, ExperimentAuditor
 from openbench.reporting import ReportGenerator, escape_markdown_cell
 from openbench.security import (
     redact_prompt_if_private,
@@ -82,7 +98,7 @@ from openbench.security import (
     validate_safe_output_path,
 )
 
-__version__ = "0.3.1"
+__version__ = "0.4.0"
 
 __all__ = [
     "__version__",
@@ -155,4 +171,21 @@ __all__ = [
     "sanitize_error_message",
     "validate_endpoint_url",
     "validate_safe_output_path",
+    # v0.4.0 additions (the 70 v0.3.1 names above are unchanged and keep their order)
+    "ComparisonArm",
+    "ComparisonPolicy",
+    "CompatibilityReport",
+    "IncompatibleComparisonError",
+    "PairedComparisonEngine",
+    "PairedComparisonResult",
+    "RepeatGroupResult",
+    "RunLineage",
+    "AnnotationImporter",
+    "PreferenceAnalyzer",
+    "PreferenceAnnotation",
+    "PreferenceTaskBuilder",
+    "AuditFinding",
+    "AuditReport",
+    "DatasetAuditor",
+    "ExperimentAuditor",
 ]

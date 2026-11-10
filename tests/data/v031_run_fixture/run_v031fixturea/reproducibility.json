@@ -1,0 +1,45 @@
+{
+  "schema_version": "0.3.0",
+  "run_id": "run_v031fixturea",
+  "execution_origin": "provider_executed",
+  "created_at": "2026-11-09T23:19:51+00:00",
+  "started_at": "2026-11-09T23:19:51+00:00",
+  "completed_at": "2026-11-09T23:19:51+00:00",
+  "openbench_version": "0.3.1",
+  "environment_metadata": {
+    "python_version": "3.13.18",
+    "platform": "Linux 6.18.44-fc-v338",
+    "machine": "x86_64"
+  },
+  "dataset_identifier": "reasoning/sample",
+  "dataset_version": "0.2.0",
+  "dataset_checksum": "c448ee83e7968d981399f743daf2c3f1ab0820c95e0267e1aaf0ba85275fafc4",
+  "model_provider": "mock",
+  "model_name": "fixture-model-a",
+  "model_version": "0.3.0",
+  "is_mock_provider": true,
+  "metrics": [
+    {
+      "name": "exact_match",
+      "version": "0.1.0"
+    },
+    {
+      "name": "keyword_coverage",
+      "version": "0.1.0"
+    },
+    {
+      "name": "f1",
+      "version": "0.2.0"
+    }
+  ],
+  "evaluation_configuration_checksum": "e1d0413b48fd3a071d9b32afbffdee652253ed2c8de4dad194ffbc5c56593c21",
+  "generation_configuration_checksum": "d9b82e7dbdb5a1f74cc90a9e13dae8f0a2dc758e269b4b869563a9740ca34757",
+  "artifact_checksums": {
+    "config_sha256": "bd5768ffddbab9f0ca87fc4322952593c8ec3458af7afa7a8665474a8267efca",
+    "model_metadata_sha256": "7a02f0098d20099bc66ce425e0552ee309501f8ad69d59cfdd789022d476d1a1",
+    "responses_sha256": "cfbd55a484a20a3daa3d311a935caa5f04965d41faa7f2139399b676cd4a0c43",
+    "evaluation_sha256": "51ac7f39ddec7030f1dd6588b78df05ecf5e8f95ed660ed53d0bfd4232459caf",
+    "performance_sha256": "55215c6966ec2d5ae5ca4f02713224f8edfebb5f5f2e9501ada4bb9e3e0d2b12"
+  },
+  "integrity_disclaimer": "SHA-256 checksums verify file and configuration integrity on disk; they do NOT prove the factual truthfulness of a model result."
+}

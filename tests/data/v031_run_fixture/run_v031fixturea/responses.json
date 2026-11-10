@@ -1,0 +1,221 @@
+{
+  "model_name": "fixture-model-a",
+  "model_version": "0.3.0",
+  "model_provider": "mock",
+  "inference_config": {
+    "provider": "mock",
+    "model_name": "fixture-model-a",
+    "model_version": "0.3.0",
+    "experimental": false,
+    "is_mock": true,
+    "timeout_seconds": 30.0,
+    "temperature": 0.0,
+    "max_tokens": 256,
+    "top_p": 1.0,
+    "stream": false,
+    "use_expected_answer": true,
+    "simulated_latency_ms": 1.0
+  },
+  "responses": [
+    {
+      "id": "reasoning_001",
+      "response": "180",
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 6,
+        "completion_tokens": 1,
+        "total_tokens": 7
+      }
+    },
+    {
+      "id": "reasoning_002",
+      "response": "12",
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 16,
+        "completion_tokens": 1,
+        "total_tokens": 17
+      }
+    },
+    {
+      "id": "reasoning_003",
+      "response": "37",
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 14,
+        "completion_tokens": 1,
+        "total_tokens": 15
+      }
+    },
+    {
+      "id": "reasoning_004",
+      "response": "Yes",
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 22,
+        "completion_tokens": 1,
+        "total_tokens": 23
+      }
+    },
+    {
+      "id": "reasoning_005",
+      "response": "260",
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 22,
+        "completion_tokens": 1,
+        "total_tokens": 23
+      }
+    },
+    {
+      "id": "reasoning_006",
+      "response": "120",
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 19,
+        "completion_tokens": 1,
+        "total_tokens": 20
+      }
+    },
+    {
+      "id": "reasoning_007",
+      "response": "R2",
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 41,
+        "completion_tokens": 1,
+        "total_tokens": 42
+      }
+    },
+    {
+      "id": "reasoning_008",
+      "response": "7",
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 13,
+        "completion_tokens": 1,
+        "total_tokens": 14
+      }
+    },
+    {
+      "id": "reasoning_009",
+      "response": "60",
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 38,
+        "completion_tokens": 1,
+        "total_tokens": 39
+      }
+    },
+    {
+      "id": "reasoning_010",
+      "response": "4",
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 28,
+        "completion_tokens": 1,
+        "total_tokens": 29
+      }
+    },
+    {
+      "id": "reasoning_011",
+      "response": "84",
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 27,
+        "completion_tokens": 1,
+        "total_tokens": 28
+      }
+    },
+    {
+      "id": "reasoning_012",
+      "response": "1/2",
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 26,
+        "completion_tokens": 1,
+        "total_tokens": 27
+      }
+    },
+    {
+      "id": "reasoning_013",
+      "response": "No",
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 24,
+        "completion_tokens": 1,
+        "total_tokens": 25
+      }
+    },
+    {
+      "id": "reasoning_014",
+      "response": "T3",
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 36,
+        "completion_tokens": 1,
+        "total_tokens": 37
+      }
+    },
+    {
+      "id": "reasoning_015",
+      "response": "215",
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 19,
+        "completion_tokens": 1,
+        "total_tokens": 20
+      }
+    },
+    {
+      "id": "reasoning_016",
+      "response": "28",
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 22,
+        "completion_tokens": 1,
+        "total_tokens": 23
+      }
+    },
+    {
+      "id": "reasoning_017",
+      "response": "No",
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 29,
+        "completion_tokens": 1,
+        "total_tokens": 30
+      }
+    },
+    {
+      "id": "reasoning_018",
+      "response": "10",
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 34,
+        "completion_tokens": 1,
+        "total_tokens": 35
+      }
+    },
+    {
+      "id": "reasoning_019",
+      "response": "1",
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 33,
+        "completion_tokens": 1,
+        "total_tokens": 34
+      }
+    },
+    {
+      "id": "reasoning_020",
+      "response": "2",
+      "latency_ms": 1.0,
+      "token_usage": {
+        "prompt_tokens": 37,
+        "completion_tokens": 1,
+        "total_tokens": 38
+      }
+    }
+  ]
+}

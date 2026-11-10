@@ -38,4 +38,10 @@ If an execution run is interrupted or experiences partial provider failures (`st
 - Cached entries are keyed by the SHA-256 digest of `(provider_name, model_name, model_version, dataset_name, dataset_version, record_id, prompt_sha256, generation_config_sha256)`.
 - Responses are **never** reused across different models, model revisions, prompts, dataset versions, or generation parameters (such as a changed `temperature` or `seed`).
 - Disable caching at any time with `--no-cache` or `use_cache: false`, or clear the cache with `openbench cache clear`.
+- **v0.4.0:**
+  - Runs in a repeat group add `(repeat_group_id, repetition_index)` to the key. Repetitions and independent groups therefore never share cached responses, and a resumed repetition reuses only its own entries. Single-run keys are unchanged.
+  - A malformed cache file is reported with the offending line and can always be removed with `openbench cache clear`.
+  - The cache is safe for concurrent threads in one process. It is not safe for several processes writing at once.
+
+  See [repeated_runs.md](repeated_runs.md).
 - **Important**: In-flight duplicate protection prevents concurrent workers within the same run from dispatching duplicate requests for the same record ID, but OpenBench AI does not claim distributed exactly-once execution when an external HTTP provider times out mid-generation.

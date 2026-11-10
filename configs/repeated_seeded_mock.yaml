@@ -1,0 +1,30 @@
+name: repeated-seeded-mock
+description: v0.4.0 repeat group (3 repetitions, generation seeds 100, 101, 102) with the mock provider.
+
+dataset:
+  path: datasets/reasoning/sample.jsonl
+
+provider:
+  name: mock
+  model: mock-repeated-seeded
+  model_version: 0.4.0
+
+generation:
+  temperature: 0.7
+  max_tokens: 64
+  seed: 100
+
+execution:
+  timeout_seconds: 10.0
+  use_cache: true
+
+metrics:
+  - exact_match
+  - keyword_coverage
+
+options:
+  repeat_count: 3
+
+output_format:
+  - json
+  - markdown

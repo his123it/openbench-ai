@@ -20,6 +20,7 @@ class KeywordCoverageMetric(BaseMetric):
 
     name = "keyword_coverage"
     version = "0.1.0"
+    score_kind = "bounded_continuous"
     description = (
         "Calculates the percentage of expected keywords present in the model response. "
         "Accepts custom keyword lists via record.metadata['keywords'] or falls back "

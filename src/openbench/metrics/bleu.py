@@ -34,6 +34,7 @@ class BleuMetric(BaseMetric):
 
     name = "bleu"
     version = "0.2.0"
+    score_kind = "bounded_continuous"
     description = (
         "Computes smoothed sentence BLEU using clipped n-gram precisions (up to 4-grams) "
         "and the standard exponential brevity penalty."

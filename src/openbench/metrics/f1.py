@@ -19,6 +19,7 @@ class F1Metric(BaseMetric):
 
     name = "f1"
     version = "0.2.0"
+    score_kind = "bounded_continuous"
     description = (
         "Computes the harmonic mean of precision and recall for binary decisions "
         "and element-set predictions."

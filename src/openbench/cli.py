@@ -1,4 +1,4 @@
-"""Command-Line Interface for OpenBench AI (v0.3.0)."""
+"""Command-Line Interface for OpenBench AI (v0.3.0 commands preserved; v0.4.0 additions)."""
 
 from __future__ import annotations
 
@@ -35,6 +35,7 @@ from openbench.execution import ExecutionConfig, RetryPolicy
 from openbench.experiments import ExperimentManager
 from openbench.history import ResultHistoryStore
 from openbench.reporting import ReportGenerator
+from openbench.security import sanitize_error_message
 
 
 def _slugify(value: str) -> str:
@@ -68,6 +69,15 @@ def build_parser() -> argparse.ArgumentParser:
         type=str,
         help="Path to a JSONL dataset file or directory.",
     )
+    val_parser.add_argument(
+        "--quality-checks",
+        action="store_true",
+        help="v0.4.0: also run the read-only dataset quality audit (exit 1 only for error findings).",
+    )
+    val_parser.add_argument("--output", type=str, default=None, help="v0.4.0: write the audit report to this file.")
+    val_parser.add_argument("--format", choices=["json", "markdown", "csv"], default="json", help="v0.4.0: audit report format.")
+    val_parser.add_argument("--near-duplicate-threshold", type=float, default=0.85, help="v0.4.0: DQ003 Jaccard threshold.")
+    val_parser.add_argument("--metrics", nargs="+", default=None, help="v0.4.0: metric names to check (DQ008).")
 
     # 2. evaluate (v0.1.0 & v0.2.0 preserved)
     eval_parser = subparsers.add_parser(
@@ -129,6 +139,21 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         type=str,
         help="Output directory or file path (.json, .md, or .csv) for evaluation reports.",
+    )
+    eval_parser.add_argument(
+        "--confidence-intervals",
+        action="store_true",
+        help="v0.4.0: add a 'statistics' block with percentile bootstrap CIs over items "
+        "(output is unchanged without this flag).",
+    )
+    eval_parser.add_argument(
+        "--confidence-level", type=float, default=0.95, help="v0.4.0: CI level for --confidence-intervals (default 0.95)."
+    )
+    eval_parser.add_argument(
+        "--resamples", type=int, default=10_000, help="v0.4.0: bootstrap resamples for --confidence-intervals (default 10000)."
+    )
+    eval_parser.add_argument(
+        "--seed", type=int, default=0, help="v0.4.0: statistical analysis seed for --confidence-intervals (default 0)."
     )
 
     # 3. compare (v0.1.0 preserved)
@@ -299,6 +324,31 @@ def build_parser() -> argparse.ArgumentParser:
         type=str,
         help="Optional output directory to also write top-level .json/.md/.csv reports.",
     )
+    run_parser.add_argument(
+        "--repetitions",
+        type=int,
+        default=None,
+        help="v0.4.0: number of independent repetitions (>= 2 creates a repeat group; overrides "
+        "options.repeat_count).",
+    )
+    run_parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="v0.4.0: generation base seed (repetition i uses seed + i); overrides generation.seed.",
+    )
+    run_parser.add_argument(
+        "--experiment-id",
+        type=str,
+        default=None,
+        help="v0.4.0: optional experiment ID recorded in run lineage.",
+    )
+    run_parser.add_argument(
+        "--parent-experiment-id",
+        type=str,
+        default=None,
+        help="v0.4.0: optional parent experiment ID recorded in run lineage.",
+    )
 
     # 10. runs (v0.3.0 new: list, show, verify, resume, compare)
     runs_parser = subparsers.add_parser(
@@ -312,6 +362,9 @@ def build_parser() -> argparse.ArgumentParser:
     runs_list_p.add_argument("--status", type=str, default=None)
     runs_list_p.add_argument("--provider", type=str, default=None)
     runs_list_p.add_argument("--format", choices=["text", "json"], default="text")
+    runs_list_p.add_argument(
+        "--group", type=str, default=None, help="v0.4.0: list only the runs of this repeat group."
+    )
 
     runs_show_p = runs_subparsers.add_parser("show", help="Inspect a specific experiment run.")
     runs_show_p.add_argument("run_id", type=str)
@@ -325,6 +378,10 @@ def build_parser() -> argparse.ArgumentParser:
     runs_verify_p.add_argument("run_id", type=str)
     runs_verify_p.add_argument("--experiments-dir", type=str, default=None)
     runs_verify_p.add_argument("--format", choices=["text", "json"], default="text")
+    runs_verify_p.add_argument(
+        "--quality-checks", action="store_true", help="v0.4.0: also run the experiment quality audit (EQ checks)."
+    )
+    runs_verify_p.add_argument("--audit-output", type=str, default=None, help="v0.4.0: write the audit report (JSON) here.")
 
     runs_resume_p = runs_subparsers.add_parser(
         "resume",
@@ -371,6 +428,69 @@ def build_parser() -> argparse.ArgumentParser:
 
     cache_stats_p = cache_subparsers.add_parser("stats", help="Show cache entry count and location.")
     cache_stats_p.add_argument("--cache-dir", type=str, default=None)
+
+    # 13. analyze (v0.4.0 new: paired comparison / repeated-run variability of stored results)
+    ana_parser = subparsers.add_parser(
+        "analyze",
+        help="v0.4.0: statistically compare stored runs, repeat groups or evaluation files "
+        "(no provider calls), or analyse one repeat group's variability.",
+    )
+    ana_src = ana_parser.add_mutually_exclusive_group(required=True)
+    ana_src.add_argument("--runs", nargs="+", default=None, help="Run IDs (run_...) or repeat group IDs (grp_...).")
+    ana_src.add_argument("--results", nargs="+", default=None, help="Evaluation result JSON files.")
+    ana_parser.add_argument("--experiments-dir", type=str, default=None)
+    ana_parser.add_argument("--metrics", nargs="+", default=None)
+    ana_parser.add_argument("--baseline", type=str, default=None, help="Arm ID or model name of the baseline.")
+    ana_parser.add_argument("--ids-file", type=str, default=None, help="Restrict the analysis to these record IDs.")
+    ana_parser.add_argument("--confidence-level", type=float, default=0.95)
+    ana_parser.add_argument("--resamples", type=int, default=10_000)
+    ana_parser.add_argument("--permutations", type=int, default=9_999)
+    ana_parser.add_argument("--seed", type=int, default=0, help="Statistical analysis seed (default 0).")
+    ana_parser.add_argument("--missing-policy", choices=["complete_case", "missing_as_failure"], default="complete_case")
+    ana_parser.add_argument("--correction", choices=["holm", "bh", "none"], default="holm")
+    ana_parser.add_argument("--min-practical-difference", type=float, default=None)
+    ana_parser.add_argument("--equivalence-margin", type=float, default=None, help="Pre-specified TOST margin (metric units).")
+    ana_parser.add_argument("--alpha", type=float, default=0.05)
+    ana_parser.add_argument("--stratified-bootstrap", action="store_true")
+    ana_parser.add_argument("--stratum-tests", action="store_true")
+    ana_parser.add_argument("--exploratory", action="store_true", help="Descriptive-only comparison of incompatible inputs.")
+    ana_parser.add_argument("--exploratory-reason", type=str, default=None)
+    ana_parser.add_argument("--output", type=str, default=None)
+    ana_parser.add_argument("--format", choices=["json", "markdown", "csv"], default="json")
+
+    # 14. preferences (v0.4.0 new: create, validate, analyze)
+    pref_parser = subparsers.add_parser(
+        "preferences",
+        help="v0.4.0: local blinded pairwise human preference evaluation.",
+    )
+    pref_sub = pref_parser.add_subparsers(dest="preferences_action")
+    pc = pref_sub.add_parser("create", help="Create blind A/B tasks (tasks.jsonl) and a separate key file.")
+    pc_src = pc.add_mutually_exclusive_group(required=True)
+    pc_src.add_argument("--runs", nargs=2, default=None, metavar=("RUN_A", "RUN_B"))
+    pc_src.add_argument("--results", nargs=2, default=None, metavar=("EVAL_A", "EVAL_B"))
+    pc.add_argument("--experiments-dir", type=str, default=None)
+    pc.add_argument("--seed", type=int, default=0, help="Preference-order seed (default 0).")
+    pc.add_argument("--output", required=True, type=str, help="Output directory for tasks.jsonl.")
+    pc.add_argument("--key-output", type=str, default=None, help="Key file path (default OUTPUT/tasks.key.json).")
+    pc.add_argument("--rubric", type=str, default=None, help="JSON rubric file.")
+    pc.add_argument("--show-reference", action="store_true", help="Include reference answers in tasks.")
+    pc.add_argument("--csv", action="store_true", help="Also write tasks.csv.")
+    pc.add_argument("--overwrite", action="store_true", help="Allow overwriting existing task files.")
+    pv = pref_sub.add_parser("validate", help="Validate completed annotation files against a task key.")
+    pv.add_argument("--key", required=True, type=str)
+    pv.add_argument("--annotations", required=True, nargs="+")
+    pv.add_argument("--annotators", type=str, default=None, help="Optional roster file (one annotator ID per line).")
+    pv.add_argument("--format", choices=["text", "json"], default="text")
+    pa = pref_sub.add_parser("analyze", help="Analyse validated annotations (win rates, agreement, optional Elo).")
+    pa.add_argument("--key", required=True, nargs="+")
+    pa.add_argument("--annotations", required=True, nargs="+")
+    pa.add_argument("--annotators", type=str, default=None)
+    pa.add_argument("--seed", type=int, default=0)
+    pa.add_argument("--confidence-level", type=float, default=0.95)
+    pa.add_argument("--resamples", type=int, default=10_000)
+    pa.add_argument("--elo", action="store_true", help="Also report Elo ratings (relative; see limitations).")
+    pa.add_argument("--output", type=str, default=None)
+    pa.add_argument("--format", choices=["json", "markdown", "csv"], default="json")
 
     return parser
 
@@ -438,6 +558,38 @@ def _handle_validate_dataset(dataset_path: str) -> int:
     return 0
 
 
+def _print_audit_summary(report_dict: dict[str, Any], label: str) -> None:
+    summary = report_dict["summary"]
+    print(f"Quality audit [{label}]: {summary['errors']} error(s), {summary['warnings']} warning(s), {summary['info']} info")
+    for f in report_dict["findings"]:
+        ids = ", ".join(f["record_ids"][:5] or f["run_ids"][:5])
+        more = "" if len(f["record_ids"]) <= 5 else f" (+{len(f['record_ids']) - 5} more)"
+        cls = f" [{f['classification']}]" if f.get("classification") else ""
+        print(f"  {f['severity'].upper():7} {f['check_id']:6} {f['message']}{cls} {('(' + ids + more + ')') if ids else ''}".rstrip())
+
+
+def _handle_dataset_audit(args: argparse.Namespace) -> int:
+    """`validate-dataset PATH --quality-checks` (v0.4.0). Read-only."""
+    from openbench.quality import DatasetAuditor
+    from openbench.reporting_v040 import render_audit
+    from openbench.security import validate_safe_output_path
+
+    report = DatasetAuditor(near_duplicate_threshold=args.near_duplicate_threshold, metrics=args.metrics).audit(args.dataset_path)
+    payload = report.to_dict()
+    try:
+        dataset = DatasetLoader.load(args.dataset_path)
+        print(f"Dataset loads: '{dataset.name}' ({len(dataset)} records)")
+    except OpenBenchError as exc:
+        print(f"Dataset does not load: {exc}", file=sys.stderr)
+    _print_audit_summary(payload, args.dataset_path)
+    if args.output:
+        out = validate_safe_output_path(args.output)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(render_audit(payload, args.format), encoding="utf-8")
+        print(f"Audit report written to: {out}")
+    return report.exit_code
+
+
 def _handle_evaluate(args: argparse.Namespace) -> int:
     profile = None
     output_formats = ["json", "markdown"]
@@ -475,6 +627,17 @@ def _handle_evaluate(args: argparse.Namespace) -> int:
     response_sets = ResponseLoader.load_all(args.responses)
     evaluator = Evaluator(config=config)
     results = evaluator.evaluate_multiple(dataset, response_sets)
+
+    if getattr(args, "confidence_intervals", False):
+        from openbench.evalstats import compute_evaluation_statistics
+
+        for res in results:
+            res.statistics = compute_evaluation_statistics(
+                res,
+                confidence_level=args.confidence_level,
+                resamples=args.resamples,
+                analysis_seed=args.seed,
+            )
 
     for res in results:
         for warning_msg in res.warnings:
@@ -861,23 +1024,46 @@ def _handle_run(args: argparse.Namespace) -> int:
     manager = ExperimentManager(experiments_root=exp_dir)
 
     repeat_count = profile.repeat_count if profile else 1
-    run_records = []
-    eval_results = []
+    if getattr(args, "repetitions", None) is not None:
+        if args.repetitions < 1:
+            print("Error: --repetitions must be >= 1.", file=sys.stderr)
+            return 2
+        repeat_count = args.repetitions
+    base_seed = args.seed if getattr(args, "seed", None) is not None else gen_cfg.seed
 
-    for _ in range(repeat_count):
-        rec, eval_res, perf_rep = manager.execute_and_record(
-            dataset=dataset,
-            provider=provider,
-            evaluation_config=eval_cfg,
-            execution_config=exec_cfg,
-            cache=cache,
+    def _report(rec) -> None:
+        group_note = (
+            f" [group {rec.repeat_group_id} repetition {rec.repetition_index + 1}/{repeat_count}]"
+            if rec.repeat_group_id
+            else ""
         )
-        run_records.append(rec)
-        eval_results.append(eval_res)
         print(
-            f"Run '{rec.run_id}' [{rec.status}]: {rec.completed_items}/{rec.total_items} completed "
+            f"Run '{rec.run_id}' [{rec.status}]{group_note}: {rec.completed_items}/{rec.total_items} completed "
             f"(provider={rec.model_provider}, model={rec.model_name}, scores={rec.aggregate_scores}) -> {rec.run_dir}"
         )
+
+    group = manager.execute_repeated(
+        dataset=dataset,
+        provider=provider,
+        repetitions=repeat_count,
+        generation_base_seed=base_seed,
+        evaluation_config=eval_cfg,
+        execution_config=exec_cfg,
+        cache=cache,
+        experiment_id=getattr(args, "experiment_id", None),
+        parent_experiment_id=getattr(args, "parent_experiment_id", None),
+        on_repetition=_report,
+    )
+    run_records = group.records
+    eval_results = group.evaluations
+    if group.repeat_group_id:
+        print(
+            f"Repeat group '{group.repeat_group_id}': {group.completed_repetitions}/{group.planned_repetitions} "
+            f"repetitions completed; index: {group.index_path}"
+        )
+    seed_status = run_records[0].lineage.get("seed_status")
+    if seed_status and seed_status != "not_supplied":
+        print(f"Generation seed status: {seed_status} (a seed does not guarantee deterministic output)")
 
     if repeat_count > 1:
         variance_summary = BenchmarkAnalytics.analyze_repeated_runs(eval_results)
@@ -904,8 +1090,16 @@ def _handle_runs(args: argparse.Namespace) -> int:
 
     manager = ExperimentManager(experiments_root=getattr(args, "experiments_dir", None))
 
+    from openbench.lineage import is_repeat_group_id
+
+    run_id_arg = getattr(args, "run_id", None)
+    if run_id_arg and is_repeat_group_id(run_id_arg) and args.runs_action in {"show", "verify", "resume"}:
+        return _handle_group_action(args, manager)
+
     if args.runs_action == "list":
-        runs = manager.list_runs(status=args.status, provider=args.provider)
+        runs = manager.list_runs(
+            status=args.status, provider=args.provider, repeat_group_id=getattr(args, "group", None)
+        )
         if args.format == "json":
             print(json.dumps([r.to_dict() for r in runs], indent=2))
             return 0
@@ -915,10 +1109,13 @@ def _handle_runs(args: argparse.Namespace) -> int:
         print(f"Experiment Runs ({len(runs)}):")
         for r in runs:
             mock_tag = " [MOCK]" if r.is_mock_provider else ""
+            group_tag = (
+                f" | group={r.repeat_group_id}#{r.repetition_index}" if r.repeat_group_id else ""
+            )
             print(
                 f"  - {r.run_id} | {r.status} | origin={r.execution_origin} | "
                 f"{r.model_provider}:{r.model_name}{mock_tag} | dataset={r.dataset_identifier} "
-                f"({r.completed_items}/{r.total_items}) | scores={r.aggregate_scores}"
+                f"({r.completed_items}/{r.total_items}) | scores={r.aggregate_scores}{group_tag}"
             )
         return 0
 
@@ -950,6 +1147,8 @@ def _handle_runs(args: argparse.Namespace) -> int:
         except KeyError as exc:
             print(f"Error: {exc}", file=sys.stderr)
             return 1
+        if getattr(args, "quality_checks", False):
+            return _verify_with_audit(args, manager, check.to_dict(), check.valid)
         if args.format == "json":
             print(json.dumps(check.to_dict(), indent=2))
             return 0 if check.valid else 1
@@ -975,20 +1174,8 @@ def _handle_runs(args: argparse.Namespace) -> int:
             print(f"Error: {exc}", file=sys.stderr)
             return 1
 
-        gen_cfg = GenerationConfig(
-            temperature=float(info["generation_configuration"].get("temperature", 0.0)),
-            max_tokens=int(info["generation_configuration"].get("max_tokens", 256)),
-        )
-        provider = _instantiate_provider_from_args_or_profile(
-            provider_name=info["model_provider"],
-            model_name=info["model_name"],
-            model_version=info["model_version"],
-            endpoint=info["generation_configuration"].get("endpoint"),
-            gen_cfg=gen_cfg,
-            timeout_seconds=float(info["execution_configuration"].get("timeout_seconds", 30.0)),
-            extra_prov_cfg=info["generation_configuration"],
-        )
-        cache = ResponseCache(cache_dir=args.cache_dir, enabled=True)
+        provider = _provider_from_stored_run(info)
+        cache = ResponseCache(cache_dir=args.cache_dir, enabled=_stored_use_cache(info))
         rec, _, _ = manager.resume_run(args.run_id, provider=provider, cache=cache)
         print(
             f"Resumed run '{rec.run_id}' -> status={rec.status} "
@@ -1024,6 +1211,328 @@ def _handle_runs(args: argparse.Namespace) -> int:
         return 0
 
     return 2
+
+
+def _generation_config_from_stored(gen: dict[str, Any]) -> GenerationConfig:
+    """Rebuild a GenerationConfig from a stored (redacted) generation configuration."""
+    stops = gen.get("stop_sequences")
+    seed = gen.get("seed")
+    return GenerationConfig(
+        temperature=float(gen.get("temperature", 0.0)),
+        max_tokens=int(gen.get("max_tokens", 256)),
+        top_p=float(gen.get("top_p", 1.0)),
+        seed=int(seed) if isinstance(seed, int) and not isinstance(seed, bool) else None,
+        stop_sequences=[str(x) for x in stops] if isinstance(stops, list) else [],
+        stream=bool(gen.get("stream", False)),
+    )
+
+
+def _provider_from_stored_run(info: dict[str, Any]):
+    gen = info.get("generation_configuration") or {}
+    return _instantiate_provider_from_args_or_profile(
+        provider_name=info["model_provider"],
+        model_name=info["model_name"],
+        model_version=info["model_version"],
+        endpoint=gen.get("endpoint"),
+        gen_cfg=_generation_config_from_stored(gen),
+        timeout_seconds=float((info.get("execution_configuration") or {}).get("timeout_seconds", 30.0)),
+        extra_prov_cfg=gen,
+    )
+
+
+def _stored_use_cache(info: dict[str, Any]) -> bool:
+    """v0.4.0 runs honour their recorded cache setting on resume; v0.3.x runs keep using the cache."""
+    lineage = info.get("lineage") or {}
+    if lineage and not lineage.get("legacy_run"):
+        return bool((info.get("execution_configuration") or {}).get("use_cache", True))
+    return True
+
+
+def _handle_group_action(args: argparse.Namespace, manager: ExperimentManager) -> int:
+    """`runs show|verify|resume grp_...` (v0.4.0 repeat groups)."""
+    group_id = args.run_id
+    if args.runs_action == "show":
+        try:
+            group = manager.load_group(group_id)
+        except KeyError as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            return 1
+        payload = {
+            "index": group["index"],
+            "members": [m.to_dict() for m in group["members"]],
+        }
+        if args.format == "json":
+            print(json.dumps(payload, indent=2))
+            return 0
+        idx = group["index"]
+        print(f"Repeat Group: {group_id} ({idx['status']})")
+        print(f"  Repetitions   : {idx['completed_repetitions']} completed / {idx['planned_repetitions']} planned")
+        print(f"  Experiment ID : {idx.get('experiment_id')}")
+        print(f"  Base seed     : {idx.get('generation_base_seed')}")
+        for m in group["members"]:
+            print(
+                f"  - #{m.repetition_index} {m.run_id} [{m.status}] seed={m.lineage.get('repetition_seed')} "
+                f"seed_status={m.lineage.get('seed_status')} scores={m.aggregate_scores}"
+            )
+        if idx.get("missing_repetition_indices"):
+            print(f"  Missing repetitions: {idx['missing_repetition_indices']}")
+        for w in idx.get("rebuild_warnings", []):
+            print(f"  Warning: {w}")
+        return 0
+    if args.runs_action == "verify":
+        result = manager.verify_group(group_id)
+        if getattr(args, "quality_checks", False):
+            return _verify_with_audit(args, manager, result, result["valid"], group=True)
+        if args.format == "json":
+            print(json.dumps(result, indent=2))
+            return 0 if result["valid"] else 1
+        print(
+            f"Repeat Group Verification [{group_id}]: {'VALID' if result['valid'] else 'INVALID'} "
+            f"({result['member_count']} member(s), {result['planned_repetitions']} planned)"
+        )
+        for problem in result["problems"]:
+            print(f"  Problem: {problem}")
+        for w in result["warnings"]:
+            print(f"  Note: {w}")
+        return 0 if result["valid"] else 1
+    # resume
+    try:
+        group = manager.load_group(group_id)
+    except KeyError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+    if not group["members"]:
+        print(f"Error: repeat group '{group_id}' has no member runs to resume from.", file=sys.stderr)
+        return 1
+    info = group["members"][0].to_dict()
+    provider = _provider_from_stored_run(info)
+    cache = ResponseCache(cache_dir=args.cache_dir, enabled=_stored_use_cache(info))
+    result = manager.resume_group(group_id, provider=provider, cache=cache)
+    for rec in result.records:
+        print(f"  - #{rec.repetition_index} {rec.run_id} [{rec.status}] scores={rec.aggregate_scores}")
+    print(
+        f"Resumed repeat group '{group_id}': {result.completed_repetitions}/{result.planned_repetitions} "
+        "repetitions completed"
+    )
+    return 0 if result.is_complete else 1
+
+
+def _verify_with_audit(args: argparse.Namespace, manager: ExperimentManager, check: dict[str, Any], valid: bool, group: bool = False) -> int:
+    """`runs verify ... --quality-checks` (v0.4.0): integrity plus EQ audit; read-only."""
+    from openbench.quality import ExperimentAuditor
+    from openbench.reporting_v040 import render_audit
+    from openbench.security import validate_safe_output_path
+
+    auditor = ExperimentAuditor(manager)
+    report = auditor.audit_group(args.run_id) if group else auditor.audit_run(args.run_id)
+    payload = report.to_dict()
+    if args.format == "json":
+        print(json.dumps({"integrity": check, "quality_audit": payload}, indent=2))
+    else:
+        print(f"Integrity [{args.run_id}]: {'VALID' if valid else 'INVALID'}")
+        _print_audit_summary(payload, args.run_id)
+    if args.audit_output:
+        out = validate_safe_output_path(args.audit_output)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(render_audit(payload, "json"), encoding="utf-8")
+    return 0 if valid and report.exit_code == 0 else 1
+
+
+def _handle_analyze(args: argparse.Namespace) -> int:
+    """`openbench analyze` (v0.4.0): paired comparison or repeated-run variability; no provider calls."""
+    from openbench.dataset import load_ids_file
+    from openbench.paired import ComparisonArm, ComparisonPolicy, PairedComparisonEngine
+    from openbench.reporting_v040 import render_analysis
+    from openbench.security import redact_sensitive_data, validate_safe_output_path
+    from openbench.stats import decompose_variability
+
+    if args.exploratory_reason and not args.exploratory:
+        print("Error: --exploratory-reason requires --exploratory.", file=sys.stderr)
+        return 2
+    if args.exploratory and not (args.exploratory_reason and args.exploratory_reason.strip()):
+        print("Error: --exploratory requires a non-empty --exploratory-reason.", file=sys.stderr)
+        return 2
+
+    arms = []
+    if args.runs:
+        manager = ExperimentManager(experiments_root=args.experiments_dir)
+        for identifier in args.runs:
+            try:
+                arms.append(ComparisonArm.from_experiments(manager, identifier))
+            except KeyError as exc:
+                print(f"Error: {exc}", file=sys.stderr)
+                return 1
+    else:
+        for path in args.results:
+            arms.append(ComparisonArm.from_evaluation_file(path))
+        labels = [a.arm_id for a in arms]
+        if len(set(labels)) != len(labels):
+            for i, arm in enumerate(arms):
+                arm.arm_id = f"{arm.arm_id}#{i + 1}"
+
+    selected = None
+    if args.ids_file:
+        selected = tuple(load_ids_file(args.ids_file).selected_ids)
+
+    if len(arms) == 1:
+        arm = arms[0]
+        if arm.repetitions < 2:
+            print(
+                "Error: analyze needs at least two arms to compare, or one repeat group "
+                "(grp_...) for a variability analysis.",
+                file=sys.stderr,
+            )
+            return 2
+        payload = decompose_variability(
+            arm.evaluations,
+            args.metrics,
+            analysis_seed=args.seed,
+            confidence_level=args.confidence_level,
+            resamples=args.resamples,
+            arm_label=arm.arm_id,
+        )
+        payload["arm"] = arm.summary()
+        payload["provider_calls"] = 0
+    else:
+        policy = ComparisonPolicy(
+            missing_policy=args.missing_policy,
+            correction=args.correction,
+            confidence_level=args.confidence_level,
+            resamples=args.resamples,
+            permutations=args.permutations,
+            analysis_seed=args.seed,
+            alpha=args.alpha,
+            min_practical_difference=args.min_practical_difference,
+            equivalence_margin=args.equivalence_margin,
+            stratified_bootstrap=args.stratified_bootstrap,
+            stratum_tests=args.stratum_tests,
+            exploratory=args.exploratory,
+            exploratory_reason=args.exploratory_reason,
+            baseline=args.baseline,
+            selected_ids=selected,
+        )
+        result = PairedComparisonEngine().compare(arms, args.metrics, policy)
+        payload = result.to_dict()
+        payload["variability"] = {
+            arm.arm_id: decompose_variability(
+                arm.evaluations,
+                args.metrics,
+                analysis_seed=args.seed,
+                confidence_level=args.confidence_level,
+                resamples=args.resamples,
+                arm_label=arm.arm_id,
+            )
+            for arm in arms
+            if arm.repetitions >= 2
+        }
+
+    payload = redact_sensitive_data(payload)
+    text = render_analysis(payload, args.format)
+    if args.output:
+        out = validate_safe_output_path(args.output)
+        for parent in out.resolve().parents:
+            if parent.name.startswith("run_") and (parent / "reproducibility.json").exists():
+                print("Error: analyses are never written into run directories; choose another --output.", file=sys.stderr)
+                return 2
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(text, encoding="utf-8")
+        print(f"Analysis ({payload.get('analysis')}, {args.format}) written to: {out}")
+        if payload.get("analysis_mode") == "exploratory":
+            print(f"Warning: {payload.get('banner')}", file=sys.stderr)
+    else:
+        print(text)
+    return 0
+
+
+def _read_roster(path: str | None) -> list[str] | None:
+    if not path:
+        return None
+    lines = Path(path).read_text(encoding="utf-8").splitlines()
+    return [ln.strip() for ln in lines if ln.strip() and not ln.strip().startswith("#")]
+
+
+def _handle_preferences(args: argparse.Namespace) -> int:
+    """`openbench preferences create|validate|analyze` (v0.4.0)."""
+    from openbench import preferences as prefs
+    from openbench.reporting_v040 import render_preferences
+    from openbench.security import validate_safe_output_path
+
+    action = getattr(args, "preferences_action", None)
+    if not action:
+        print("Error: Specify a preferences subcommand (create, validate, analyze).", file=sys.stderr)
+        return 2
+    if action == "create":
+        sources = []
+        if args.runs:
+            manager = ExperimentManager(experiments_root=args.experiments_dir)
+            for rid in args.runs:
+                try:
+                    rec = manager.load_run_record(rid)
+                    ev = manager.load_evaluation(rid)
+                except KeyError as exc:
+                    print(f"Error: {exc}", file=sys.stderr)
+                    return 1
+                sources.append(prefs.PreferenceSource.from_evaluation(rec.run_id, ev))
+        else:
+            from openbench.paired import ComparisonArm
+
+            for path in args.results:
+                ev = ComparisonArm.from_evaluation_file(path).evaluations[0]
+                sources.append(prefs.PreferenceSource.from_evaluation(Path(path).stem, ev))
+            if sources[0].source_id == sources[1].source_id:
+                sources[0].source_id += "#1"
+                sources[1].source_id += "#2"
+        rubric, instructions = ([], None)
+        if args.rubric:
+            rubric, instructions = prefs.load_rubric(args.rubric)
+        builder = prefs.PreferenceTaskBuilder(args.seed, rubric, instructions, args.show_reference)
+        task_set = builder.build(sources[0], sources[1])
+        written = prefs.write_task_set(task_set, args.output, args.key_output, write_csv=args.csv, overwrite=args.overwrite)
+        print(f"Created {len(task_set.tasks)} blind task(s): {written['tasks']}")
+        print(f"Unblinded key (keep away from annotators): {written['key']}")
+        for w in task_set.leakage_warnings:
+            print(f"Warning: possible identity leak in task text ({len(w['task_ids'])} task(s)): {', '.join(w['task_ids'][:10])}", file=sys.stderr)
+        return 0
+
+    roster = _read_roster(getattr(args, "annotators", None))
+    if action == "validate":
+        key = prefs.load_key(args.key)
+        report = prefs.AnnotationImporter(key, annotator_roster=roster).load(args.annotations)
+        if args.format == "json":
+            print(json.dumps(report.to_dict(), indent=2))
+        else:
+            print(f"Annotation validation: {'VALID' if report.valid else 'INVALID'} ({report.records_read} record(s) read)")
+            for e in report.errors:
+                print(f"  Error [{e['code']}] {e.get('file', '')}:{e.get('line')}: {e['message']}")
+            for w in report.warnings:
+                print(f"  Warning [{w['code']}] line {w.get('line')}: {w['message']}")
+        return 0 if report.valid else 1
+
+    keys = [prefs.load_key(k) for k in args.key]
+    merged = {"tasks": [t for k in keys for t in k["tasks"]], "creation_parameters": keys[0].get("creation_parameters", {})}
+    report = prefs.AnnotationImporter(merged, annotator_roster=roster).load(args.annotations)
+    if not report.valid:
+        print(f"Error: {len(report.errors)} annotation error(s); run 'preferences validate' for details.", file=sys.stderr)
+        for e in report.errors[:20]:
+            print(f"  [{e['code']}] {e.get('file', '')}:{e.get('line')}: {e['message']}", file=sys.stderr)
+        return 1
+    analysis = prefs.PreferenceAnalyzer(keys, analysis_seed=args.seed, confidence_level=args.confidence_level,
+                                        resamples=args.resamples).analyze(report.annotations, elo=args.elo)
+    analysis["validation_warnings"] = report.warnings
+    from openbench.integrity import compute_file_sha256
+
+    analysis["provenance"]["inputs"] += [
+        {"annotation_file": str(a), "sha256": compute_file_sha256(a)} for a in args.annotations
+    ] + [{"key_file": str(k), "sha256": compute_file_sha256(k)} for k in args.key]
+    text = render_preferences(analysis, args.format)
+    if args.output:
+        out = validate_safe_output_path(args.output)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(text, encoding="utf-8")
+        print(f"Preference analysis ({args.format}) written to: {out}")
+    else:
+        print(text)
+    return 0
 
 
 def _handle_providers(args: argparse.Namespace) -> int:
@@ -1099,6 +1608,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         if args.command == "validate-dataset":
+            if getattr(args, "quality_checks", False):
+                return _handle_dataset_audit(args)
             return _handle_validate_dataset(args.dataset_path)
         if args.command == "evaluate":
             return _handle_evaluate(args)
@@ -1125,14 +1636,26 @@ def main(argv: Sequence[str] | None = None) -> int:
             return _handle_providers(args)
         if args.command == "cache":
             return _handle_cache(args)
+        if args.command == "analyze":
+            return _handle_analyze(args)
+        if args.command == "preferences":
+            return _handle_preferences(args)
+    except BrokenPipeError:
+        # v0.4.0: output piped into a command that closed early (e.g. `| head`); exit quietly.
+        import os
+
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(devnull, sys.stdout.fileno())
+        return 1
     except FileNotFoundError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
+        print(f"Error: {sanitize_error_message(str(exc))}", file=sys.stderr)
         return 1
     except OpenBenchError as exc:
-        print(f"Validation/Evaluation Error: {exc}", file=sys.stderr)
+        print(f"Validation/Evaluation Error: {sanitize_error_message(str(exc))}", file=sys.stderr)
         return 1
     except Exception as exc:  # pragma: no cover
-        print(f"Unexpected Error: {exc}", file=sys.stderr)
+        # v0.4.0: messages are scrubbed of embedded credentials before printing.
+        print(f"Unexpected Error: {sanitize_error_message(str(exc))}", file=sys.stderr)
         return 1
 
     return 0

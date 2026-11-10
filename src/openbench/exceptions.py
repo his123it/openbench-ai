@@ -75,3 +75,16 @@ class MetricError(OpenBenchError):
 
 class ConfigurationError(OpenBenchError):
     """Raised when evaluation or comparison configuration is invalid."""
+
+
+class IncompatibleComparisonError(ConfigurationError):
+    """Raised when a paired comparison has hard incompatibilities (v0.4.0).
+
+    ``report`` holds the :class:`openbench.paired.CompatibilityReport` listing every
+    incompatibility. Use the exploratory mode (with a stated reason) for a descriptive-only
+    comparison of incompatible inputs.
+    """
+
+    def __init__(self, message: str, report: object | None = None) -> None:
+        super().__init__(message)
+        self.report = report
