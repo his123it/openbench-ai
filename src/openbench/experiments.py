@@ -846,6 +846,22 @@ class ExperimentManager:
         extra: dict[str, Any] | None = None,
         warnings: list[str] | None = None,
     ) -> dict[str, Any]:
+        index = self._compose_group_index(repeat_group_id, planned, members, extra, warnings)
+        self.root.mkdir(parents=True, exist_ok=True)
+        path = self._group_index_path(repeat_group_id)
+        tmp = path.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(index, indent=2) + "\n", encoding="utf-8")
+        os.replace(tmp, path)
+        return index
+
+    def _compose_group_index(
+        self,
+        repeat_group_id: str,
+        planned: int,
+        members: list[ExperimentRecord],
+        extra: dict[str, Any] | None = None,
+        warnings: list[str] | None = None,
+    ) -> dict[str, Any]:
         now_iso = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
         previous = self._read_group_index(repeat_group_id) or {}
         member_entries = []
@@ -910,15 +926,13 @@ class ExperimentManager:
                 "reproducibility.json is authoritative; if they disagree, lineage wins."
             ),
         }
-        self.root.mkdir(parents=True, exist_ok=True)
-        path = self._group_index_path(repeat_group_id)
-        tmp = path.with_suffix(".json.tmp")
-        tmp.write_text(json.dumps(index, indent=2) + "\n", encoding="utf-8")
-        os.replace(tmp, path)
         return index
 
     def rebuild_group_index(self, repeat_group_id: str) -> dict[str, Any]:
-        """Rebuild a group index from member lineage (lineage wins over a stale index)."""
+        """Rebuild a group index from member lineage and write it (lineage wins over a stale index)."""
+        return self._group_index_from_lineage(repeat_group_id, write=True)
+
+    def _group_index_from_lineage(self, repeat_group_id: str, write: bool) -> dict[str, Any]:
         validate_repeat_group_id(repeat_group_id)
         members = self._scan_group_members(repeat_group_id)
         previous = self._read_group_index(repeat_group_id)
@@ -953,11 +967,16 @@ class ExperimentManager:
                 warnings.append(
                     "Group index planned_repetitions disagreed with lineage; lineage used."
                 )
-        return self._write_group_index(repeat_group_id, planned, members, warnings=warnings)
+        if write:
+            return self._write_group_index(repeat_group_id, planned, members, warnings=warnings)
+        return self._compose_group_index(repeat_group_id, planned, members, warnings=warnings)
 
     def load_group(self, repeat_group_id: str) -> dict[str, Any]:
-        """Return the (rebuilt) group index and its member records, without writing runs."""
-        index = self.rebuild_group_index(repeat_group_id)
+        """Return the group index (recomputed from lineage, in memory) and its member records.
+
+        Read-only: nothing under the experiments root is written.
+        """
+        index = self._group_index_from_lineage(repeat_group_id, write=False)
         members = self._scan_group_members(repeat_group_id)
         return {"index": index, "members": members}
 

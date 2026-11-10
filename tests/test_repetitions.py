@@ -266,3 +266,21 @@ def test_legacy_v030_run_maps_to_unknown_seed_status(tmp_path):
     runs = manager.list_runs()
     assert runs and all(r.lineage["seed_status"] == "unknown" for r in runs)
     assert all(r.lineage["legacy_run"] for r in runs)
+
+
+def test_show_verify_and_audit_of_groups_are_read_only(tmp_path, capsys):
+    from _v040_helpers import snapshot
+
+    exp = tmp_path / "exp"
+    assert main(["run", "--dataset", str(DATASET), "--provider", "mock", "--model", "m", "--repetitions", "2",
+                 "--no-cache", "--experiments-dir", str(exp)]) == 0
+    group_id = capsys.readouterr().out.split("Repeat group '")[1].split("'")[0]
+    index = exp / f"{group_id}.json"
+    stale = json.loads(index.read_text())
+    stale["members"] = []
+    index.write_text(json.dumps(stale))
+    before = snapshot(exp)
+    assert main(["runs", "show", group_id, "--experiments-dir", str(exp)]) == 0
+    assert main(["runs", "verify", group_id, "--experiments-dir", str(exp), "--quality-checks"]) == 0
+    assert main(["analyze", "--runs", group_id, "--experiments-dir", str(exp), "--resamples", "100"]) == 0
+    assert snapshot(exp) == before
