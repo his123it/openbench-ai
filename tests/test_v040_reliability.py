@@ -188,3 +188,20 @@ def test_corrupted_cache_can_be_cleared_and_is_not_half_loaded(tmp_path):
         fresh.stats()  # still failing: never a silently truncated cache
     assert main(["cache", "clear", "--cache-dir", str(cache_dir)]) == 0
     assert ResponseCache(cache_dir).stats()["stored_entries"] == 0
+
+
+def test_cli_exits_quietly_when_stdout_reader_closes(tmp_path):
+    """Piping output into a reader that closes early (e.g. `| head`) must not print a traceback or an error."""
+    import os
+    import subprocess
+    import sys
+
+    root = Path(__file__).resolve().parents[1]
+    env = {**os.environ, "PYTHONPATH": str(root / "src"), "PYTHONUNBUFFERED": "1"}
+    proc = subprocess.Popen([sys.executable, "-m", "openbench.cli", "list-datasets"], cwd=root, env=env,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc.stdout.close()
+    _, err = proc.communicate(timeout=120)
+    text = err.decode("utf-8", "replace")
+    assert "Traceback" not in text and "Unexpected Error" not in text and "Broken pipe" not in text, text
+    assert proc.returncode in (0, 1)
