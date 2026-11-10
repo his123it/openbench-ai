@@ -30,7 +30,8 @@ An unavailable statistic is `null` with a reason, never 0.
 
 - Each random procedure uses its own stream, derived from SHA-256 of the analysis seed, purpose, metric and arms. Results therefore do not depend on the order in which analyses run.
 - Items are sorted by ID before resampling, and sums use `math.fsum`.
-- Identical inputs, parameters and seed give identical results. The test suite checks this on Python 3.10–3.13 on Linux.
+- Identical inputs, parameters and seed give identical results, including across Python versions: sums use `math.fsum` and standard deviations are computed exactly and rounded once, because `statistics.stdev` and the built-in `sum()` of floats changed in Python 3.12. This was checked on Python 3.10, 3.11, 3.12 and 3.13 on Linux.
+- Outputs computed by v0.3.1 code paths (`evaluate` metric scores and aggregates, `compare`, history analytics) are unchanged from v0.3.1 and may still differ in the last bit between Python 3.11 and 3.12 for some inputs.
 
 ## Formats
 

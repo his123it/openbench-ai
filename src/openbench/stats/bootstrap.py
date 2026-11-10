@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import math
-import statistics
 from collections.abc import Sequence
 
 from openbench.performance import compute_percentile
+from openbench.stats._numeric import stdev as exact_stdev
 from openbench.stats._validation import finite_floats, require_int
 from openbench.stats.results import ConfidenceInterval, StatWarning
 from openbench.stats.rng import derive_stream
@@ -120,7 +120,7 @@ def bootstrap_mean_ci(
     ordered_means = sorted(means)
     lower = compute_percentile(ordered_means, 100.0 * alpha / 2.0)
     upper = compute_percentile(ordered_means, 100.0 * (1.0 - alpha / 2.0))
-    se = statistics.stdev(means) if len(means) > 1 else None
+    se = exact_stdev(means) if len(means) > 1 else None
     return ConfidenceInterval(
         estimate=estimate,
         lower=lower,

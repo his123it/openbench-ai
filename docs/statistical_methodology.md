@@ -48,8 +48,9 @@ binary with more than one repetition in an arm), or `None` (unknown: interval on
   must lie in [0.5, 0.999].
 - **Algorithm:** each resample draws n indices with replacement from the `bootstrap` random
   stream and computes the mean with `math.fsum`. The percentiles use the linear-interpolation
-  convention of `compute_percentile`. The reported standard error is the SD of the
-  resampled means.
+  convention of `compute_percentile`. The reported standard error is the sample SD of the
+  resampled means, computed exactly and rounded once so that it is identical on Python
+  3.10–3.13 (v0.4.0).
 - **Optional stratified resampling:** within each stratum, keeping each stratum's size, with
   one stream per stratum (`stratum:<label>`).
 - **Edge cases:** n < 2 gives no interval (`insufficient_items`). If all values are equal,

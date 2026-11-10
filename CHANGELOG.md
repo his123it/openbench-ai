@@ -47,6 +47,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Cache file errors.** A malformed cache entry raised a raw `KeyError`, a failed cache load left a partially loaded cache in memory, and a corrupted cache could not be cleared with `cache clear`.
 - **Malformed evaluation files.** Type errors are reported as clear errors instead of unexpected exceptions.
 - **Stage 1 audit follow-ups.** Exported statistical helpers validate direct calls, an infinite equivalence margin is rejected, and `binary_paired_counts` rejects booleans.
+- **Results differed in the last bit between Python versions.** `statistics.stdev` is correctly rounded only from Python 3.12, and built-in `sum()` of floats changed in 3.12. Bootstrap standard errors, variability standard deviations and preference statistics now use correctly rounded arithmetic (`math.fsum` and an exact standard deviation), so v0.4.0 analysis output is identical on Python 3.10–3.13. On Python 3.10 and 3.11 a bootstrap standard error can change by one unit in the last place compared with the unreleased Stage 1 code.
+- **CLI output piped into a reader that closes early** (`openbench runs list | head`) printed "Unexpected Error: [Errno 32] Broken pipe". The CLI now exits quietly.
 
 ### Security
 - CSV exports neutralise spreadsheet formula injection in text cells. This includes the existing evaluation and comparison CSV; numbers are unchanged.

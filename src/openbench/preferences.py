@@ -679,7 +679,7 @@ def cohens_kappa(labels_1: Sequence[str], labels_2: Sequence[str]) -> float | No
         return None
     po = sum(1 for a, b in zip(labels_1, labels_2, strict=True) if a == b) / n
     c1, c2 = Counter(labels_1), Counter(labels_2)
-    pe = sum((c1[k] / n) * (c2[k] / n) for k in set(c1) | set(c2))
+    pe = math.fsum((c1[k] / n) * (c2[k] / n) for k in sorted(set(c1) | set(c2)))
     if math.isclose(pe, 1.0):
         return None
     return (po - pe) / (1.0 - pe)
@@ -697,8 +697,8 @@ def fleiss_kappa(table: Sequence[Sequence[int]]) -> float | None:
     k = len(rows[0])
     p_j = [sum(r[j] for r in rows) / (n_items * m) for j in range(k)]
     p_i = [(sum(c * c for c in r) - m) / (m * (m - 1)) for r in rows]
-    p_bar = sum(p_i) / n_items
-    pe = sum(p * p for p in p_j)
+    p_bar = math.fsum(p_i) / n_items
+    pe = math.fsum(p * p for p in p_j)
     if math.isclose(pe, 1.0):
         return None
     return (p_bar - pe) / (1.0 - pe)
@@ -749,7 +749,7 @@ class PreferenceAnalyzer:
                 continue
             by_task.setdefault(r["task_id"], []).append(score)
         task_ids = sorted(by_task)
-        task_values = [sum(by_task[t]) / len(by_task[t]) for t in task_ids]
+        task_values = [math.fsum(by_task[t]) / len(by_task[t]) for t in task_ids]
         annotation_values = [v for t in task_ids for v in by_task[t]]
         ci = bootstrap_mean_ci(task_values, confidence_level=self.confidence_level, resamples=self.resamples,
                                analysis_seed=self.seed, metric=f"preference_win_rate|{label}")
@@ -762,8 +762,8 @@ class PreferenceAnalyzer:
             "outcome_counts": {k: outcome_counts.get(k, 0) for k in ("A", "B", "tie", "neither")},
             "tie_rate": (outcome_counts.get("tie", 0) / total) if total else None,
             "neither_rate": (outcome_counts.get("neither", 0) / total) if total else None,
-            "win_rate_a_task_weighted": (sum(task_values) / len(task_values)) if task_values else None,
-            "win_rate_a_annotation_weighted": (sum(annotation_values) / len(annotation_values)) if annotation_values else None,
+            "win_rate_a_task_weighted": (math.fsum(task_values) / len(task_values)) if task_values else None,
+            "win_rate_a_annotation_weighted": (math.fsum(annotation_values) / len(annotation_values)) if annotation_values else None,
             "win_rate_a_confidence_interval": {**ci.to_dict(), "method": "percentile_bootstrap_over_tasks", "clustering": "annotations are resampled with their task"},
             "definition": "task value = mean of A-win 1, tie 0.5, B-win 0 over the task's non-'neither' annotations; headline = mean over tasks",
         }
@@ -773,10 +773,10 @@ class PreferenceAnalyzer:
         for r in rows:
             if r["outcome"] in ("response_1", "response_2"):
                 by_task.setdefault(r["task_id"], []).append(1.0 if r["outcome"] == "response_1" else 0.0)
-        values = [sum(v) / len(v) for _, v in sorted(by_task.items())]
+        values = [math.fsum(v) / len(v) for _, v in sorted(by_task.items())]
         ci = bootstrap_mean_ci(values, confidence_level=self.confidence_level, resamples=self.resamples,
                                analysis_seed=self.seed, metric="preference_position_bias")
-        share = (sum(values) / len(values)) if values else None
+        share = (math.fsum(values) / len(values)) if values else None
         warnings = []
         if ci.lower is not None and ci.upper is not None and (ci.lower > 0.5 or ci.upper < 0.5):
             warnings.append({"code": "position_bias", "message": "The share of decisive choices for response_1 differs from 0.5 beyond its CI."})
@@ -919,7 +919,7 @@ class PreferenceAnalyzer:
             "agreement": {"display_space": self._agreement(rows, "display"), "model_space": self._agreement(rows, "model"),
                           "note": ("Observed agreement is identical in both spaces because all annotators of a task share its display order; "
                                    "kappa can differ because category marginals change when outcomes are relabelled per task.")},
-            "rubric_scores": {name: {"count": len(v), "mean": sum(v) / len(v), "min": min(v), "max": max(v)} for name, v in sorted(rubric_summary.items())},
+            "rubric_scores": {name: {"count": len(v), "mean": math.fsum(v) / len(v), "min": min(v), "max": max(v)} for name, v in sorted(rubric_summary.items())},
             "methodology": {
                 "task_selection": "records with a valid response from both models, sorted by record ID",
                 "blinding": BLINDING_NOTE,

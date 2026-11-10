@@ -32,6 +32,7 @@ from openbench.itemscores import (
     collect_item_scores,
     metric_score_kind,
 )
+from openbench.stats._numeric import stdev as exact_stdev
 from openbench.stats.bootstrap import DEFAULT_RESAMPLES, bootstrap_mean_ci
 
 SCHEMA_VERSION = "0.4.0"
@@ -46,7 +47,7 @@ INTERPRETATION = (
 
 
 def _sd(values: Sequence[float]) -> float | None:
-    return statistics.stdev(values) if len(values) >= 2 else None
+    return exact_stdev(values) if len(values) >= 2 else None
 
 
 def _summary(values: Sequence[float]) -> dict[str, Any]:
@@ -181,9 +182,9 @@ def _latency_tokens(observations: dict[str, ItemObservation], repetitions: int) 
         lats = [v for v in o.latencies if v is not None]
         toks = [float(v) for v in o.total_tokens if v is not None]
         if len(lats) >= 2:
-            within_lat.append(statistics.stdev(lats))
+            within_lat.append(exact_stdev(lats))
         if len(toks) >= 2:
-            within_tok.append(statistics.stdev(toks))
+            within_tok.append(exact_stdev(toks))
     return {
         "latency_ms": {
             "per_repetition_mean": lat_means,
