@@ -1,29 +1,46 @@
-# OpenBench AI (v0.3.1)
+# OpenBench AI (v0.4.0)
 
-**A modular, open-source LLM experiment execution, evaluation, and benchmarking platform.**
+**A modular, open-source LLM experiment execution, evaluation, statistical comparison, and benchmarking platform.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](pyproject.toml)
-[![Version: 0.3.1](https://img.shields.io/badge/Version-0.3.1-2ea44f.svg)](CHANGELOG.md)
+[![Version: 0.4.0](https://img.shields.io/badge/Version-0.4.0-2ea44f.svg)](CHANGELOG.md)
 
 ---
 
 ## Project Overview
 
-**OpenBench AI** is a modular Python toolkit and experiment platform designed to help developers and researchers run reproducible language model benchmarks, evaluate model responses against standardized JSONL datasets, monitor latency and token performance, and verify benchmark artifact integrity—without requiring paid commercial API keys.
+**OpenBench AI** is a Python toolkit for running reproducible language model benchmarks. It evaluates model responses against standardized JSONL datasets, repeats experiments, compares models with appropriate statistics, collects blinded human preferences, and audits dataset and run quality. The core installation has no external runtime dependencies, and nothing requires a paid API.
 
 > **Note**: OpenBench AI is maintained by its project owner, and its initial development was AI-assisted. Contributions, bug reports, and new datasets are welcome!
 
 ---
 
-## Highlights in v0.3.1 (Maintenance, Security & Reliability Release)
+## What's new in v0.4.0
 
-- **Like-for-Like Subset Evaluation (`--ids-file`)**: Evaluate response files against an explicit subset of dataset IDs (`openbench evaluate --ids-file legacy_ids.txt ...`) so intentionally excluded dataset records are never penalized as missing responses.
-- **Stronger Value-Level Secret Redaction**: Redacts URL query tokens (`?token=...`, `&api_key=...`), `Authorization: Bearer ...` headers, inline `password=...` / `client_secret=...` assignments, and API token prefixes embedded inside string values while preserving live runtime credentials during model execution.
-- **Optional Fenced JSON Stripping (`strip_markdown_fence`)**: `StructuredOutputMetric` can optionally strip a single valid surrounding Markdown code fence (```` ```json ... ``` ````) when `strip_markdown_fence=True` (default `False`).
-- **Accurate Lexical vs. Semantic Similarity Labeling**: Distinguishes surface n-gram feature hashing (`lexical_similarity` via `LocalNgramEmbeddingProvider`) from neural embedding similarity (`semantic_similarity` via `HuggingFaceEmbeddingProvider` or verified embedding providers).
-- **Stderr Warning Emission & Markdown Table Escaping**: `openbench evaluate` prints evaluation warnings to `stderr` while keeping `stdout` clean, and Markdown tables escape `|` characters in model, dataset, and category names.
-- **Core v0.3.0 Platform Preserved**: Full support for `ExecutionEngine`, `OllamaAdapter`, `HuggingFaceAdapter` (experimental), `MockModelProvider`, `ExperimentManager` (`experiments/run_<id>/`), `RunIntegrityVerifier`, `PerformanceMonitor`, and `BenchmarkAnalytics`.
+- **Repeated-run benchmarking**: `openbench run --repetitions N --seed S` creates a *repeat group*. Each repetition is its own run with recorded lineage: group ID, repetition index, seeds and seed status, the exact record IDs, per-record content hashes, and cache provenance.
+- **Interrupted groups resume** without re-requesting completed items (`openbench runs resume grp_...`).
+- **Fix: repetitions no longer reuse cached responses.** In v0.3.1, repeated runs reused cached responses across repetitions, which understated variability.
+- **Paired model comparison**: `openbench analyze` aligns stored runs, repeat groups or evaluation files on stable record IDs, with no provider calls. It reports the following, with Holm (or BH) correction, an explicit missing-data policy, coverage and failure-rate comparisons, and category and difficulty breakdowns:
+  - percentile bootstrap confidence intervals;
+  - an exact McNemar test (binary metrics) or a paired sign-flip permutation test;
+  - effect sizes;
+  - wins, losses and ties;
+  - optional equivalence testing (TOST) with a pre-specified margin.
+- **Compatibility checks**: incompatible inputs, such as different record content, metric versions or scoring options, are refused unless you request a clearly labelled exploratory comparison.
+- **Repeated-run variability**: generation variability (within items), item-to-item variation and provider failures are reported separately.
+- **Human preference evaluation**: `openbench preferences create|validate|analyze` is a local-first, blinded A/B workflow. The task file contains no model identities; the identity key is a separate file. Analysis covers validated annotation import, task-weighted win rates with task-clustered CIs, tie and neither outcomes, position bias, Cohen's and Fleiss' kappa, and optional Elo with stated limitations.
+- **Quality audits**: `openbench validate-dataset PATH --quality-checks` and `openbench runs verify ID --quality-checks` run read-only checks for:
+  - duplicate IDs, and exact and near-duplicate prompts (a lexical 5-gram heuristic);
+  - malformed or placeholder references, and keyword expectations missing from references;
+  - invalid metric configurations and inconsistent versions;
+  - missing outputs, incomplete runs and groups, integrity failures, and insufficient data.
+
+  Audits never modify data.
+- **Reports**: every new analysis renders to JSON, Markdown and CSV, with provenance (software, environment, input SHA-256s, seeds, parameters). CSV cells are protected against spreadsheet formula injection.
+- **Opt-in evaluation CIs**: `openbench evaluate --confidence-intervals`. Output is unchanged without the flag.
+
+v0.3.1 commands, flags, public Python names, the 200 dataset records and existing scores are preserved, and v0.3.1 run directories can be read without modification. See the [migration guide](V0_4_0_MIGRATION_GUIDE.md) for the details and the few documented behaviour changes.
 
 ---
 
@@ -42,52 +59,81 @@ python -m pip install -e ".[dev]"
 # Optional integration groups
 python -m pip install -e ".[huggingface]"  # transformers + torch for local HF models
 python -m pip install -e ".[semantic]"     # sentence-transformers for neural embeddings
-python -m pip install -e ".[all]"          # All optional dependencies
+python -m pip install -e ".[all]"          # All optional runtime integrations
+
+# Statistical reference cross-checks (tests only; never imported by the library)
+python -m pip install -e ".[dev,stats-ref]"
 ```
 
-The Ollama adapter needs no extra packages: it uses the Python standard library HTTP client.
+The Ollama adapter needs no extra packages: it uses the Python standard library HTTP client. All v0.4.0 statistics, preference and audit features use the standard library only.
 
 ---
 
-## Quick Start & CLI Reference
+## Quick Start
 
-### 1. Evaluate Static Response Files (Full Dataset or `--ids-file` Subset)
+### 1. Evaluate response files
 
 ```bash
-# Full dataset evaluation
-openbench evaluate   --dataset datasets/reasoning/sample.jsonl   --responses examples/sample_responses.json   --metrics exact_match accuracy keyword_coverage   --output results/
+openbench evaluate --dataset datasets/reasoning/sample.jsonl --responses examples/sample_responses.json \
+  --metrics exact_match accuracy keyword_coverage --output results/
 
-# Like-for-like subset evaluation using --ids-file
-openbench evaluate   --dataset datasets/reasoning/sample.jsonl   --responses examples/sample_responses.json   --ids-file legacy_ids.txt   --output results/
+# With percentile bootstrap confidence intervals over items (v0.4.0, opt-in)
+openbench evaluate --dataset datasets/reasoning/sample.jsonl --responses examples/sample_responses.json \
+  --confidence-intervals --seed 0 --output results/ci/
 ```
 
-### 2. Execute a Model Experiment & Manage Runs
+### 2. Run models, with repetitions
 
 ```bash
 openbench providers list
-openbench providers check mock
-
-openbench run --config configs/mock_experiment.yaml
+openbench run --dataset datasets/reasoning/sample.jsonl --provider mock --model model-a --repetitions 3 --seed 100
+openbench run --dataset datasets/reasoning/sample.jsonl --provider mock --model model-b
 
 openbench runs list
-openbench runs show <RUN_ID>
-openbench runs verify <RUN_ID>
-openbench runs resume <RUN_ID>
-openbench runs compare <RUN_ID_1> <RUN_ID_2> --output results/run_comparison.md
-
-openbench cache stats
-openbench cache clear
+openbench runs show grp_<id>           # a repeat group
+openbench runs verify grp_<id> --quality-checks
+openbench runs resume grp_<id>         # finish an interrupted group
 ```
 
-### 3. Explore & Validate the 200-Item Dataset Catalog
+### 3. Compare stored results (no provider calls)
 
 ```bash
-openbench list-datasets
-openbench inspect-dataset datasets/mathematics/sample.jsonl --samples 2
-openbench dataset-stats datasets/
-openbench validate-dataset datasets/
-python scripts/validate_datasets.py
+openbench analyze --runs grp_<id> run_<id> --baseline run_<id> --format markdown --output results/comparison.md
+openbench analyze --results results/model_a.json results/model_b.json --equivalence-margin 0.05 --output results/cmp.json
+openbench analyze --runs grp_<id> --output results/variability.json   # one repeat group: variability report
 ```
+
+### 4. Collect blinded human preferences
+
+```bash
+openbench preferences create --runs run_<a> run_<b> --seed 7 --output tasks/ --key-output private/tasks.key.json
+# annotators fill annotations.jsonl from tasks/tasks.jsonl
+openbench preferences validate --key private/tasks.key.json --annotations annotations.jsonl
+openbench preferences analyze --key private/tasks.key.json --annotations annotations.jsonl --format markdown --output results/preferences.md
+```
+
+### 5. Audit quality
+
+```bash
+openbench validate-dataset datasets/ --quality-checks --format markdown --output results/dataset_audit.md
+```
+
+A complete runnable walkthrough using the mock provider is in [`examples/v040_workflow.py`](examples/v040_workflow.py).
+
+---
+
+## CLI Commands
+
+| Command | Purpose |
+| :--- | :--- |
+| `validate-dataset`, `list-datasets`, `inspect-dataset`, `dataset-stats` | Dataset validation and exploration (`--quality-checks` adds the audit) |
+| `evaluate`, `compare`, `export`, `history list/show` | Evaluate response files, descriptive comparison, export, history |
+| `run`, `runs list/show/verify/resume/compare` | Provider execution, repeat groups, run management and integrity |
+| `providers list/check`, `cache stats/clear` | Providers and the response cache |
+| `analyze` | v0.4.0 paired comparison or repeated-run variability of stored results |
+| `preferences create/validate/analyze` | v0.4.0 blinded pairwise human preference evaluation |
+
+See the [CLI reference](docs/cli_reference.md) for every flag.
 
 ---
 
@@ -106,37 +152,48 @@ python scripts/validate_datasets.py
 | `summarization` | `datasets/summarization/sample.jsonl` | 20 | Single-sentence technical and scientific summarization |
 | `structured_output` | `datasets/structured_output/sample.jsonl` | 20 | JSON generation with `required_keys`, `field_types`, `expected_schema` |
 
+The built-in quality audit reports 0 errors, 6 warnings and 8 informational findings. These are documented historical keyword exceptions, one ambiguous item and accepted answer variants; see [quality audits](docs/quality_audits.md). With 20 items per category, statistical comparisons on one category have low power, and the reports say so.
+
 ---
 
 ## Metrics Reference
 
-| Metric Identifier | Version | Description | Key Methodological Limitation |
-| :--- | :--- | :--- | :--- |
-| `exact_match` | `0.1.0` | Normalized string equality (`1.0` or `0.0`). | Penalizes conversational framing. |
-| `accuracy` | `0.1.0` | Deterministic correctness via exact or word-bounded answer containment. | Does not parse negation or complex paraphrases. |
-| `keyword_coverage` | `0.1.0` | Proportion of expected keywords present in the response. | **Not equivalent to semantic correctness.** |
-| `precision` | `0.2.0` | $\text{TP} / (\text{TP} + \text{FP})$ for binary decisions or element sets. | Applies to discrete decisions/sets, not free-form prose truth. |
-| `recall` | `0.2.0` | $\text{TP} / (\text{TP} + \text{FN})$ for binary decisions or element sets. | Does not penalize extra false-positive elements alone. |
-| `f1` | `0.2.0` | Harmonic mean of `precision` and `recall`. | Ignores word order outside discrete elements. |
-| `rouge` / `rouge_1` / `rouge_l` | `0.2.0` | Unigram (`rouge_1`) and LCS (`rouge_l`) overlap F1. | Cannot detect factual hallucinations or antonym flips. |
-| `bleu` | `0.2.0` | Smoothed clipped $n$-gram precision with brevity penalty. | Penalizes valid synonyms and paraphrases. |
-| `semantic_similarity` | `0.2.0` | Embedding cosine similarity via configurable `EmbeddingProvider`; with the default `local_ngram_hash` provider it is a legacy alias for `lexical_similarity`. Pass `require_semantic_provider=True` to require a neural embedding provider. | **Not factual correctness**; opposite statements can have high similarity. |
-| `lexical_similarity` | `0.3.1` | Cosine similarity of hashed word and character 3-gram features. | Surface wording only; paraphrases score low and negations score high. |
-| `structured_output` | `0.2.0` | Validates JSON syntax, required keys, field types, and JSON Schema. | Structural validity is separate from factual value accuracy. |
+| Metric Identifier | Version | Kind | Description | Key Methodological Limitation |
+| :--- | :--- | :--- | :--- | :--- |
+| `exact_match` | `0.1.0` | binary | Normalized string equality (`1.0` or `0.0`). | Penalizes conversational framing. |
+| `accuracy` | `0.1.0` | binary | Deterministic correctness via exact or word-bounded answer containment. | Does not parse negation or complex paraphrases. |
+| `keyword_coverage` | `0.1.0` | continuous | Proportion of expected keywords present in the response. | **Not equivalent to semantic correctness.** |
+| `precision` | `0.2.0` | continuous | $\text{TP} / (\text{TP} + \text{FP})$ for binary decisions or element sets. | Applies to discrete decisions/sets, not free-form prose truth. |
+| `recall` | `0.2.0` | continuous | $\text{TP} / (\text{TP} + \text{FN})$ for binary decisions or element sets. | Does not penalize extra false-positive elements alone. |
+| `f1` | `0.2.0` | continuous | Harmonic mean of `precision` and `recall`. | Ignores word order outside discrete elements. |
+| `rouge` / `rouge_1` / `rouge_l` | `0.2.0` | continuous | Unigram (`rouge_1`) and LCS (`rouge_l`) overlap F1. | Cannot detect factual hallucinations or antonym flips. |
+| `bleu` | `0.2.0` | continuous | Smoothed clipped $n$-gram precision with brevity penalty. | Penalizes valid synonyms and paraphrases. |
+| `semantic_similarity` | `0.2.0` | continuous | Embedding cosine similarity via configurable `EmbeddingProvider`; with the default `local_ngram_hash` provider it is a legacy alias for `lexical_similarity`. | **Not factual correctness**; opposite statements can have high similarity. |
+| `lexical_similarity` | `0.3.1` | continuous | Cosine similarity of hashed word and character 3-gram features. | Surface wording only; paraphrases score low and negations score high. |
+| `structured_output` | `0.2.0` | continuous | Validates JSON syntax, required keys, field types, and JSON Schema. | Structural validity is separate from factual value accuracy. |
+
+The **kind** (`score_kind`) selects the statistical procedure in `analyze`. Metric scores and versions are unchanged in v0.4.0.
+
+---
+
+## Statistical honesty
+
+- A non-significant difference is never reported as "no difference" or "equivalent". Equivalence requires a pre-specified margin and a TOST, and continuous-metric equivalence is disabled in v0.4.0 (descriptive only).
+- Exact binary equivalence p-values are computed in floating point with a documented, tested error allowance. This is an engineering bound, not a machine-checked proof.
+- Confidence intervals describe uncertainty over items for fixed models, prompts and settings. They are labelled as not adjusted for multiple comparisons.
+- A seed passed to a provider does not guarantee deterministic output.
+- SHA-256 checksums show that files match recorded checksums. They do not prove that results are correct or authentic.
+
+See the [statistical methodology](docs/statistical_methodology.md).
 
 ---
 
 ## Documentation Index
 
-- **Execution, Providers & Integrity**:
-  - [Model Execution Engine](docs/model_execution.md) | [Providers Overview](docs/providers.md) | [Local Ollama Guide](docs/ollama.md) | [Hugging Face Guide (Experimental)](docs/huggingface.md) | [Custom Provider Guide](docs/custom_provider.md)
-  - [Experiment Tracking](docs/experiment_tracking.md) | [Performance Monitoring](docs/performance_monitoring.md) | [Reliability & Caching](docs/reliability.md) | [Benchmark Integrity](docs/benchmark_integrity.md) | [Security & Privacy](docs/security_and_privacy.md)
-- **Datasets, Metrics & Compatibility**:
-  - [Installation Guide](docs/installation.md) | [Usage Reference](docs/usage.md) | [Architecture](docs/architecture.md)
-  - [Dataset Catalog](docs/dataset_catalog.md) | [Core Metrics](docs/metrics.md) | [Advanced Metrics (v0.3.1)](docs/advanced_metrics.md)
-  - [YAML Configuration Profiles](docs/configuration.md) | [Historical Tracking](docs/historical_tracking.md) | [Compatibility Guide](docs/v0_3_compatibility.md)
-- **v0.3.1 Release Deliverables**:
-  - [v0.3.1 Compatibility Report](V0_3_1_COMPATIBILITY_REPORT.md) | [v0.3.1 Validation Report](V0_3_1_VALIDATION_REPORT.md) | [v0.3.1 Integration Guide](V0_3_1_INTEGRATION_GUIDE.md) | [v0.3.1 Change Manifest](V0_3_1_CHANGE_MANIFEST.json)
+- **v0.4.0 guides**: [Repeated runs](docs/repeated_runs.md) | [Model comparison](docs/model_comparison.md) | [Human preferences](docs/human_preferences.md) | [Quality audits](docs/quality_audits.md) | [Reproducibility & reports](docs/reproducibility.md) | [Statistical methodology](docs/statistical_methodology.md) | [CLI reference](docs/cli_reference.md) | [Python API](docs/api_reference.md) | [Migration from v0.3.1](V0_4_0_MIGRATION_GUIDE.md)
+- **Execution, providers & integrity**: [Model Execution Engine](docs/model_execution.md) | [Providers](docs/providers.md) | [Ollama](docs/ollama.md) | [Hugging Face (experimental)](docs/huggingface.md) | [Custom providers](docs/custom_provider.md) | [Experiment tracking](docs/experiment_tracking.md) | [Performance monitoring](docs/performance_monitoring.md) | [Reliability & caching](docs/reliability.md) | [Benchmark integrity](docs/benchmark_integrity.md) | [Security & privacy](docs/security_and_privacy.md)
+- **Datasets, metrics & configuration**: [Installation](docs/installation.md) | [Usage](docs/usage.md) | [Architecture](docs/architecture.md) | [Dataset catalog](docs/dataset_catalog.md) | [Core metrics](docs/metrics.md) | [Advanced metrics](docs/advanced_metrics.md) | [YAML profiles](docs/configuration.md) | [Historical tracking](docs/historical_tracking.md) | [v0.3 compatibility](docs/v0_3_compatibility.md)
+- **Project**: [Changelog](CHANGELOG.md) | [Contributing](CONTRIBUTING.md) | [Security policy](SECURITY.md) | [v0.3.1 compatibility report](V0_3_1_COMPATIBILITY_REPORT.md)
 
 ---
 

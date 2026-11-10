@@ -43,3 +43,12 @@ openbench runs resume run_a1b2c3d4e5f6
 # 6. Compare two or more runs side-by-side
 openbench runs compare run_a1b2c3d4e5f6 run_998877665544 --output results/run_comparison.md
 ```
+
+## v0.4.0: lineage and repeat groups
+
+New runs record a `lineage` block in `config.json` and `reproducibility.json` (schema `0.4.0`). It holds the experiment and parent IDs, repeat group, repetition index and count, seeds and seed status, selected record IDs, per-record content hashes and cache provenance.
+
+`openbench run --repetitions N` creates a repeat group (`grp_<id>`) with a rebuildable index file `experiments/grp_<id>.json`. `runs list --group`, `runs show grp_...`, `runs verify grp_...` and `runs resume grp_...` operate on groups.
+
+v0.3.x runs remain readable and are never rewritten. See [repeated_runs.md](repeated_runs.md) and [reproducibility.md](reproducibility.md).
+

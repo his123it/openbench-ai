@@ -40,7 +40,7 @@ def test_json_report_serialization_and_roundtrip(tmp_path: Path) -> None:
 
     assert json_path.exists()
     loaded = json.loads(json_path.read_text(encoding="utf-8"))
-    assert loaded["project_version"] == "0.3.1"
+    assert loaded["project_version"] == "0.4.0"
     assert loaded["model"]["model_name"] == "ReportModel"
     assert "reproducibility_card" in loaded
     assert loaded["reproducibility_card"]["number_of_test_cases"] == 1

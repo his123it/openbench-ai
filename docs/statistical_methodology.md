@@ -1,11 +1,13 @@
-# Statistical Methodology (v0.4.0 Stage 1)
+# Statistical Methodology (v0.4.0)
 
 This document describes the statistical primitives in `openbench.stats`. They are
 standard-library only and operate on per-item values that the caller has already aligned on
 stable record IDs, filtered and sorted by ID.
 
-> **Scope of Stage 1.** These primitives are not yet wired into any CLI command, evaluator,
-> report or run artifact. Existing commands, outputs and scores are unchanged.
+> **Where they are used.** `openbench analyze` (paired comparison, section 14),
+> `stats.decompose_variability` (repeated runs, section 15), `openbench preferences analyze`
+> (section 16) and `evaluate --confidence-intervals` (section 17) apply these primitives to
+> stored results. Without those commands and flags, existing outputs and scores are unchanged.
 
 Every procedure below states its assumptions and whether its inference is **exact** or
 **approximate**. Nothing here is a claim of scientific validation or of absolute model
@@ -341,3 +343,55 @@ arguments above depends on them.
 - **Holm:** gives familywise decisions only, with no simultaneous intervals.
 - **Small datasets:** the built-in 20-item datasets have low power. Equivalence there is
   typically not established, which is not evidence of a difference.
+
+## 14. Paired comparison pipeline (`openbench analyze`)
+
+1. **Alignment.** Items are aligned on record IDs. An arm's per-item value is the mean of
+   its valid repetitions; the unit of analysis is the item, never item × repetition.
+2. **Missing data.** `complete_case` (default) uses items valid in both arms;
+   `missing_as_failure` scores missing or invalid outputs 0.0. The policy, the sample count
+   and the exclusions by reason are recorded.
+3. **Method selection by `score_kind`** (section 2). Binary metrics with one repetition per
+   arm use exact McNemar. Continuous metrics and repeated binary metrics use the sign-flip
+   test. Unknown metrics get a CI only. The CI is always the paired percentile bootstrap.
+4. **Multiplicity.** Every difference test forms one family (Holm by default); equivalence
+   forms a separate Holm family; failure-rate comparisons form a third. Category and
+   difficulty breakdowns are descriptive unless stratum tests are requested.
+5. **Compatibility.** Hard incompatibilities (record content, metric version, options or
+   normalization) block inference. The exploratory mode is descriptive only.
+
+## 15. Repeated-run variability
+
+Generation variability is measured within items: per-item variance across valid
+repetitions, the share of items that change, and the binary flip rate and pairwise
+agreement. Item variation is the spread of per-item means, with a percentile bootstrap CI
+over items. Failures are reported per repetition.
+
+These three are kept separate. Repetition noise never enters the question-level standard
+error: changing only the repetition pattern around fixed per-item means leaves the CI
+unchanged, and a test checks this. A hierarchical bootstrap is not used in v0.4.0.
+
+## 16. Human preference statistics
+
+- **Win rate.** Each task's value is the mean of its annotations (A = 1, tie = 0.5, B = 0;
+  `neither` excluded). The headline is the mean over tasks.
+- **CI.** A percentile bootstrap over tasks, which treats annotations of one task as a
+  cluster.
+- **Assumptions.** Tasks are a sample of similar tasks and annotators are exchangeable
+  within a task. Annotator effects are not modelled.
+- **Agreement.** Cohen's κ (pairwise) and Fleiss' κ (tasks with the modal number of
+  ratings) are descriptive. They are unstable with few shared tasks and sensitive to
+  imbalanced categories.
+- **Elo.** Order-dependent and relative to the pool; it does not replace the win-rate
+  statistics.
+
+## 17. Opt-in evaluation confidence intervals
+
+`evaluate --confidence-intervals` reports, per metric, two percentile bootstrap CIs over
+items:
+
+- `headline`: missing responses count as 0.0, so the estimate equals the headline score;
+- `evaluated_only`: only items with a response.
+
+The same interpretation and small-sample caveats as section 3 apply.
+

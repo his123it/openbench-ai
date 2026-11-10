@@ -147,13 +147,13 @@ def build_parser() -> argparse.ArgumentParser:
         "(output is unchanged without this flag).",
     )
     eval_parser.add_argument(
-        "--confidence-level", type=float, default=0.95, help="CI level for --confidence-intervals (default 0.95)."
+        "--confidence-level", type=float, default=0.95, help="v0.4.0: CI level for --confidence-intervals (default 0.95)."
     )
     eval_parser.add_argument(
-        "--resamples", type=int, default=10_000, help="Bootstrap resamples for --confidence-intervals (default 10000)."
+        "--resamples", type=int, default=10_000, help="v0.4.0: bootstrap resamples for --confidence-intervals (default 10000)."
     )
     eval_parser.add_argument(
-        "--seed", type=int, default=0, help="Statistical analysis seed for --confidence-intervals (default 0)."
+        "--seed", type=int, default=0, help="v0.4.0: statistical analysis seed for --confidence-intervals (default 0)."
     )
 
     # 3. compare (v0.1.0 preserved)

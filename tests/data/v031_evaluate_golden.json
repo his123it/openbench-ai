@@ -19,9 +19,9 @@
     "structured_output"
   ],
   "generated_with": "OpenBench AI v0.3.1, commit 8d3295abbabeff4a0c20052a1bbb70fed48c424e",
-  "masked_fields": "JSON: every evaluation_id, evaluation_timestamp and project_version key (recursively); Markdown: Evaluation ID, Evaluation Timestamp and OpenBench AI Version lines",
-  "json_sha256": "873b506830c0311c74891fc86b643287a8192ac8e9756cbe8ba6786477a397be",
-  "markdown_sha256": "d3f3af10536e19b844aea7ee3450a715240b9489f1b2da53d35a6002f0674aa3",
+  "masked_fields": "JSON: every evaluation_id, evaluation_timestamp, project_version, openbench_version, python_version, operating_system and platform key (recursively); Markdown: Evaluation ID, Evaluation Timestamp, OpenBench AI Version and Python Environment lines",
+  "json_sha256": "9ab38c7d8af483120e39931d43262306b6ac44dfb73b683f61fa8213bb0e7eab",
+  "markdown_sha256": "1257b8ed4e0ae7f05182ad3645405c29a4e65f0afe1e4e36e64dbbca2625d0a6",
   "aggregate_scores": {
     "accuracy": 1.0,
     "bleu": 0.958333,

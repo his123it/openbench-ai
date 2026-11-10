@@ -6,8 +6,8 @@ import hashlib
 import json
 import re
 
-VOLATILE_JSON_KEYS = {"evaluation_id", "evaluation_timestamp", "project_version"}
-_MD_VOLATILE = re.compile(r"^(- \*\*Evaluation ID\*\*|- \*\*Evaluation Timestamp\*\*|- \*\*OpenBench AI Version\*\*|\| \*\*Evaluation ID\*\*|\| \*\*Evaluation Timestamp \(UTC\)\*\*|\| \*\*OpenBench AI Version\*\*).*$", re.M)
+VOLATILE_JSON_KEYS = {"evaluation_id", "evaluation_timestamp", "project_version", "openbench_version", "python_version", "operating_system", "platform"}
+_MD_VOLATILE = re.compile(r"^(- \*\*Evaluation ID\*\*|- \*\*Evaluation Timestamp\*\*|- \*\*OpenBench AI Version\*\*|\| \*\*Evaluation ID\*\*|\| \*\*Evaluation Timestamp \(UTC\)\*\*|\| \*\*OpenBench AI Version\*\*|\| \*\*Python Environment\*\*).*$", re.M)
 
 
 def _strip(value):

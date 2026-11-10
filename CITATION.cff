@@ -8,8 +8,7 @@ authors:
 repository-code: "https://github.com/lakshaychhaba0001-sys/openbench-ai"
 url: "https://github.com/lakshaychhaba0001-sys/openbench-ai"
 license: "MIT"
-version: "0.3.1"
-date-released: "2026-11-08"
+version: "0.4.0"
 keywords:
   - "large language models"
   - "evaluation"
