@@ -2,12 +2,12 @@
 
 ## Supported Versions
 
-OpenBench AI is maintained by its project owner, and its initial development was AI-assisted. Security updates and maintenance fixes are applied to the latest release series (`0.4.x` once released; `0.3.x` until then).
+OpenBench AI is maintained by its project owner, and its initial development was AI-assisted. Security updates and maintenance fixes are applied to the latest release series (`0.4.x`).
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 0.4.x (release candidate) | :white_check_mark: |
-| 0.3.x   | :white_check_mark: |
+| 0.4.x   | :white_check_mark: |
+| 0.3.x   | :x:                |
 | < 0.3.0 | :x:                |
 
 ## Security Model of OpenBench AI
