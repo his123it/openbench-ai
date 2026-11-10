@@ -1640,6 +1640,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             return _handle_analyze(args)
         if args.command == "preferences":
             return _handle_preferences(args)
+    except BrokenPipeError:
+        # v0.4.0: output piped into a command that closed early (e.g. `| head`); exit quietly.
+        import os
+
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(devnull, sys.stdout.fileno())
+        return 1
     except FileNotFoundError as exc:
         print(f"Error: {sanitize_error_message(str(exc))}", file=sys.stderr)
         return 1
