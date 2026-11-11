@@ -1,18 +1,42 @@
+<div align="center">
+
 # OpenBench AI (v0.4.0)
 
-**A modular, open-source LLM experiment execution, evaluation, statistical comparison, and benchmarking platform.**
+**Is the difference between two LLMs real, or noise?**
 
+Statistically sound LLM benchmarking in Python: repeated runs, paired model comparison with confidence intervals and exact tests, blinded human preference evaluation and dataset quality audits. No runtime dependencies.
+
+[![Tests](https://github.com/lakshaychhaba0001-sys/openbench-ai/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/lakshaychhaba0001-sys/openbench-ai/actions/workflows/tests.yml)
+[![Release](https://img.shields.io/github/v/release/lakshaychhaba0001-sys/openbench-ai?color=2ea44f)](https://github.com/lakshaychhaba0001-sys/openbench-ai/releases/latest)
+[![Python 3.10–3.13](https://img.shields.io/badge/Python-3.10%E2%80%933.13-3776AB.svg)](pyproject.toml)
+[![Runtime dependencies: none](https://img.shields.io/badge/runtime%20dependencies-none-blue.svg)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](pyproject.toml)
-[![Version: 0.4.0](https://img.shields.io/badge/Version-0.4.0-2ea44f.svg)](CHANGELOG.md)
 
----
+<img src="docs/assets/demo.gif" alt="Terminal demo: a read-only dataset audit, then the end-to-end example running repeated runs, a paired comparison with an adjusted p-value and confidence interval, variability, blinded preferences and a group audit" width="860">
 
-## Project Overview
+</div>
 
-**OpenBench AI** is a Python toolkit for running reproducible language model benchmarks. It evaluates model responses against standardized JSONL datasets, repeats experiments, compares models with appropriate statistics, collects blinded human preferences, and audits dataset and run quality. The core installation has no external runtime dependencies, and nothing requires a paid API.
+## Why OpenBench AI?
 
-> **Note**: OpenBench AI is maintained by its project owner, and its initial development was AI-assisted. Contributions, bug reports, and new datasets are welcome!
+Most model comparisons report two averages and pick the higher one. On a benchmark of 20 to 200 questions, a gap of a few points is often within run-to-run noise. Re-running a model can also return cached answers and look more stable than it really is. OpenBench AI answers the question behind the leaderboard:
+
+| You want to know | OpenBench AI gives you |
+| --- | --- |
+| Is model B really better than model A? | `openbench analyze`: item-by-item pairing, bootstrap confidence intervals, an exact McNemar or sign-flip test, Holm or BH correction, and effect sizes. A non-significant result is never reported as "equivalent". |
+| How much do scores move between runs? | `openbench run --repetitions N --seed S`: repeat groups with full lineage. Within-item noise, item spread and failures are reported separately. |
+| Which answers do people prefer? | `openbench preferences`: blinded A/B task files, validated annotations, clustered win rates, position bias and inter-annotator agreement. |
+| Can I trust the dataset and the runs? | `--quality-checks`: read-only audits for duplicates, near-duplicates, broken references, incomplete runs and integrity failures. |
+| Can someone else check my numbers? | JSON, Markdown and CSV reports with provenance: input SHA-256s, seeds, parameters and environment. |
+
+Try the whole workflow in under a minute, with no API keys and no network:
+
+```bash
+git clone https://github.com/lakshaychhaba0001-sys/openbench-ai.git && cd openbench-ai
+python -m pip install -e .
+python examples/v040_workflow.py demo   # writes comparison, variability, preference and audit reports to demo/
+```
+
+> **Note**: OpenBench AI is maintained by its project owner, and its initial development was AI-assisted. Contributions, bug reports, and new datasets are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md) and the [good first issues](https://github.com/lakshaychhaba0001-sys/openbench-ai/labels/good%20first%20issue).
 
 ---
 

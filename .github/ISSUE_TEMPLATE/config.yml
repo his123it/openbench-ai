@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Questions and ideas
+    url: https://github.com/lakshaychhaba0001-sys/openbench-ai/discussions
+    about: Ask how to use OpenBench AI, share results, or discuss ideas before opening an issue.
+  - name: Security vulnerability
+    url: https://github.com/lakshaychhaba0001-sys/openbench-ai/blob/main/SECURITY.md
+    about: Please report security issues privately as described in SECURITY.md.
