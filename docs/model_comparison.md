@@ -39,6 +39,10 @@ result = PairedComparisonEngine().compare(arms, ["exact_match", "f1"], Compariso
 
 Every test of no difference across all pairs and metrics forms one family. Raw and adjusted p-values are reported; `--correction` selects Holm (default), BH (controls the false discovery rate, flagged) or none (flagged). Category and difficulty breakdowns are descriptive unless `--stratum-tests` adds them to the family.
 
+### What `descriptive_only` means on breakdowns
+
+Each category and difficulty breakdown entry carries `"descriptive_only": true` unless `--stratum-tests` is used. That means no multiplicity-adjusted hypothesis test was run for that stratum — it does **not** mean there is no interval: the entry still includes a bootstrap confidence interval. Use `--stratum-tests` to add the breakdowns to the test family (with multiplicity adjustment) instead of leaving them descriptive-only.
+
 The **failure-rate comparison** tests paired failure indicators (missing or invalid) per arm pair. It forms its own Holm family.
 
 **Practical importance** (`--min-practical-difference`) classifies the CI against a threshold. It is descriptive and never an equivalence claim.
