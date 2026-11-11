@@ -8,6 +8,7 @@ Statistically sound LLM benchmarking in Python: repeated runs, paired model comp
 
 [![Tests](https://github.com/lakshaychhaba0001-sys/openbench-ai/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/lakshaychhaba0001-sys/openbench-ai/actions/workflows/tests.yml)
 [![Release](https://img.shields.io/github/v/release/lakshaychhaba0001-sys/openbench-ai?color=2ea44f)](https://github.com/lakshaychhaba0001-sys/openbench-ai/releases/latest)
+[![PyPI](https://img.shields.io/pypi/v/openbench-ai?color=2ea44f)](https://pypi.org/project/openbench-ai/)
 [![Python 3.10–3.13](https://img.shields.io/badge/Python-3.10%E2%80%933.13-3776AB.svg)](pyproject.toml)
 [![Runtime dependencies: none](https://img.shields.io/badge/runtime%20dependencies-none-blue.svg)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -69,6 +70,13 @@ v0.3.1 commands, flags, public Python names, the 200 dataset records and existin
 ---
 
 ## Installation
+
+```bash
+# From PyPI: the library and the `openbench` CLI (no runtime dependencies)
+python -m pip install openbench-ai
+```
+
+The built-in datasets, example profiles and `examples/` live in the repository rather than the package, so clone it to use them or to develop:
 
 ```bash
 git clone https://github.com/lakshaychhaba0001-sys/openbench-ai.git
