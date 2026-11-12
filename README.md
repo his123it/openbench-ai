@@ -232,3 +232,20 @@ See the [statistical methodology](docs/statistical_methodology.md).
 ## License
 
 Released under the [MIT License](LICENSE).
+
+---
+
+## How to cite
+
+If you use OpenBench AI in your research, please cite it using the following BibTeX entry:
+
+```bibtex
+@software{chhaba2026openbench,
+  author  = {Chhaba, Lakshay},
+  title   = {OpenBench AI},
+  version = {0.4.0},
+  date    = {2026-11-10},
+  url     = {https://github.com/lakshaychhaba0001-sys/openbench-ai},
+  license = {MIT}
+}
+```
