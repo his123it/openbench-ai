@@ -43,6 +43,8 @@ Every test of no difference across all pairs and metrics forms one family. Raw a
 
 Each category and difficulty breakdown entry carries `"descriptive_only": true` unless `--stratum-tests` is used. That means no multiplicity-adjusted hypothesis test was run for that stratum — it does **not** mean there is no interval: the entry still includes a bootstrap confidence interval. Use `--stratum-tests` to add the breakdowns to the test family (with multiplicity adjustment) instead of leaving them descriptive-only.
 
+When `--stratum-tests` is enabled, a stratum with only one paired item is still reported as `"descriptive_only": true`, because the `policy.stratum_tests and n >= 2` check in `PairedComparisonEngine._breakdown` requires at least two paired items before a category or difficulty group joins the test family.
+
 The **failure-rate comparison** tests paired failure indicators (missing or invalid) per arm pair. It forms its own Holm family.
 
 **Practical importance** (`--min-practical-difference`) classifies the CI against a threshold. It is descriptive and never an equivalence claim.
